@@ -88,6 +88,44 @@ Here’s the complete folder structure for the network monitoring system, includ
 
 ## How It Works
 
+
+# Monitoring Service Setup
+
+To ensure that the monitoring script runs as a background service and restarts automatically if it fails, you need to create a `systemd` service unit.
+
+## Steps to Add `monitoring.service` to `systemd`
+
+1. **Create the service file**
+
+   First, create a new `service` file for the monitoring script:
+   
+   ```bash
+   sudo nano /etc/systemd/system/monitoring.service
+2. **Reload systemd to recognize the new service:**
+
+    After saving the service file, reload the systemd manager configuration to apply the changes:
+    ```
+    sudo systemctl daemon-reload
+    ```
+3. **Enable the service to start on boot:**
+
+    To ensure that the monitoring service starts automatically on system boot, enable the service:
+    ```
+    sudo systemctl enable monitoring.service
+    ```
+4. **Start the service:**
+
+    Now, start the service manually:
+    ```
+    sudo systemctl start monitoring.service
+    ```
+5. **Check the status of the service:**
+
+    To verify that the service is running correctly:
+    ```
+    sudo systemctl status monitoring.service
+    ```
+
 ### Bash Script (`monitor.sh`):
 
 This script continuously checks the availability of the server by sending an HTTP request to `http://localhost/index.php`. It also pings the IP addresses listed in `ips.txt` to check if they are online or offline.
