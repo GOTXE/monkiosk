@@ -1,0 +1,6 @@
+SERVIDOR (192.168.1.1): Online
+KIOSKO-1 (192.168.1.2): Online
+KIOSKO-2 (192.168.1.3): Offline
+KIOSKO-3 (192.168.1.4): Online
+KIOSKO-4 (192.168.1.5): Offline
+KIOSKO-5 (192.168.1.6): Online
