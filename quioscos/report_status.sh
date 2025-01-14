@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Configuración
-server_url="http://servidor-central/endpoint.php"  # URL del servidor para recibir el POST
-quiosco_name=$(hostname)  
+server_url="http://<IP_DEL_SERVIDOR>/update_status.php"  # Cambia aquí a update_status.php
+quiosco_name=$(hostname)  # Obtén el nombre del dispositivo usando el comando hostname
 
 # Función para reportar el estado al servidor
 report_status() {

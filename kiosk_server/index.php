@@ -31,52 +31,9 @@
     <iframe id="documentFrame"></iframe>
 
     <script>
-        var documentos = [];
-        var currentIndex = 0;
-        var intervalo = 5000; // 5 segundos para las pruebas, puedes cambiarlo luego
-        var recarga = 10000; // Tiempo para recargar la página
-
-        // Lista de documentos generada desde PHP
-        documentos = [
+        var documentos = [
             <?php
-            // Verifica si es un POST para actualizar el estado
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $status_file = "/var/www/html/monkiosk/status.txt";
-                $data = json_decode(file_get_contents("php://input"), true);
-
-                if (isset($data['name']) && isset($data['status'])) {
-                    $name = htmlspecialchars($data['name']);
-                    $status = htmlspecialchars($data['status']);
-
-                    // Leer el contenido actual del archivo
-                    $current_status = file_exists($status_file) ? file_get_contents($status_file) : "";
-                    $lines = explode("\n", $current_status);
-                    $updated = false;
-
-                    foreach ($lines as &$line) {
-                        if (strpos($line, $name) !== false) {
-                            $line = "$name: $status";
-                            $updated = true;
-                        }
-                    }
-
-                    // Si no se encuentra el quiosco, añadirlo
-                    if (!$updated) {
-                        $lines[] = "$name: $status";
-                    }
-
-                    // Escribir el nuevo contenido al archivo
-                    file_put_contents($status_file, implode("\n", $lines));
-                    echo json_encode(["success" => true]);
-                    exit;
-                } else {
-                    http_response_code(400);
-                    echo json_encode(["success" => false, "message" => "Datos inválidos"]);
-                    exit;
-                }
-            }
-
-            // Carga de documentos si no es un POST
+            // Carga de documentos
             $dir = '/var/www/html/docs';
             $archivos = scandir($dir);
 
@@ -94,6 +51,10 @@
             }
             ?>
         ];
+
+        var currentIndex = 0;
+        var intervalo = 5000; // 5 segundos para las pruebas, puedes cambiarlo luego
+        var recarga = 10000; // Tiempo para recargar la página
 
         // Cambiar el documento mostrado en el iframe
         function cambiarDocumento() {
