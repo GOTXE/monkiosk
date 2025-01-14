@@ -3,20 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitorización de Quioscos</title>
+    <title>Estado de los Quioscos</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="/monkiosk/img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
 </head>
 <body>
     <div class="container">
-        <h1>ESTADO DE CONEXIÓN</h1>
-        <div id="last-check-time">Última comprobación: N/A</div> <!-- Para mostrar la última hora de comprobación -->
-        <div id="monitor">
-            <img src="img/server.svg" alt="Servidor" id="server" style="max-width: 40px; height: 40px;">
-            <div id="server-status">Servidor: Comprobando...</div> <!-- Estado del servidor -->
-            <div id="quioscos-status"></div> <!-- Aquí se mostrarán los estados de los equipos -->
+        <div style="display: flex; align-items: center;">
+            <img src="/img/server.svg" alt="Servidor" class="header-icon">
+            <h1>Estado de los Quioscos</h1>
         </div>
+        <div id="quioscos-status"></div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        const statusContainer = document.getElementById('quioscos-status');
+        let currentStatus = {}; // Almacena el estado actual para evitar actualizaciones innecesarias
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch('status.json');
+                if (!response.ok) {
+                    throw new Error('Error al obtener el estado');
+                }
+                const statusData = await response.json();
+                const currentTime = Math.floor(Date.now() / 1000);
+                const timeout = 150; // Tiempo límite para determinar si está offline (en segundos)
+
+                for (const [kioskName, kioskInfo] of Object.entries(statusData)) {
+                    const timeElapsed = currentTime - kioskInfo.last_updated;
+                    const isOnline = timeElapsed <= timeout;
+                    const newStatus = {
+                        status: isOnline ? 'Online' : 'Offline',
+                        lastUpdated: kioskInfo.last_updated
+                    };
+
+                    if (!currentStatus[kioskName] || 
+                        currentStatus[kioskName].status !== newStatus.status ||
+                        currentStatus[kioskName].lastUpdated !== newStatus.lastUpdated) {
+                        
+                        updateKioskStatus(kioskName, newStatus);
+                        currentStatus[kioskName] = newStatus;
+                    }
+                }
+
+                for (const kioskName of Object.keys(currentStatus)) {
+                    if (!statusData[kioskName]) {
+                        removeKioskStatus(kioskName);
+                        delete currentStatus[kioskName];
+                    }
+                }
+            } catch (error) {
+                console.error('Error al actualizar los estados:', error);
+            }
+        }
+
+        function updateKioskStatus(kioskName, newStatus) {
+            let kioskElement = document.getElementById(`kiosk-${kioskName}`);
+            if (!kioskElement) {
+                kioskElement = document.createElement('div');
+                kioskElement.id = `kiosk-${kioskName}`;
+                kioskElement.className = `quiosco ${newStatus.status.toLowerCase()}`;
+                kioskElement.innerHTML = `
+                    <img src="/img/quiosco.svg" alt="Quiosco">
+                    <div>
+                        <span><strong>${kioskName}</strong>: <span class="status-text">${newStatus.status}</span></span>
+                        <br>
+                        <span class="last-updated">Última actualización: ${new Date(newStatus.lastUpdated * 1000).toLocaleString()}</span>
+                    </div>
+                `;
+                statusContainer.appendChild(kioskElement);
+            } else {
+                const statusTextElement = kioskElement.querySelector('.status-text');
+                const lastUpdatedElement = kioskElement.querySelector('.last-updated');
+
+                if (statusTextElement.textContent !== newStatus.status) {
+                    statusTextElement.textContent = newStatus.status;
+                    kioskElement.className = `quiosco ${newStatus.status.toLowerCase()}`;
+                }
+
+                if (lastUpdatedElement.textContent !== new Date(newStatus.lastUpdated * 1000).toLocaleString()) {
+                    lastUpdatedElement.textContent = `Última actualización: ${new Date(newStatus.lastUpdated * 1000).toLocaleString()}`;
+                }
+            }
+        }
+
+        function removeKioskStatus(kioskName) {
+            const kioskElement = document.getElementById(`kiosk-${kioskName}`);
+            if (kioskElement) {
+                kioskElement.style.opacity = 0;
+                setTimeout(() => kioskElement.remove(), 300);
+            }
+        }
+
+        setInterval(fetchStatus, 5000); // Actualizar cada 5 segundos CAMBIAR EN PRODUCCIÓN
+        fetchStatus();
+    </script>
 </body>
 </html>

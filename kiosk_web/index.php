@@ -1,32 +1,64 @@
 <?php
-// Check if the request is a POST request to update the status
+// Verifica si la solicitud es POST para actualizar el estado
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get the JSON payload from the request
+    // Obtén los datos JSON enviados por el cliente
     $data = json_decode(file_get_contents('php://input'), true);
 
-    // Extract the kiosk name and status
-    $kiosk_name = $data['name'];
+    // Valida que los datos tengan el formato correcto
+    if (!isset($data['name'], $data['status'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid data']);
+        exit;
+    }
+
+    $kiosk_name = trim($data['name']); // Elimina espacios en blanco del nombre
     $status = $data['status'];
 
-    // Define the path to the status file
-    $status_file = '../monkiosk/status.txt';
+    // Ruta al archivo de estados y archivo de hostnames permitidos
+    $status_file = __DIR__ . '/status.json';
+    $allowed_hosts_file = __DIR__ . '/allowed_hosts.txt';
 
-    // Read the current status file
+    // Cargar lista de hosts permitidos
+    $allowed_hosts = file_exists($allowed_hosts_file)
+        ? array_map('trim', file($allowed_hosts_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES))
+        : [];
+
+    // Carga los estados actuales
     $status_data = file_exists($status_file) ? json_decode(file_get_contents($status_file), true) : [];
 
-    // Update the status for the kiosk
-    $status_data[$kiosk_name] = $status;
+    // Tiempo actual y límite de inactividad para equipos restirados de la lista allowed_hosts
+    $current_time = time();
+    $inactivity_limit = 150; // 2.5 minutos CAMBIAR EN PRODUCCION
 
-    // Write the updated status back to the file
-    file_put_contents($status_file, json_encode($status_data));
+    // Actualiza o agrega el estado del quiosco
+    $status_data[$kiosk_name] = [
+        'status' => $status,
+        'last_updated' => $current_time
+    ];
 
-    // Respond with a success message
+    // Limpia equipos no permitidos y offline de la lista de estados
+    foreach ($status_data as $name => $info) {
+        $is_offline = ($current_time - $info['last_updated']) > $inactivity_limit;
+        if (!in_array($name, $allowed_hosts) && $is_offline) {
+            error_log("Eliminando $name: no está en allowed_hosts y está inactivo.");
+            unset($status_data[$name]);
+        }
+    }
+
+    // Guarda los datos actualizados en el archivo JSON
+    file_put_contents($status_file, json_encode($status_data, JSON_PRETTY_PRINT));
+
+    // Responde con un mensaje de éxito
     echo json_encode(['message' => 'Status updated successfully']);
     exit;
 }
 
-// Existing code to display documents
+// Si no es una solicitud POST, muestra un error
+http_response_code(405);
+echo json_encode(['error' => 'Method not allowed']);
 ?>
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -35,25 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Documentos en Bucle</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
-        }
-        iframe {
-            width: 100vw; /* Ancho completo de la ventana */
-            height: 100vh; /* Alto completo de la ventana */
-            border: none;
-        }
-        img {
-            width: 100%;
-            height: auto;
-            object-fit: contain;
-        }
+        
     </style>
 </head>
 <body>
@@ -82,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
 
         var currentIndex = 0;
-        var intervalo = 5000; // 5 segundos para las pruebas, puedes cambiarlo luego
-        var recarga = 10000; // Tiempo para recargar la página
+        var intervalo = 5000; // Tiempo para cambiar de documento (en milisegundos) CAMBIAR EN PRODUCCION
+        var recarga = 10000; // Tiempo para recargar la página (en milisegundos) CAMBIAR EN PRODUCCION
 
         // Cambiar el documento mostrado en el iframe
         function cambiarDocumento() {
