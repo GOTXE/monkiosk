@@ -1,3 +1,32 @@
+<?php
+// Check if the request is a POST request to update the status
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get the JSON payload from the request
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    // Extract the kiosk name and status
+    $kiosk_name = $data['name'];
+    $status = $data['status'];
+
+    // Define the path to the status file
+    $status_file = '../monkiosk/status.txt';
+
+    // Read the current status file
+    $status_data = file_exists($status_file) ? json_decode(file_get_contents($status_file), true) : [];
+
+    // Update the status for the kiosk
+    $status_data[$kiosk_name] = $status;
+
+    // Write the updated status back to the file
+    file_put_contents($status_file, json_encode($status_data));
+
+    // Respond with a success message
+    echo json_encode(['message' => 'Status updated successfully']);
+    exit;
+}
+
+// Existing code to display documents
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

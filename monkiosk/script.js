@@ -1,69 +1,39 @@
-const statusUrl = 'status.txt';  // Ruta del archivo status.txt
-const updateInterval = 30000;  // 30 segundos para actualizar
+document.addEventListener('DOMContentLoaded', (event) => {
+    // Function to fetch the status of kiosks
+    async function fetchStatus() {
+        try {
+            // Fetch the status file
+            const response = await fetch('status.txt');
+            const statusData = await response.json();
 
-async function fetchStatus() {
-    try {
-        // Leer el archivo status.txt
-        const response = await fetch(statusUrl + '?_=' + new Date().getTime());  // Evitar caché
-        const text = await response.text();
-
-        // Reemplazar '\n' literales por saltos de línea reales
-        const cleanedText = text.replace(/\\n/g, '\n');
-        updateStatus(cleanedText);
-    } catch (error) {
-        console.error("Error al leer el archivo status.txt:", error);
-    }
-}
-
-function updateStatus(data) {
-    const lines = data.split('\n');
-
-    // Actualizar el campo de la última comprobación
-    const now = new Date();
-    const lastCheckElement = document.getElementById('last-check-time');
-    lastCheckElement.textContent = `Última comprobación: ${now.toLocaleString()}`;
-
-    // Actualizar estado del servidor
-    const serverStatusLine = lines[0]?.trim(); // Tomar la primera línea del servidor
-    const serverStatusElement = document.getElementById('server-status');
-
-    // Asumiendo que el formato es "SERVIDOR (IP): Estado"
-    const serverStatusMatch = serverStatusLine.match(/(.+) \((.+)\): (Online|Offline)/);
-    if (serverStatusMatch) {
-        const name = serverStatusMatch[1]; // El nombre del servidor
-        const statusText = serverStatusMatch[3]; // Estado (Online/Offline)
-        serverStatusElement.textContent = `${name}: ${statusText}`;
-        serverStatusElement.style.color = statusText === 'Online' ? 'green' : 'red';
-    }
-
-    // Actualizar estado de los quioscos
-    const quioscosContainer = document.getElementById('quioscos-status');
-    quioscosContainer.innerHTML = ''; // Limpiar quioscos anteriores
-
-    for (let i = 1; i < lines.length; i++) { // Empezar desde la línea 1 (quioscos)
-        const line = lines[i]?.trim();
-        if (line) {
-            const [nameAndIp, status] = line.split(': ');
-            const nameMatch = nameAndIp.match(/(.+) \((.+)\)/);
-            if (nameMatch) {
-                const name = nameMatch[1]; // Extraer nombre del quiosco
-                const isOnline = status === 'Online';
-                const quioscoElement = document.createElement('div');
-                quioscoElement.classList.add('quiosco');
-
-                quioscoElement.innerHTML = `
-                    <img src="img/quiosco.svg" alt="Quiosco" style="max-width: 40px;">
-                    <span style="color: ${isOnline ? 'green' : 'red'}; margin-left: 10px;">
-                        ${isOnline ? 'Online' : 'Offline'}
-                    </span>
-                    <span style="margin-left: 10px;">${name}</span> <!-- Mostrar solo el nombre del quiosco -->
-                `;
-                quioscosContainer.appendChild(quioscoElement);
-            }
+            // Update the status on the web page
+            updateStatus(statusData);
+        } catch (error) {
+            console.error('Error fetching status:', error);
         }
     }
-}
 
-// Iniciar la monitorización cada 30 segundos
-setInterval(fetchStatus, updateInterval);
-fetchStatus(); // Llamar una vez al cargar la página
+    // Function to update the status on the web page
+    function updateStatus(statusData) {
+        const statusContainer = document.getElementById('quioscos-status');
+        statusContainer.innerHTML = '';
+
+        // Iterate over the status data and create elements for each kiosk
+        for (const [kioskName, status] of Object.entries(statusData)) {
+            const kioskElement = document.createElement('div');
+            kioskElement.className = 'kiosk-status';
+            kioskElement.innerHTML = `<strong>${kioskName}</strong>: <span class="${status.toLowerCase()}">${status}</span>`;
+            statusContainer.appendChild(kioskElement);
+        }
+
+        // Update the last check time
+        const lastCheckTime = new Date().toLocaleString();
+        document.getElementById('last-check-time').innerText = `Última comprobación: ${lastCheckTime}`;
+    }
+
+    // Fetch the status every 60 seconds
+    setInterval(fetchStatus, 60000);
+
+    // Initial fetch
+    fetchStatus();
+});
