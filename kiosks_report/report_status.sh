@@ -1,13 +1,18 @@
 #!/bin/bash
 
 # Configuración
-server_url="http://localhost:8000/update_status.php"  # Cambia aquí a update_status.php
-quiosco_name=$(hostname)  # Obtén el nombre del dispositivo usando el comando hostname
+server_url="http://<IP_DEL_SERVIDOR>/update_status.php"  # Cambia aquí a update_status.php
+quiosco_name=$(hostname)  # Obtiene el nombre del dispositivo usando el comando hostname
 
 # Función para reportar el estado al servidor# Reintento en caso de fallo
 max_retries=3
 retry_interval=10  # Segundos entre reintentos
 interval=10  # Segundos entre envios
+
+    # This function attempts to report the kiosk's status to the server by sending a POST request
+    # with JSON data containing the kiosk's name and status. It retries the request up to a maximum
+    # number of attempts if it fails, waiting for a specified interval between each retry. If all
+    # attempts fail, it logs an error message and returns a failure code.
 
 report_status() {
     for ((i=1; i<=max_retries; i++)); do
