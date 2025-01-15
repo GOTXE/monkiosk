@@ -6,23 +6,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Documentos en Bucle</title>
     <style>
-        
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+        iframe {
+            width: 100vw; /* Ancho completo de la ventana */
+            height: 100vh; /* Alto completo de la ventana */
+            border: none;
+        }
+        img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
     <iframe id="documentFrame"></iframe>
 
     <script>
-        var documentos = [
+        var documentos = [];
+        var currentIndex = 0;
+        var intervalo = 5000; // 5 segundos para las pruebas, puedes cambiarlo luego
+        var recarga = 10000; // Tiempo para recargar la página
+
+        // Lista de documentos generada desde PHP
+        documentos = [
             <?php
-            // Carga de documentos
+            // Define la carpeta donde están tus archivos
             $dir = '/var/www/html/docs';
+
+            // Obtén todos los archivos del directorio
             $archivos = scandir($dir);
 
+            // Filtra los archivos válidos (PDF, JPG, PNG, etc.)
             $archivosValidos = array_filter($archivos, function($archivo) {
                 return preg_match('/\.(pdf|jpg|jpeg|png)$/i', $archivo);
             });
 
+            // Imprime los archivos en formato JavaScript
             $primero = true;
             foreach ($archivosValidos as $archivo) {
                 if (!$primero) {
@@ -33,10 +61,6 @@
             }
             ?>
         ];
-
-        var currentIndex = 0;
-        var intervalo = 5000; // Tiempo para cambiar de documento (en milisegundos) CAMBIAR EN PRODUCCION
-        var recarga = 10000; // Tiempo para recargar la página (en milisegundos) CAMBIAR EN PRODUCCION
 
         // Cambiar el documento mostrado en el iframe
         function cambiarDocumento() {
