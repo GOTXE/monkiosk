@@ -32,6 +32,7 @@
          * 
          * Si ocurre un error al obtener el estado, el error se registra en la consola.
          */
+
         async function fetchStatus() {
             try {
                 const response = await fetch('status.json');
@@ -76,8 +77,9 @@
          * @param {string} kioskName - El nombre del quiosco a actualizar.
          * @param {Object} newStatus - El objeto con el nuevo estado del quiosco.
          * @param {string} newStatus.status - El estado actual del quiosco ('Online' o 'Offline').
-         * @param {number} newStatus.lastUpdated - El timestamp de la última actualización del quiosco.
+         * @param {number} newStatus.lastUpdated - La marca de tiempo de la última actualización del quiosco.
          */
+
         function updateKioskStatus(kioskName, newStatus) {
             let kioskElement = document.getElementById(`kiosk-${kioskName}`);
             if (!kioskElement) {
@@ -109,9 +111,10 @@
         }
 
         /**
-         * Removes the HTML element of a kiosk from the page if it exists.
-         * @param {string} kioskName - The name of the kiosk to remove.
+         * Elimina el elemento HTML de un quiosco de la página si existe.
+         * @param {string} kioskName - El nombre del quiosco a eliminar.
          */
+
         function removeKioskStatus(kioskName) {
             const kioskElement = document.getElementById(`kiosk-${kioskName}`);
             if (kioskElement) {

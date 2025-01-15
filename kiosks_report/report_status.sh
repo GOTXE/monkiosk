@@ -9,10 +9,10 @@ max_retries=3
 retry_interval=10  # Segundos entre reintentos
 interval=10  # Segundos entre envios
 
-    # This function attempts to report the kiosk's status to the server by sending a POST request
-    # with JSON data containing the kiosk's name and status. It retries the request up to a maximum
-    # number of attempts if it fails, waiting for a specified interval between each retry. If all
-    # attempts fail, it logs an error message and returns a failure code.
+    # Esta función intenta reportar el estado del quiosco al servidor enviando una petición POST
+    # con datos JSON que contienen el nombre del quiosco y su estado. Reintenta la petición hasta un número
+    # máximo de intentos si falla, esperando un intervalo específico entre cada reintento. Si todos los
+    # intentos fallan, registra un mensaje de error y retorna un código de fallo.
 
 report_status() {
     for ((i=1; i<=max_retries; i++)); do
