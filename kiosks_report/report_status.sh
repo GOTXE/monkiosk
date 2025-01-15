@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuración
-server_url="http://<IP_DEL_SERVIDOR>/index.php"  # Cambia aquí a update_status.php
+server_url="http://<IP_DEL_SERVIDOR>/update_status.php"  # URL del servidor para enviar el estado
 quiosco_name=$(hostname)  # Obtiene el nombre del dispositivo usando el comando hostname
 
 # Función para reportar el estado al servidor# Reintento en caso de fallo

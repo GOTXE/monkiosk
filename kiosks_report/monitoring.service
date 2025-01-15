@@ -4,7 +4,6 @@ After=network.target
 
 [Service]
 ExecStart=/opt/monitoring/report_status.sh  # Ruta a tu script Bash
-WorkingDirectory=/opt/monitoring    # Poner la ruta al ejecutable monitor.sh
 Restart=always  # Para asegurarse de que se reinicie en caso de fallo
 RestartSec=10    # Espera 10 segundos antes de reiniciar si se cierra
 
