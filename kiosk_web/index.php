@@ -33,8 +33,8 @@
     <script>
         var documentos = [];
         var currentIndex = 0;
-        var intervalo = 5000; // 5 segundos para las pruebas, puedes cambiarlo luego
-        var recarga = 10000; // Tiempo para recargar la página
+        var intervalo = 5000; // 5 segundos para las pruebas, CAMBIARLO EN PRODUCCION
+        var recarga = 10000; // Tiempo para recargar la página, CAMBIARLO EN PRODUCCION
 
         // Lista de documentos generada desde PHP
         documentos = [
