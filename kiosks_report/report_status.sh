@@ -4,37 +4,42 @@
 server_url="http://<IP_DEL_SERVIDOR>/update_status.php"  # URL del servidor para enviar el estado
 quiosco_name=$(hostname)  # Obtiene el nombre del dispositivo usando el comando hostname
 
-# Función para reportar el estado al servidor# Reintento en caso de fallo
+# Configuración de reintentos y tiempos
 max_retries=3
 retry_interval=10  # Segundos entre reintentos
-interval=10  # Segundos entre envios
+interval=60  # Intervalo en segundos entre envíos de estado
 
-    # Esta función intenta reportar el estado del quiosco al servidor enviando una petición POST
-    # con datos JSON que contienen el nombre del quiosco y su estado. Reintenta la petición hasta un número
-    # máximo de intentos si falla, esperando un intervalo específico entre cada reintento. Si todos los
-    # intentos fallan, registra un mensaje de error y retorna un código de fallo.
-
+# Función para reportar el estado al servidor
 report_status() {
     for ((i=1; i<=max_retries; i++)); do
-        curl -X POST -H "Content-Type: application/json" \
+        response=$(curl -s -w "%{http_code}" -X POST -H "Content-Type: application/json" \
             -d "{\"name\": \"$quiosco_name\", \"status\": \"Online\"}" \
-            "$server_url" && return 0
-        echo "Intento $i fallido. Reintentando en $retry_interval segundos..."
+            "$server_url")
+        http_code="${response: -3}"  # Extrae el código HTTP de la respuesta
+        if [[ $http_code -eq 200 ]]; then
+            echo "Estado reportado correctamente al servidor."
+            return 0
+        fi
+        echo "Intento $i fallido con código HTTP: $http_code. Reintentando en $retry_interval segundos..."
         sleep $retry_interval
     done
-    echo "No se pudo conectar al servidor después de $max_retries intentos."
+    echo "No se pudo conectar al servidor después de $max_retries intentos." >&2
     return 1
 }
 
-# Enviar estado cada 60 segundos
+# Ciclo principal para enviar estado
 while true; do
     start_time=$(date +%s)
-    report_status
-    end_time=$(date +%s)
+    
+    if ! report_status; then
+        echo "Error crítico: No se pudo reportar el estado del quiosco." >&2
+    fi
 
-    # Ajustar el intervalo para mantener un envío constante cada 60 segundos
+    end_time=$(date +%s)
     elapsed=$((end_time - start_time))
     sleep_time=$((interval - elapsed))
+
+    # Ajustar el tiempo de espera para mantener el intervalo constante
     if (( sleep_time > 0 )); then
         sleep $sleep_time
     fi
