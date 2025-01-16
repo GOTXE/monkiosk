@@ -1,5 +1,5 @@
 # Files not to be tracked by git
-#*test*.txt
+*test*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
