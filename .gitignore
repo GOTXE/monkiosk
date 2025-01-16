@@ -1,3 +1,6 @@
+# Files not to be tracked by git
+#*test*.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
