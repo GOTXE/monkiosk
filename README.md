@@ -152,6 +152,99 @@ You can change the update interval in the Bash script (`monitor.sh`) by modifyin
 
 To customize the icons used for kiosks, replace the `quiosco.svg | server.svg` file in the `img/` directory with your preferred image.
 
+---
+
+# Installation of Kiosks (on Xubuntu 24.04)
+
+This implementation is based on a clean, minimal image of Xubuntu 24.04, where a single user, `kiosk`, is created.
+
+
+## Installation Steps
+
+### 1. Set Administrator Password
+```bash
+sudo passwd root
+```
+
+### 2. Update the Distribution and Packages
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+### 3. Install Necessary Packages
+```bash
+sudo apt install unclutter l3afpad curl chromium caffeine
+```
+
+### 4. Disable Keyring for the Browser
+```bash
+sudo chmod -x /usr/bin/gnome-keyring*
+```
+
+### 5. Apply Custom Plymouth Layer
+This will overwrite the default `xubuntu-logo`.
+```bash
+sudo cp -R xubuntu-logo /usr/share/plymouth/themes
+sudo update-initramfs -u
+sudo reboot now
+```
+
+### 6. Disable Google Translator in Chromium
+- Open Chromium.
+- Navigate to settings and disable Google Translator (enabled by default).
+
+### 7. Create (or Copy) the Autostart Script
+**Reference:** The original script and its configuration can be found at [josfaber/debian-kiosk-installer](https://github.com/josfaber/debian-kiosk-installer). Only the script itself has been used for this implementation.
+
+Save the following script as `autostart`:
+```bash
+#!/bin/bash
+unclutter -idle 0.1 -grab -root &
+while :
+do
+  chromium \
+    --no-first-run \
+    --start-maximized \
+    --disable \
+    --disable-translate \
+    --disable-infobars \
+    --disable-suggestions-service \
+    --disable-save-password-bubble \
+    --disable-session-crashed-bubble \
+    --incognito \
+    --kiosk "https://elmundo.com"
+  sleep 2
+done &
+```
+
+Copy the script to the following location:
+```bash
+/home/kiosk/.config/autostart/autostart
+```
+
+### 8. Make the Kiosk Script Executable and Test It
+```bash
+sudo chmod +x /home/kiosk/.config/autostart/autostart
+sh /home/kiosk/.config/autostart/autostart
+```
+
+### 9. Configure Startup Applications
+Ensure the following applications and scripts are set to run at startup:
+- **Caffeine:** Verify it is running with either of these commands:
+  ```bash
+  ps aux | grep caffeine
+  pgrep caffeine
+  ```
+- **Autostart Script:** Add and enable the autostart script.
+
+### 10. Restrict the `kiosk` User
+Remove `sudo` rights by commenting out the relevant line:
+```bash
+sudo visudo
+```
+
+---
+
 ## License
 
 This project is open-source and available under the MIT License. Feel free to use and modify it for your needs.
