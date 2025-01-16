@@ -33,8 +33,8 @@
     <script>
         var documentos = [];
         var currentIndex = 0;
-        var intervalo = 5000; // 5 segundos para las pruebas, CAMBIARLO EN PRODUCCION
-        var recarga = 10000; // Tiempo para recargar la página, CAMBIARLO EN PRODUCCION
+        var intervalo = 5000; // 5 segundos para las pruebas, puedes cambiarlo luego
+        var recarga = 10000; // Tiempo para recargar la página
 
         // Lista de documentos generada desde PHP
         documentos = [
@@ -45,9 +45,14 @@
             // Obtén todos los archivos del directorio
             $archivos = scandir($dir);
 
-            // Filtra los archivos válidos (PDF, JPG, PNG, etc.)
+            // Filtra los archivos válidos (PDF, JPG, PNG)
             $archivosValidos = array_filter($archivos, function($archivo) {
                 return preg_match('/\.(pdf|jpg|jpeg|png)$/i', $archivo);
+            });
+
+            // Ordena los archivos numéricamente
+            usort($archivosValidos, function($a, $b) {
+                return intval(pathinfo($a, PATHINFO_FILENAME)) - intval(pathinfo($b, PATHINFO_FILENAME));
             });
 
             // Imprime los archivos en formato JavaScript
@@ -70,7 +75,15 @@
 
                 // Si es una imagen, la mostramos como <img> en vez de usar <iframe>
                 if (ext === 'jpg' || ext === 'jpeg' || ext === 'png') {
-                    document.getElementById("documentFrame").srcdoc = '<img src="' + docActual + '" style="width:100%;height:auto;">';
+                    var img = new Image();
+                    img.onload = function() {
+                        document.getElementById("documentFrame").srcdoc = '<img src="' + docActual + '" style="width:100%;height:auto;">';
+                    };
+                    img.onerror = function() {
+                        console.error("Error al cargar la imagen: " + docActual);
+                        cambiarDocumento(); // Intenta cargar el siguiente documento
+                    };
+                    img.src = docActual;
                 } else {
                     document.getElementById("documentFrame").src = docActual; // PDFs se muestran en iframe
                 }

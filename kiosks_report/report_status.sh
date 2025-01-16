@@ -12,10 +12,19 @@ interval=60  # Intervalo en segundos entre envíos de estado
 # Función para reportar el estado al servidor
 report_status() {
     for ((i=1; i<=max_retries; i++)); do
+        # Datos JSON a enviar
+        json_data="{\"name\": \"$quiosco_name\", \"status\": \"Online\"}"
+        echo "Enviando datos JSON: $json_data"
+        echo "URL del servidor: $server_url"
+
+        # Realiza la solicitud POST
         response=$(curl -s -w "%{http_code}" -X POST -H "Content-Type: application/json" \
-            -d "{\"name\": \"$quiosco_name\", \"status\": \"Online\"}" \
+            -d "$json_data" \
             "$server_url")
         http_code="${response: -3}"  # Extrae el código HTTP de la respuesta
+        echo "Respuesta del servidor: $response"
+        echo "Código HTTP: $http_code"
+
         if [[ $http_code -eq 200 ]]; then
             echo "Estado reportado correctamente al servidor."
             return 0
@@ -38,9 +47,7 @@ while true; do
     end_time=$(date +%s)
     elapsed=$((end_time - start_time))
     sleep_time=$((interval - elapsed))
-
-    # Ajustar el tiempo de espera para mantener el intervalo constante
-    if (( sleep_time > 0 )); then
+    if ((sleep_time > 0)); then
         sleep $sleep_time
     fi
 done
