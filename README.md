@@ -37,6 +37,7 @@ Este proyecto es un sistema de presentación y monitorización de quioscos basad
 
 La estructura y los permisos del proyecto es la siguiente:
 
+```bash
 monkiosk/
 ├── kiosk_web/              [750]
 │   ├── styles.css          [644]
@@ -57,7 +58,7 @@ Quioscos/
 ├── kiosk_/                 [750]
 │   ├── autostart           [644]
 
-
+```
 
 ## Instalación del Servidor
 
