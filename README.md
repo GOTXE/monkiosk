@@ -10,7 +10,6 @@
 - Archivos y Directorios
 - Funcionamiento
 - Personalización
-- Licencia
 
 ## Idea principal
 
