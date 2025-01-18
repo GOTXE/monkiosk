@@ -1,202 +1,148 @@
-# Network Monitoring Web Application
+# Documentación del Sistema de Quioscos y Monitorización
 
-This repository contains a web-based network monitoring system designed to monitor the status of various kiosks and a local server within a LAN. The solution combines a Bash script that checks the network connectivity of devices and a web interface that visually presents their online/offline status in real-time.
+## Índice
 
-## Table of Contents
+- Idea principal
+- Descripción General
+- Estructura del Proyecto
+- Instalación
+- Configuración
+- Archivos y Directorios
+- Funcionamiento
+- Personalización
+- Licencia
 
-- [Overview](#overview)
-- [Folder Structure](#folder-structure)
-- [Technologies Used](#technologies-used)
-- [Installation](#installation)
-- [How It Works](#how-it-works)
-- [Screenshots](#screenshots)
-- [Customization](#customization)
-- [License](#license)
-- [Image Credits](#image-credits)
+## Idea principal
 
-## Overview
+Este proyecto :floppy_disk: nace de una necesidad muy especial, la de `un amigo` que quería mostrar información en ciertos monitores. Los requisitos son claros y casi ~~patét~~ poéticos: `solo necesito algo extremadamente sencillo, de coste cercano a 0, fácil de usar y mantener, además se que a tí te gusta eso de los cacharros y así te entretienes`. :zipper_mouth_face:
 
-This project is designed to run on a Linux server using Nginx as the web server. The system performs network checks using a Bash script to determine the status of devices in the local network (referred to as kiosks) and presents the results on a user-friendly web page. The system operates with minimal human interaction, making it suitable for environments like kiosks where manual input is limited or non-existent.
+No esperes encontrar aquí código digno de admiración o soluciones dignas de SpaceX. De hecho, lo único que compartimos con ellos es que estamos vivos y somos capaces de hacer cosas con un presupuesto que en nuestro caso roza casi el cero absoluto :money_with_wings:.
 
-### Key Features:
+Entonces, ¿por qué documentar todo esto? Muy sencillo: porque el `gotxe` y el `panoramix` del futuro no querrán recordar cómo funcionaba esto y, cuando ese amigo **tenga un problema** :boom: (**porque lo tendrá**), nos llamará :telephone_receiver: preguntando cómo reinstalarlo . 
+Pero esa vez no se lo vamos a reinstalar porque los `dos` del futuro, que fueron los que lo hcicieron, seguro estarán a otras cosas y quien sabe si en otro lugar (vivos), así que más le vale leer esto 😅.
 
-- Monitors the status of multiple kiosks and a local server.
-- Displays the results on a dynamic web interface using HTML, CSS, and JavaScript.
-- Updates device statuses every 60 seconds without refreshing the entire page.
-- Provides real-time online/offline status indicators for each kiosk.
+## Descripción General
+
+Este proyecto es un sistema de presentación y monitorización de quioscos basado en web. Hay una pagina web `index.php`que pone a disposición de los quioscos los documentos a presentar y un sistema de monitorización de los quioscos `update_status.php` e `index.html`, que combina un script `Bash` que verifica la conectividad de la red de los quioscos y una interfaz web que presenta visualmente su estado en tiempo real.
+
+### Características Clave
+
+- Servidor quiosco que muestra documentos en un ciclo continuo.
+- Monitorización del estado de múltiples quioscos, servidor y puerta de enlace.
+- Muestra los resultados en una interfaz web dinámica utilizando HTML, CSS y JavaScript.
+- Actualiza el estado de los dispositivos cada 60 segundos sin necesidad de recargar toda la página.
+- Proporciona indicadores de estado en tiempo real (online/offline) con fecha_hora para cada elemento.
+
+## Estructura del Proyecto
+
+La estructura y los permisos del proyecto es la siguiente:
+
+monkiosk/
+├── kiosk_web/              [750]
+│   ├── styles.css          [644]
+│   ├── img/                [755]
+│   │   └── ...svg
+│   ├── docs/               [755]
+│   │   └── ...jpg
+│   ├── index.php           [640]
+│   ├── update_status.php   [640]
+│   ├── status.json         [640]
+│   ├── allowed_hosts.txt   [600]
+│   ├── index.html          [644]
+
+Quioscos/
+├── kiosk_report/           [750]
+│   ├── kioskmonitoring.service [644]
+│   ├── report_status.sh    [750]
+├── kiosk_/                 [750]
+│   ├── autostart           [644]
 
 
-## Folder Structure
 
-Here’s the complete folder structure for the network monitoring system, including file types and suggested file permissions:
+## Instalación del Servidor
 
-```plaintext
+### Requisitos Previos
 
-/opt/monitoring/                    # Directory for the monitoring script
-  ├── monitor.sh                      # Bash script for monitoring devices (Permissions: 755)
-/etc/systemd/system/                # Directory for systemd service configuration
-  ├── monitoring.service              # Systemd service file to run monitor.sh (Permissions: 644)
-/var/www/html/monkiosk/             # Root directory for the web interface (Permissions: 755)
-  ├── index.html                      # Main HTML file for the web interface (Permissions: 644)
-  ├── script.js                       # JavaScript file for fetching and displaying statuses (Permissions: 644)
-  ├── styles.css                      # CSS file for styling the web page (Permissions: 644)
-  ├── status.txt                      # Generated status file with server and kiosk states (Permissions: 644)
-  ├── ips.txt                         # List of kiosk IPs and names (Permissions: 644)
-  ├── img/                            # Directory for images used in the web interface
-  │   ├── server.svg                  # SVG icon for the server (Permissions: 644)
-  │   ├── quiosco.svg                 # SVG icon for kiosks (Permissions: 644)
-/var/log/monitoring/                # Log directory for the monitoring system (Permissions: 755)
-  ├── monitor.log                     # Log file for monitoring results (Permissions: 644)
-```
+- Servidor: El Linux que tu quieras con Nginx, php y caffeine, :coffee: de este también! En este caso es debian.
+ [![debian](https://img.shields.io/badge/DEBIAN-d70a53)](https://www.debian.org/distrib/)   [![NGINX](https://img.shields.io/badge/NGINX-8A2BE2)](https://nginx.org/en/docs/http/ngx_http_index_module.html)    [![PHP](https://img.shields.io/badge/PHP-4D5D8C)](https://www.php.net/) [![CAFFEINE](https://img.shields.io/badge/CAFFEINE-a18262)](https://duckduckgo.com/?t=h_&q=caffeine+linux+&ia=web)
 
-## Technologies Used
+### Pasos de Instalación
 
-- **Bash**: For performing network checks (ping and HTTP).
-- **HTML/CSS/JavaScript**: For the web interface.
-- **Nginx**: As the web server.
-- **Curl**: To verify server availability.
-- **Ping**: To check connectivity of kiosks.
-
-## Installation
-
-1. **Clone the Repository**:
+1. **Descarga los archivos del Repositorio**:
+    Utiliza un navegador o si prefieres desde terminal con `wget`
     ```bash
-    git clone https://github.com/GOTXE/network-monitoring.git
+     wget https://github.com/GOTXE/monkiosk/archive/refs/heads/main.zip
     ```
+    Para el servidor solo te hace falta la carpeta `kiosk_web`.
 
-2. **Install Required Packages**:
-    Make sure your system has Nginx installed. You can use:
+2. **Instalar Paquetes Requeridos en el Servidor**:
     ```bash
     sudo apt update
-    sudo apt install nginx curl
+    sudo apt install nginx curl php-fpm
     ```
 
-3. **Set Up the Web Interface**:
-    - Copy the contents of the `/www/html` folder to your Nginx root directory (typically `/var/www/html/`).
-    - Make sure Nginx is configured to serve the `index.html` file.
+3. **Configurar la Interfaz Web**:
+    - Copiar el contenido de la carpeta `kiosk_web` al directorio `/var/www/html/<tu_nombre_favorito>`
+    - Asegurarse de que Nginx esté configurado para servir el archivo `index.php`, `index.html` y `update_status.php`.
 
-4. **Configure the Monitoring Script**:
-    - Place `monitor.sh` in a suitable location on your server.
-    - Set up a cron job or systemd service to run `monitor.sh` every minute.
+4. **Configurar Nginx**
+        P E N D I E N T E
 
-5. **Configure IPs**:
-    In the `ips.txt` file, add the IPs and corresponding names for each kiosk in the following format:
+5. **Configurar hostnames**:
+    En el archivo `allowed_hosts.txt`, agregar los nombres correspondientes para cada quiosco en el siguiente formato:
+    
     ```
-    192.168.1.2    Kiosk1
-    192.168.1.3    Kiosk2
+    Kiosk1
+    Kiosk2
     ```
+6. **Modificaciones en los archivos**
+    En el archivo `index.php`, hay una línea `var intervalo = 5000;` en la que tienes que establecer el tiempo que quieres que se presente cada diapositiva (está en ms).
 
-## How It Works
+    En el archivo `index.html` hay una línea `const timeout = 150;` en la que puedes determinar si un equipo está offline (está en sg).
 
+# Configuración de los Quioscos
 
-# Monitoring Service Setup
+## Instalación de Kioscos (en Xubuntu 24.04)
 
-To ensure that the monitoring script runs as a background service and restarts automatically if it fails, you need to create a `systemd` service unit.
+Esta implementación se basa en una imagen limpia y minimalista de Xubuntu 24.04, donde se crea un único usuario, `kiosco`.
 
-## Steps to Add `monitoring.service` to `systemd`
+### Pasos de Instalación
 
-1. **Create the service file**
-
-   First, create a new `service` file for the monitoring script:
-   
-   ```bash
-   sudo nano /etc/systemd/system/monitoring.service
-2. **Reload systemd to recognize the new service:**
-
-    After saving the service file, reload the systemd manager configuration to apply the changes:
-    ```
-    sudo systemctl daemon-reload
-    ```
-3. **Enable the service to start on boot:**
-
-    To ensure that the monitoring service starts automatically on system boot, enable the service:
-    ```
-    sudo systemctl enable monitoring.service
-    ```
-4. **Start the service:**
-
-    Now, start the service manually:
-    ```
-    sudo systemctl start monitoring.service
-    ```
-5. **Check the status of the service:**
-
-    To verify that the service is running correctly:
-    ```
-    sudo systemctl status monitoring.service
-    ```
-
-### Bash Script (`monitor.sh`):
-
-This script continuously checks the availability of the server by sending an HTTP request to `http://localhost/index.php`. It also pings the IP addresses listed in `ips.txt` to check if they are online or offline.
-
-The script outputs the status of the server and kiosks to the `status.txt` file. This file is then used by the web interface to display the status.
-
-### Web Interface:
-
-The web page, built with HTML, CSS, and JavaScript, reads the `status.txt` file every 30 seconds to update the status of the kiosks and the server without needing a full page refresh. The kiosks are visually represented with color-coded (green for online, red for offline) icons.
-
-## Screenshots
-![imagen](https://github.com/user-attachments/assets/49281686-a957-457f-82fa-b72cdc1a42f9)
-
-
-**Figure 1**: Status page showing server and kiosk states
-
-## Customization
-
-### Update Interval:
-
-You can change the update interval in the Bash script (`monitor.sh`) by modifying the `check_interval` variable.
-
-### Kiosk Icons:
-
-To customize the icons used for kiosks, replace the `quiosco.svg | server.svg` file in the `img/` directory with your preferred image.
-
----
-
-# Installation of Kiosks (on Xubuntu 24.04)
-
-This implementation is based on a clean, minimal image of Xubuntu 24.04, where a single user, `kiosk`, is created.
-
-
-## Installation Steps
-
-### 1. Set Administrator Password
+#### 1. Establecer Contraseña de Administrador
 ```bash
 sudo passwd root
 ```
-
-### 2. Update the Distribution and Packages
+#### 2. Actualizar la Distrubución y los Paquetes
 ```bash
 sudo apt update && sudo apt upgrade -y
 ```
 
-### 3. Install Necessary Packages
+#### 3. Instalar los Paquetes Necesarios
 ```bash
 sudo apt install unclutter l3afpad curl chromium caffeine
 ```
 
-### 4. Disable Keyring for the Browser
+#### 4. Deshabilitar el Llavero del Navegador
 ```bash
 sudo chmod -x /usr/bin/gnome-keyring*
 ```
 
-### 5. Apply Custom Plymouth Layer
-This will overwrite the default `xubuntu-logo`.
+#### 5. Aplicar Capa de Personalización de Plymouth
+This will overwrite the default `xubuntu-logo`.V
 ```bash
 sudo cp -R xubuntu-logo /usr/share/plymouth/themes
 sudo update-initramfs -u
 sudo reboot now
 ```
 
-### 6. Disable Google Translator in Chromium
+#### 6. Deshabilitar Traductor de Google en Chromium
 - Open Chromium.
 - Navigate to settings and disable Google Translator (enabled by default).
 
-### 7. Create (or Copy) the Autostart Script
-**Reference:** The original script and its configuration can be found at [josfaber/debian-kiosk-installer](https://github.com/josfaber/debian-kiosk-installer). Only the script itself has been used for this implementation.
+#### 7. Crear o Copiar el Script Autostart
+**Referencia:** El script original se puede en contrar en  [josfaber/debian-kiosk-installer](https://github.com/josfaber/debian-kiosk-installer). Solo se ha utilizado el script en sí para esta implementación.
 
-Save the following script as `autostart`:
+Guarda el script como `autostart`:
 ```bash
 #!/bin/bash
 unclutter -idle 0.1 -grab -root &
@@ -222,33 +168,103 @@ Copy the script to the following location:
 /home/kiosk/.config/autostart/autostart
 ```
 
-### 8. Make the Kiosk Script Executable and Test It
+#### 8. Haz que el Script del Kiosko sea Ejecutable y Pruébalo
 ```bash
 sudo chmod +x /home/kiosk/.config/autostart/autostart
 sh /home/kiosk/.config/autostart/autostart
 ```
 
-### 9. Configure Startup Applications
-Ensure the following applications and scripts are set to run at startup:
-- **Caffeine:** Verify it is running with either of these commands:
+#### 9. Configurar Aplicacioned de Inicio
+Asegurarse que las siguientes aplicaciones y scripts estén configurados para ejecutarse al incion:
+- **Caffeine:** Verificar que se está ejecutando, con alguno de estos comandos:
   ```bash
   ps aux | grep caffeine
   pgrep caffeine
   ```
-- **Autostart Script:** Add and enable the autostart script.
+- **Script de Inicio:** Agrergar y habilitar el sript de inicio automático.
 
-### 10. Restrict the `kiosk` User
-Remove `sudo` rights by commenting out the relevant line:
+#### 10. Restringir el Usuario `kiosk`
+Eliminar derechos de `sudo` comentando la línea correspondiente:
 ```bash
 sudo visudo
 ```
 
----
 
-## License
+### Configuración del Servicio de Monitorización
 
-This project is open-source and available under the MIT License. Feel free to use and modify it for your needs.
+Para asegurarse de que el script de monitorización se ejecute como un servicio en segundo plano y se reinicie automáticamente si falla, se debe crear una unidad de servicio `systemd`.
 
-## Image Credits
+1. Descargar archivos del Repositorio:
 
-The SVG images used in this project (e.g., `server.svg`, `quiosco.svg`) are sourced from [svgrepo.com](https://www.svgrepo.com).
+    Utiliza un navegador o si prefieres desde terminal con `wget`
+    ```bash
+     wget https://github.com/GOTXE/monkiosk/archive/refs/heads/main.zip
+    ```
+    Ahora la carpeta que hace falta es `kiosk_report`.
+
+2. Configurar el Script de Monitorización:
+    - Colocar `report_status.sh` `/opt/monitoring/report_status.sh`. Probablemente la carpeta monitoring no exista, así que tendrás que crearla
+     ```bash
+     sudo mkdir /opt/monitoring
+     ```
+    - coloca el archivo `report_status.sh`en esa carpeta y abrelo con tu editor favorito 
+    ```bash
+    sudo nano report_status.sh
+    ```
+    busca la línea: `server_url="http://<IP_DEL_SERVIDOR>/update_status.php`y pon la ip del servidor.
+
+     ***Recargar systemd***:
+    ```bash
+    sudo systemctl daemon-reload
+    ```
+
+     ***Habilitar el servicio para que inicie al arrancar***:
+    ```bash
+    sudo systemctl enable kioskmonitoring.service
+    ```
+
+     ***Iniciar el servicio***:
+    ```bash
+    sudo systemctl start kioskmonitoring.service
+    ```
+
+     ***Verificar el estado del servicio***:
+    ```bash
+    sudo systemctl status kioskmonitoring.service
+    ```
+
+# Funcionamiento
+
+### Script de Monitorización (`report_status.sh`)
+
+Este script verifica continuamente la disponibilidad del servidor enviando una solicitud HTTP a `http://<IP_DEL_SERVIDOR>/update_status.php`. También obtiene el nombre del quiosco usando el comando `hostname` y envía su estado al servidor. Recibiendo el estado del quiosco en la web `update_status.php`, escribiendo en el archivo `status.json` el estado del quisco.
+
+### Interfaz Web
+
+La página web `ìndex.html` lee el archivo `status.json` cada 5 segundos para actualizar el estado de los quioscos y el servidor sin necesidad de recargar la página. Los quioscos se presentan visualmente con iconos codificados por colores (verde para online, rojo para offline) además de presentar la fecha_hora de visto el equipo.
+
+
+### Personalización
+Intervalo de Actualización:
+Puedes cambiar el intervalo de actualización en el script Bash (report_status.sh) modificando la variable interval.
+
+### Iconos de Quioscos
+Para personalizar los iconos utilizados para los quioscos, reemplaza el archivo quiosco.svg en el directorio img/ con tu imagen preferida.
+
+### Intervalo de Cambio de Documentos
+Para cambiar el intervalo de tiempo entre documentos en el servidor quiosco `index.php`, modifica el valor en milisegundos en la variable `var intervalo = 5000;`
+
+
+***Fin***
+¿ Pero has llegado hasta aquí ? :clap::clap::clap:
+
+Si has leído todo y lo llevaste a la práctica, tendrás un sistema   [![RAE](https://img.shields.io/badge/FUNCIONAL-42FC)](https://dle.rae.es/funcional)
+
+
+Este pequeño proyecto está pensado para alguien sin conocimientos que pueda tener esta herramienta sencilla y sin complicaciones :vulcan_salute:
+
+
+Oye que igual nos calentamos :fire:, se nos pone el morro fino :lips: y nos ponemos con una versión 2 :rocket:... 
+
+
+Las imagenes usadas en la web son de [svgrepo.com](https://www.svgrepo.com).
