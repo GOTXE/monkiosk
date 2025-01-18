@@ -239,34 +239,37 @@ Para asegurarse de que el script de monitorización se ejecute como un servicio 
 
 ### Script de Monitorización (`report_status.sh`)
 
-Este script verifica continuamente la disponibilidad del servidor enviando una solicitud HTTP a `http://<IP_DEL_SERVIDOR>/update_status.php`. También obtiene el nombre del quiosco usando el comando `hostname` y envía su estado al servidor. Recibiendo el estado del quiosco en la web `update_status.php`, escribiendo en el archivo `status.json` el estado del quisco.
+Este script verifica continuamente la disponibilidad del servidor enviando una solicitud HTTP POST a `http://<IP_DEL_SERVIDOR>/update_status.php`. Obtiene el nombre del quiosco usando el comando `hostname` para enviarlo en la petición POST al servidor. 
 
 ### Interfaz Web
 
-La página web `ìndex.html` lee el archivo `status.json` cada 5 segundos para actualizar el estado de los quioscos y el servidor sin necesidad de recargar la página. Los quioscos se presentan visualmente con iconos codificados por colores (verde para online, rojo para offline) además de presentar la fecha_hora de visto el equipo.
+Está dividida en dos partes:
+
+1. Recibe el estado del quiosco `(http POST)` en la web `update_status.php`, escribiendo en el archivo `status.json` el estado del quiosco.
+
+2. La web `ìndex.html` lee el archivo `status.json` cada 5 segundos para actualizar el estado de los quioscos y el servidor sin necesidad de recargar la página. Los quioscos se presentan visualmente codificados por colores (verde para online, rojo para offline) y con iconos, además de presentar la fecha_hora de visto el equipo.
 
 
 ### Personalización
 Intervalo de Actualización:
-Puedes cambiar el intervalo de actualización en el script Bash (report_status.sh) modificando la variable interval.
+Puedes cambiar el intervalo de actualización en el script Bash `(report_status.sh)` modificando la variable `interval`.
 
 ### Iconos de Quioscos
-Para personalizar los iconos utilizados para los quioscos, reemplaza el archivo quiosco.svg en el directorio img/ con tu imagen preferida.
+Para personalizar los iconos utilizados , reemplaza cada archivo `.svg` en el directorio img/ con tu imagen preferida (***manteniendo el mismo nombre***).
 
 ### Intervalo de Cambio de Documentos
-Para cambiar el intervalo de tiempo entre documentos en el servidor quiosco `index.php`, modifica el valor en milisegundos en la variable `var intervalo = 5000;`
+Este tiempo marca el cambio entre documentos. Para cambiar el intervalo de tiempo de presentación en los quiosco `index.php`, modifica el valor en milisegundos en la variable `var intervalo = 5000;`
 
 
 ***Fin***
 ¿ Pero has llegado hasta aquí ? :clap::clap::clap:
 
-Si has leído todo y lo llevaste a la práctica, tendrás un sistema   [![RAE](https://img.shields.io/badge/FUNCIONAL-42FC)](https://dle.rae.es/funcional)
+Si has leído todo y lo llevaste a la práctica, tendrás un sistema [![RAE](https://img.shields.io/badge/FUNCIONAL-RAE:_2,_3-42FC)](https://dle.rae.es/funcional)
 
 
-Este pequeño proyecto está pensado para alguien sin conocimientos que pueda tener esta herramienta sencilla y sin complicaciones :vulcan_salute:
+Este pequeño proyecto está pensado para alguien sin conocimientos que pueda tener esta herramienta sencilla y sin complicaciones, :vulcan_salute:
 
-
-Oye que igual nos calentamos :fire:, se nos pone el morro fino :lips: y nos ponemos con una versión 2 :rocket:... 
+Oye que igual nos calentamos :fire:, se nos pone el morro fino :lips: y nos ponemos con una versión 2 vitaminada :pill: :rocket:... 
 
 
 Las imagenes usadas en la web son de [svgrepo.com](https://www.svgrepo.com).
