@@ -65,6 +65,7 @@ Quioscos/
 ### Requisitos Previos
 
 - Servidor: El Linux que tu quieras con Nginx, php y caffeine, :coffee: de este también! En este caso es debian.
+
  [![debian](https://img.shields.io/badge/DEBIAN-d70a53)](https://www.debian.org/distrib/)   [![NGINX](https://img.shields.io/badge/NGINX-8A2BE2)](https://nginx.org/en/docs/http/ngx_http_index_module.html)    [![PHP](https://img.shields.io/badge/PHP-4D5D8C)](https://www.php.net/) [![CAFFEINE](https://img.shields.io/badge/CAFFEINE-a18262)](https://duckduckgo.com/?t=h_&q=caffeine+linux+&ia=web)
 
 ### Pasos de Instalación
