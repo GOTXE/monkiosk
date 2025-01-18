@@ -1,4 +1,4 @@
-# Documentación del Sistema de Quioscos y Monitorización
+# Sistema de Quioscos y Monitorización
 
 ## Índice
 
