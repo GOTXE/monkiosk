@@ -103,7 +103,7 @@ Quioscos/
 
 # Configuración de los Quioscos
 
-## Instalación de Kioscos (en Xubuntu 24.04)
+## Instalación de Quioscos (en Xubuntu 24.04)
 
 Esta implementación se basa en una imagen limpia y minimalista de Xubuntu 24.04, donde se crea un único usuario, `kiosco`.
 
@@ -140,10 +140,10 @@ sudo reboot now
 - Open Chromium.
 - Navigate to settings and disable Google Translator (enabled by default).
 
-#### 7. Crear o Copiar el Script Autostart
-**Referencia:** El script original se puede en contrar en  [josfaber/debian-kiosk-installer](https://github.com/josfaber/debian-kiosk-installer). Solo se ha utilizado el script en sí para esta implementación.
+#### 7. Crear o Copiar el Script Autostart (inicia Chromium con la web que se desee); y Autorefresh (que refresca el navegador cada x segundos)
+**Referencia:** El script original de Autostart se puede en contrar en  [josfaber/debian-kiosk-installer](https://github.com/josfaber/debian-kiosk-installer). Solo se ha utilizado el script en sí para esta implementación.
 
-Guarda el script como `autostart`:
+Script de `autostart`:
 ```bash
 #!/bin/bash
 unclutter -idle 0.1 -grab -root &
@@ -159,24 +159,50 @@ do
     --disable-save-password-bubble \
     --disable-session-crashed-bubble \
     --incognito \
-    --kiosk "https://elmundo.com"
-  sleep 2
+    --kiosk "https://tuwebquiosco.com"
+  sleep 5
 done &
 ```
 
-Copy the script to the following location:
+Script de `autorefresh`:
 ```bash
-/home/kiosk/.config/autostart/autostart
+#!/bin/bash
+unclutter -idle 0.1 -grab -root &
+while true:
+do
+  chromium \
+    --no-first-run \
+    --start-maximized \
+    --disable \
+    --disable-translate \
+    --disable-infobars \
+    --disable-suggestions-service \
+    --disable-save-password-bubble \
+    --disable-session-crashed-bubble \
+    --incognito \
+    --kiosk "https://tuwebquiosco.com"
+  sleep 5
+done &
 ```
 
-#### 8. Haz que el Script del Kiosko sea Ejecutable y Pruébalo
+Copiar los scripts a la localización:
+```bash
+/home/kiosk/.config/autostart/
+```
+
+
+#### 8. Haz que los scripts del Quiosko sean Ejecutable y Pruébalo
 ```bash
 sudo chmod +x /home/kiosk/.config/autostart/autostart
 sh /home/kiosk/.config/autostart/autostart
+
+sudo chmod +x /home/kiosk/.config/autostart/autorefresh
+sh /home/kiosk/.config/autostart/autorefresh
+
 ```
 
 #### 9. Configurar Aplicacioned de Inicio
-Asegurarse que las siguientes aplicaciones y scripts estén configurados para ejecutarse al incion:
+Asegurarse que las siguientes aplicaciones y scripts estén configurados para ejecutarse al inicio:
 - **Caffeine:** Verificar que se está ejecutando, con alguno de estos comandos:
   ```bash
   ps aux | grep caffeine
