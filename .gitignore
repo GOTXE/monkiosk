@@ -1,6 +1,22 @@
 # Files not to be tracked by git
 *test*.txt
 
+# Media files in docs (except README)
+kiosk_web/docs/*.mp4
+kiosk_web/docs/*.webm
+kiosk_web/docs/*.avi
+kiosk_web/docs/*.mov
+kiosk_web/docs/*.jpg
+kiosk_web/docs/*.jpeg
+kiosk_web/docs/*.png
+kiosk_web/docs/*.pdf
+kiosk_web/docs/*.gif
+!kiosk_web/docs/README.md
+
+# Configuration files (keep .example)
+kiosk_web/config.json
+!kiosk_web/config.json.example
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

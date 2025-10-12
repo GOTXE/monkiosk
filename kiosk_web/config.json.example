@@ -1,0 +1,30 @@
+{
+  "settings": {
+    "defaultInterval": 5000,
+    "autoRefresh": true,
+    "refreshInterval": 60000,
+    "enableLogging": true
+  },
+  "content": [
+    {
+      "file": "1.jpg",
+      "duration": 5000,
+      "enabled": true
+    },
+    {
+      "file": "2.mp4",
+      "duration": "auto",
+      "enabled": true
+    },
+    {
+      "file": "3.png",
+      "duration": 8000,
+      "enabled": true
+    },
+    {
+      "file": "4.pdf",
+      "duration": 10000,
+      "enabled": true
+    }
+  ]
+}

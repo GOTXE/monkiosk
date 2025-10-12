@@ -285,6 +285,29 @@ Para personalizar los iconos utilizados , reemplaza cada archivo `.svg` en el di
 ### Intervalo de Cambio de Documentos
 Este tiempo marca el cambio entre documentos. Para cambiar el intervalo de tiempo de presentación en los quiosco `index.php`, modifica el valor en milisegundos en la variable `var intervalo = 5000;`
 
+### Soporte de Videos
+El sistema ahora soporta videos en formato MP4 y WEBM con audio. Los videos se reproducen automáticamente y avanzan al siguiente contenido cuando terminan. 
+
+**Formatos soportados:**
+- Imágenes: JPG, JPEG, PNG
+- Documentos: PDF
+- Videos: MP4, WEBM (recomendado: 1920x1080, códec H.264 para MP4)
+
+**Características de video:**
+- Reproducción automática con audio
+- El sistema avanza automáticamente al terminar el video
+- Objeto-fit: contain para mantener proporciones
+- Fondo negro para mejor visualización
+
+**Recomendaciones para videos:**
+- Resolución: 1920x1080 (Full HD)
+- Códec de video: H.264 (para MP4) o VP9 (para WEBM)
+- Códec de audio: AAC (para MP4) o Vorbis/Opus (para WEBM)
+- Bitrate de video: 5-10 Mbps para buena calidad
+- Bitrate de audio: 128-192 kbps
+
+Para añadir videos, simplemente colócalos en la carpeta `docs/` con el nombre numérico correspondiente (ej: `5.mp4`, `6.webm`).
+
 
 ***Fin***
 ¿ Pero has llegado hasta aquí ? :clap::clap::clap:

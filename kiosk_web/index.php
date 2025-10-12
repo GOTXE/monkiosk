@@ -16,7 +16,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f0f0f0;
+            background-color: #000000;
             overflow: hidden;
         }
 
@@ -32,6 +32,21 @@
             max-width: 100vw;
             max-height: 100vh;
             object-fit: contain;
+        }
+
+        video {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+            background-color: #000000;
+        }
+
+        #contentContainer {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
     <?php
@@ -52,10 +67,10 @@
         // Obtén todos los archivos del directorio
         $archivos = scandir($dir);
 
-        // Filtra los archivos válidos (PDF, JPG, PNG)
+        // Filtra los archivos válidos (PDF, JPG, PNG, MP4, WEBM)
         $archivosValidos = array_filter($archivos, function ($archivo) use ($dir) {
             $path = $dir . '/' . $archivo;
-            return is_file($path) && preg_match('/\\.(pdf|jpg|jpeg|png)$/i', $archivo);
+            return is_file($path) && preg_match('/\\.(pdf|jpg|jpeg|png|mp4|webm)$/i', $archivo);
         });
 
         // Ordena los archivos numéricamente
@@ -77,37 +92,115 @@
 </head>
 
 <body>
-    <iframe id="documentFrame"></iframe>
+    <div id="contentContainer">
+        <iframe id="documentFrame" style="display:none;"></iframe>
+        <video id="videoPlayer" style="display:none;" autoplay muted></video>
+        <img id="imageViewer" style="display:none;">
+    </div>
 
     <script>
         // Lista inicial de documentos generada desde PHP
         var documentos = <?php echo json_encode($documentos); ?>;
         var currentIndex = 0;
-        var intervalo = 5000; // 5 segundos por documento
+        var intervalo = 5000; // 5 segundos por documento (imágenes y PDFs)
+        var timeoutHandle = null;
+        var currentType = null;
+
+        // Referencias a elementos
+        var videoPlayer = document.getElementById("videoPlayer");
+        var documentFrame = document.getElementById("documentFrame");
+        var imageViewer = document.getElementById("imageViewer");
+
+        // Función para ocultar todos los elementos
+        function ocultarTodosElementos() {
+            videoPlayer.style.display = 'none';
+            documentFrame.style.display = 'none';
+            imageViewer.style.display = 'none';
+            
+            // Pausar video si está reproduciendo
+            if (!videoPlayer.paused) {
+                videoPlayer.pause();
+            }
+            videoPlayer.src = '';
+        }
 
         // Función para mostrar el siguiente documento
         function mostrarSiguienteDocumento() {
             if (documentos.length > 0) {
                 var documento = documentos[currentIndex];
-                var ext = documento.split('.').pop().toLowerCase();
+                var ext = documento.split('.').pop().toLowerCase().split('?')[0]; // Remover query params
                 var docActual = 'docs/' + documento;
 
-                // Mostrar el archivo actual
-                if (ext === 'jpg' || ext === 'jpeg' || ext === 'png') {
+                console.log('Mostrando documento:', docActual, 'tipo:', ext);
+
+                // Limpiar timeout anterior si existe
+                if (timeoutHandle) {
+                    clearTimeout(timeoutHandle);
+                    timeoutHandle = null;
+                }
+
+                ocultarTodosElementos();
+
+                // Mostrar el archivo según su tipo
+                if (ext === 'mp4' || ext === 'webm') {
+                    // Video
+                    currentType = 'video';
+                    videoPlayer.src = docActual;
+                    videoPlayer.style.display = 'block';
+                    
+                    // Activar audio
+                    videoPlayer.muted = false;
+                    
+                    // Cuando el video termine, avanzar al siguiente
+                    videoPlayer.onended = function() {
+                        console.log('Video terminado, avanzando...');
+                        avanzarIndice();
+                        mostrarSiguienteDocumento();
+                    };
+                    
+                    // Manejar errores
+                    videoPlayer.onerror = function() {
+                        console.error("Error al cargar el video: " + docActual);
+                        avanzarIndice();
+                        mostrarSiguienteDocumento();
+                    };
+                    
+                    // Reproducir video
+                    videoPlayer.play().catch(function(error) {
+                        console.error("Error al reproducir video:", error);
+                        avanzarIndice();
+                        mostrarSiguienteDocumento();
+                    });
+
+                } else if (ext === 'jpg' || ext === 'jpeg' || ext === 'png') {
+                    // Imagen
+                    currentType = 'image';
                     var img = new Image();
                     img.onload = function () {
-                        document.getElementById("documentFrame").srcdoc = '<img src="' + docActual + '" style="width:100%;height:100%;max-width:100vw;max-height:100vh;">';
+                        imageViewer.src = docActual;
+                        imageViewer.style.display = 'block';
+                        
+                        // Programar siguiente documento después del intervalo
+                        avanzarIndice();
+                        timeoutHandle = setTimeout(mostrarSiguienteDocumento, intervalo);
                     };
                     img.onerror = function () {
                         console.error("Error al cargar la imagen: " + docActual);
-                        avanzarIndice(); // Avanzar al siguiente documento
+                        avanzarIndice();
+                        mostrarSiguienteDocumento();
                     };
                     img.src = docActual;
-                } else {
-                    document.getElementById("documentFrame").src = docActual; // PDFs se muestran en iframe
-                }
 
-                avanzarIndice();
+                } else if (ext === 'pdf') {
+                    // PDF
+                    currentType = 'pdf';
+                    documentFrame.src = docActual;
+                    documentFrame.style.display = 'block';
+                    
+                    // Programar siguiente documento después del intervalo
+                    avanzarIndice();
+                    timeoutHandle = setTimeout(mostrarSiguienteDocumento, intervalo);
+                }
             }
         }
 
@@ -140,7 +233,6 @@
 
         // Inicia el ciclo de documentos
         mostrarSiguienteDocumento(); // Mostrar el primer documento inmediatamente
-        setInterval(mostrarSiguienteDocumento, intervalo);
     </script>
 </body>
 
