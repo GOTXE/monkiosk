@@ -10,6 +10,7 @@
 - Archivos y Directorios
 - Funcionamiento
 - Personalización
+- Herramientas Auxiliares
 
 ## Idea principal
 
@@ -307,6 +308,34 @@ El sistema ahora soporta videos en formato MP4 y WEBM con audio. Los videos se r
 - Bitrate de audio: 128-192 kbps
 
 Para añadir videos, simplemente colócalos en la carpeta `docs/` con el nombre numérico correspondiente (ej: `5.mp4`, `6.webm`).
+
+## Herramientas Auxiliares
+
+El proyecto incluye scripts auxiliares en la carpeta `tools/` para facilitar el trabajo con contenido multimedia.
+
+### Script de Conversión de Videos
+
+`tools/convert_video.sh` - Convierte videos a formatos optimizados para kiosks.
+
+**Uso básico:**
+```bash
+cd tools
+chmod +x convert_video.sh
+./convert_video.sh input.avi output.mp4
+```
+
+**Características:**
+- Conversión automática a 1920x1080
+- Optimización de códecs (H.264 + AAC para MP4)
+- Padding negro para mantener aspect ratio
+- Información detallada del archivo de salida
+
+Para más información, consulta `tools/README.md`
+
+### Páginas de Prueba y Conceptos
+
+- `kiosk_web/test_video.html` - Página para probar reproducción de videos
+- `kiosk_web/admin_concept.html` - Concepto de panel de administración futuro
 
 
 ***Fin***

@@ -13,11 +13,17 @@ monkiosk/
 │   ├── status.json
 │   ├── allowed_hosts.txt
 │   ├── index.html
-│   └── config.json.example
+│   ├── config.json.example
+│   ├── test_video.html
+│   └── admin_concept.html
 |
 ├── kiosk_status_report/
 │   ├── kioskmonitoring.service
 │   ├── report_status.sh
+│
+├── tools/
+│   ├── convert_video.sh
+│   └── README.md
 │   
 ├── README.md
 ├── README_EN.md
