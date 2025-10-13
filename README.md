@@ -10,6 +10,7 @@
 - Archivos y Directorios
 - Funcionamiento
 - Personalización
+- Herramientas Auxiliares
 
 ## Idea principal
 
@@ -285,6 +286,55 @@ Para personalizar los iconos utilizados , reemplaza cada archivo `.svg` en el di
 ### Intervalo de Cambio de Documentos
 Este tiempo marca el cambio entre documentos. Para cambiar el intervalo de tiempo de presentación en los quiosco `index.php`, modifica el valor en milisegundos en la variable `var intervalo = 5000;`
 
+### Soporte de Videos
+El sistema ahora soporta videos en formato MP4 y WEBM con audio. Los videos se reproducen automáticamente y avanzan al siguiente contenido cuando terminan. 
+
+**Formatos soportados:**
+- Imágenes: JPG, JPEG, PNG
+- Documentos: PDF
+- Videos: MP4, WEBM (recomendado: 1920x1080, códec H.264 para MP4)
+
+**Características de video:**
+- Reproducción automática con audio
+- El sistema avanza automáticamente al terminar el video
+- Objeto-fit: contain para mantener proporciones
+- Fondo negro para mejor visualización
+
+**Recomendaciones para videos:**
+- Resolución: 1920x1080 (Full HD)
+- Códec de video: H.264 (para MP4) o VP9 (para WEBM)
+- Códec de audio: AAC (para MP4) o Vorbis/Opus (para WEBM)
+- Bitrate de video: 5-10 Mbps para buena calidad
+- Bitrate de audio: 128-192 kbps
+
+Para añadir videos, simplemente colócalos en la carpeta `docs/` con el nombre numérico correspondiente (ej: `5.mp4`, `6.webm`).
+
+## Herramientas Auxiliares
+
+El proyecto incluye scripts auxiliares en la carpeta `tools/` para facilitar el trabajo con contenido multimedia.
+
+### Script de Conversión de Videos
+
+`tools/convert_video.sh` - Convierte videos a formatos optimizados para kiosks.
+
+**Uso básico:**
+```bash
+cd tools
+chmod +x convert_video.sh
+./convert_video.sh input.avi output.mp4
+```
+
+**Características:**
+- Conversión automática a 1920x1080
+- Optimización de códecs (H.264 + AAC para MP4)
+- Padding negro para mantener aspect ratio
+- Información detallada del archivo de salida
+
+Para más información, consulta `tools/README.md`
+
+### Páginas de Prueba
+
+Las páginas de prueba y conceptos se mantienen fuera de la versión de producción. Si necesitas acceder a ellas, revisa la rama `futuros` o la carpeta local `kiosk_web/tests/`.
 
 ***Fin***
 ¿ Pero has llegado hasta aquí ? :clap::clap::clap:

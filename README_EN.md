@@ -60,9 +60,9 @@ Here’s the complete folder structure for the network monitoring system, includ
 ## Installation
 
 1. **Clone the Repository**:
-    ```bash
-    git clone https://github.com/GOTXE/network-monitoring.git
-    ```
+  ```bash
+  git clone https://github.com/GOTXE/monkiosk.git
+  ```
 
 2. **Install Required Packages**:
     Make sure your system has Nginx installed. You can use:
@@ -151,6 +151,30 @@ You can change the update interval in the Bash script (`monitor.sh`) by modifyin
 ### Kiosk Icons:
 
 To customize the icons used for kiosks, replace the `quiosco.svg | server.svg` file in the `img/` directory with your preferred image.
+
+### Video Support:
+
+The system now supports video playback with audio. Supported formats include:
+- **Videos**: MP4, WEBM (recommended: 1920x1080, H.264 codec for MP4)
+- **Images**: JPG, JPEG, PNG
+- **Documents**: PDF
+
+**Video features:**
+- Automatic playback with audio
+- System advances automatically when video ends
+- Object-fit: contain to maintain aspect ratio
+- Black background for better visualization
+
+**Video recommendations:**
+- Resolution: 1920x1080 (Full HD)
+- Video codec: H.264 (MP4) or VP9 (WEBM)
+- Audio codec: AAC (MP4) or Vorbis/Opus (WEBM)
+- Video bitrate: 5-10 Mbps for good quality
+- Audio bitrate: 128-192 kbps
+
+To add videos, simply place them in the `docs/` folder with the corresponding numeric name (e.g., `5.mp4`, `6.webm`).
+
+For detailed video guide, see `GUIA_VIDEOS.md`.
 
 ---
 

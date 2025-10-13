@@ -1,3 +1,9 @@
+<?php
+// Desactivar caché del navegador para este HTML
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -5,18 +11,20 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
     <title>Quiosco SINOFAP</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body,
         html {
             margin: 0;
             padding: 0;
-            height: 100%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
+            height: 100vh;
+            width: 100vw;
+            background-color: #000000;
             overflow: hidden;
         }
 
@@ -24,22 +32,58 @@
             width: 100vw;
             height: 100vh;
             border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
-        img {
-            width: 100%;
-            height: 100%;
-            max-width: 100vw;
-            max-height: 100vh;
-            object-fit: contain;
+        video {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            background-color: #000000;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #contentContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background-color: #000000;
+        }
+        
+    #imageViewer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        background-color: #000000;
+    }
+
+        #documentFrame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            border: none;
+        }
+
+        #videoPlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            background-color: #000000;
         }
     </style>
     <?php
-    // Evitar caché en la página
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
-
     // Generar lista de documentos
     function obtenerDocumentos() {
         $dir = './docs';
@@ -52,10 +96,10 @@
         // Obtén todos los archivos del directorio
         $archivos = scandir($dir);
 
-        // Filtra los archivos válidos (PDF, JPG, PNG)
+        // Filtra los archivos válidos (PDF, JPG, PNG, MP4, WEBM)
         $archivosValidos = array_filter($archivos, function ($archivo) use ($dir) {
             $path = $dir . '/' . $archivo;
-            return is_file($path) && preg_match('/\\.(pdf|jpg|jpeg|png)$/i', $archivo);
+            return is_file($path) && preg_match('/\\.(pdf|jpg|jpeg|png|mp4|webm)$/i', $archivo);
         });
 
         // Ordena los archivos numéricamente
@@ -66,48 +110,249 @@
         // Agrega marcas de tiempo para invalidar caché en cada archivo
         return array_map(function ($archivo) use ($dir) {
             $path = $dir . '/' . $archivo;
-            $timestamp = filemtime($path);
-            return $archivo . '?v=' . $timestamp;
+            if (file_exists($path)) {
+                $timestamp = filemtime($path);
+                return $archivo . '?v=' . $timestamp;
+            } else {
+                error_log("Archivo no encontrado: " . $path);
+                return $archivo; // Devolver sin timestamp si el archivo no existe
+            }
         }, $archivosValidos);
     }
 
     // Exportar la lista de documentos a JavaScript
     $documentos = obtenerDocumentos();
+    
+    // Log para debugging
+    error_log("Documentos encontrados: " . json_encode($documentos));
     ?>
+    <!-- Cargar PDF.js localmente (debe descargarse en vendor/pdfjs/) -->
+    <script src="vendor/pdfjs/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
+            console.log('PDF.js local cargado, workerSrc configurado');
+        } else {
+            console.warn('PDF.js no está disponible localmente en vendor/pdfjs/');
+        }
+    </script>
 </head>
 
 <body>
-    <iframe id="documentFrame"></iframe>
+    <div id="contentContainer">
+        <iframe id="documentFrame" style="display:none;"></iframe>
+    <canvas id="pdfCanvas" style="display:none;"></canvas>
+        <video id="videoPlayer" style="display:none;" autoplay muted></video>
+        <img id="imageViewer" style="display:none;">
+    </div>
 
     <script>
+        // Usamos la copia local de PDF.js en vendor/pdfjs/
+        // La carga del script local y la configuración de workerSrc ya se realiza en el <head>
+
+        // Referencia al canvas para PDF
+        var pdfCanvas = document.getElementById('pdfCanvas');
+        var pdfRenderingTask = null;
+
         // Lista inicial de documentos generada desde PHP
         var documentos = <?php echo json_encode($documentos); ?>;
+        console.log('Lista inicial de documentos:', documentos);
+        
         var currentIndex = 0;
-        var intervalo = 5000; // 5 segundos por documento
+        var intervalo = 5000; // 5 segundos por documento (imágenes y PDFs)
+        var timeoutHandle = null;
+        var currentType = null;
+
+        // Referencias a elementos
+        var videoPlayer = document.getElementById("videoPlayer");
+        var documentFrame = document.getElementById("documentFrame");
+        var imageViewer = document.getElementById("imageViewer");
+
+        // Limpia por completo el reproductor de vídeo (pausa, quita src y recarga)
+        function cleanupVideo() {
+            try {
+                videoPlayer.pause();
+                videoPlayer.removeAttribute('src');
+                // Limpia eventos anteriores por seguridad
+                videoPlayer.onended = null;
+                videoPlayer.onerror = null;
+                videoPlayer.load();
+            } catch (e) {
+                console.warn('cleanupVideo: no se pudo limpiar el video', e);
+            }
+        }
+
+        // Limpia canvas de PDF si estaba renderizando
+        function cleanupPDF() {
+            try {
+                if (pdfRenderingTask && pdfRenderingTask.cancel) pdfRenderingTask.cancel();
+            } catch (e) {
+                console.warn('cleanupPDF:', e);
+            }
+            pdfRenderingTask = null;
+            if (pdfCanvas) {
+                pdfCanvas.style.display = 'none';
+                var ctx = pdfCanvas.getContext('2d');
+                if (ctx) ctx.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+            }
+        }
+
+        // Función para ocultar todos los elementos
+        function ocultarTodosElementos() {
+            videoPlayer.style.display = 'none';
+            documentFrame.style.display = 'none';
+            imageViewer.style.display = 'none';
+            cleanupPDF();
+            // Asegurar limpieza del reproductor de video
+            cleanupVideo();
+        }
 
         // Función para mostrar el siguiente documento
         function mostrarSiguienteDocumento() {
             if (documentos.length > 0) {
                 var documento = documentos[currentIndex];
-                var ext = documento.split('.').pop().toLowerCase();
+                var ext = documento.split('.').pop().toLowerCase().split('?')[0]; // Remover query params
                 var docActual = 'docs/' + documento;
 
-                // Mostrar el archivo actual
-                if (ext === 'jpg' || ext === 'jpeg' || ext === 'png') {
-                    var img = new Image();
-                    img.onload = function () {
-                        document.getElementById("documentFrame").srcdoc = '<img src="' + docActual + '" style="width:100%;height:100%;max-width:100vw;max-height:100vh;">';
-                    };
-                    img.onerror = function () {
-                        console.error("Error al cargar la imagen: " + docActual);
-                        avanzarIndice(); // Avanzar al siguiente documento
-                    };
-                    img.src = docActual;
-                } else {
-                    document.getElementById("documentFrame").src = docActual; // PDFs se muestran en iframe
+                console.log('Mostrando documento:', docActual, 'tipo:', ext);
+
+                // Limpiar timeout anterior si existe
+                if (timeoutHandle) {
+                    clearTimeout(timeoutHandle);
+                    timeoutHandle = null;
                 }
 
-                avanzarIndice();
+                ocultarTodosElementos();
+                // Extra: al salir de un video, garantizamos que no queden audios huérfanos
+                cleanupVideo();
+
+                // Mostrar el archivo según su tipo
+                if (ext === 'mp4' || ext === 'webm') {
+                    // Video
+                    currentType = 'video';
+                    videoPlayer.src = docActual;
+                    videoPlayer.style.display = 'block';
+                    
+                    // No forzamos audio para cumplir políticas de autoplay en navegadores.
+                    // Mantener muted=true permite autoplay; el audio podrá activarse mediante interacción del usuario.
+                    videoPlayer.muted = true;
+
+                    // Permitir unmute con un único click/tap del usuario (si se desea audio)
+                    function unmuteOnInteraction() {
+                        try {
+                            if (videoPlayer && videoPlayer.muted) {
+                                videoPlayer.muted = false;
+                                console.log('Audio activado por interacción del usuario');
+                            }
+                        } catch (e) {
+                            console.warn('unmuteOnInteraction error', e);
+                        }
+                        document.removeEventListener('click', unmuteOnInteraction);
+                        document.removeEventListener('touchstart', unmuteOnInteraction);
+                    }
+                    document.addEventListener('click', unmuteOnInteraction);
+                    document.addEventListener('touchstart', unmuteOnInteraction);
+                    
+                    // Cuando el video termine, avanzar al siguiente
+                    videoPlayer.onended = function() {
+                        console.log('Video terminado, avanzando...');
+                        // Limpieza inmediata al terminar para evitar audio residual
+                        cleanupVideo();
+                        avanzarIndice();
+                        mostrarSiguienteDocumento();
+                    };
+                    
+                    // Manejar errores
+                    videoPlayer.onerror = function(e) {
+                        console.error("Error detallado al cargar el video: " + docActual);
+                        console.error("Error event:", e);
+                        if (this.error) {
+                            console.error("Media error code:", this.error.code);
+                            console.error("Media error message:", this.error.message);
+                        }
+                        // En error de video también limpiamos
+                        cleanupVideo();
+                        avanzarIndice();
+                        mostrarSiguienteDocumento();
+                    };
+                    
+                    // Reproducir video (si el navegador lo permite). Si falla, avanzamos al siguiente.
+                    videoPlayer.play().catch(function(error) {
+                        console.error("Error al reproducir video:", error);
+                        // En algunos navegadores (especialmente Firefox ESR) la reproducción automática
+                        // con audio/estado puede estar bloqueada. En ese caso, avanzamos para no quedar bloqueados.
+                        avanzarIndice();
+                        mostrarSiguienteDocumento();
+                    });
+
+                } else if (ext === 'jpg' || ext === 'jpeg' || ext === 'png') {
+                    // Imagen
+                    currentType = 'image';
+                    console.log('Cargando imagen:', docActual);
+                    
+                    // Cargar imagen directamente en el elemento img del DOM
+                    imageViewer.onload = function () {
+                        console.log('✓ Imagen mostrada:', docActual, '(1920x1080)');
+                        this.style.display = 'block';
+                        
+                        // Programar siguiente documento después del intervalo
+                        avanzarIndice();
+                        timeoutHandle = setTimeout(mostrarSiguienteDocumento, intervalo);
+                    };
+                    
+                    imageViewer.onerror = function (e) {
+                        console.error("✗ Error real al mostrar imagen:", docActual);
+                        console.error("Detalles:", e);
+                        avanzarIndice();
+                        mostrarSiguienteDocumento();
+                    };
+                    
+                    // Asignar directamente al elemento img del DOM
+                    imageViewer.src = docActual;
+
+                } else if (ext === 'pdf') {
+                    // Antes de mostrar PDF, aseguramos limpieza de video y canvas anterior
+                    cleanupVideo();
+                    cleanupPDF();
+                    // Usar PDF.js para renderizar a pantalla completa (sin UI del navegador)
+                    currentType = 'pdf';
+                    if (window.pdfjsLib) {
+                        // Cargar y renderizar la primera página
+                        pdfjsLib.getDocument(docActual).promise.then(function(pdf) {
+                            return pdf.getPage(1);
+                        }).then(function(page) {
+                            var viewport = page.getViewport({ scale: 1 });
+                            // Ajustar escala para caber en pantalla
+                            var scale = Math.min(window.innerWidth / viewport.width, window.innerHeight / viewport.height);
+                            var scaledViewport = page.getViewport({ scale: scale });
+                            pdfCanvas.width = scaledViewport.width;
+                            pdfCanvas.height = scaledViewport.height;
+                            pdfCanvas.style.display = 'block';
+                            var ctx = pdfCanvas.getContext('2d');
+                            var renderContext = {
+                                canvasContext: ctx,
+                                viewport: scaledViewport
+                            };
+                            pdfRenderingTask = page.render(renderContext);
+                            // Avanzar al siguiente documento pasado el tiempo
+                            avanzarIndice();
+                            timeoutHandle = setTimeout(function() {
+                                cleanupPDF();
+                                mostrarSiguienteDocumento();
+                            }, intervalo);
+                        }).catch(function(err){
+                            console.error('Error renderizando PDF:', err);
+                            avanzarIndice();
+                            mostrarSiguienteDocumento();
+                        });
+                    } else {
+                        // Fallback: mostrar en iframe si PDF.js no está disponible
+                        documentFrame.src = docActual;
+                        documentFrame.style.display = 'block';
+                        avanzarIndice();
+                        timeoutHandle = setTimeout(mostrarSiguienteDocumento, intervalo);
+                    }
+                }
             }
         }
 
@@ -140,7 +385,6 @@
 
         // Inicia el ciclo de documentos
         mostrarSiguienteDocumento(); // Mostrar el primer documento inmediatamente
-        setInterval(mostrarSiguienteDocumento, intervalo);
     </script>
 </body>
 

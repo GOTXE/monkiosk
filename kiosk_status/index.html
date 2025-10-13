@@ -9,9 +9,15 @@
 </head>
 <body>
     <div class="container">
-        <div style="display: flex; align-items: center;">
-            <img src="/img/server.svg" alt="Servidor" class="header-icon">
-            <h1>Estado de los Quioscos</h1>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="/img/server.svg" alt="Servidor" class="header-icon">
+                <h1>Estado de los Quioscos</h1>
+            </div>
+            <div>
+                <!-- Botón para abrir la documentación local (solo accesible desde el servidor) -->
+                <a href="http://localhost/kiosk_info/" target="_blank" style="background:#4ea3ff;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none;">Documentación local</a>
+            </div>
         </div>
         <div id="quioscos-status"></div>
     </div>
