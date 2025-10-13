@@ -1,3 +1,4 @@
+```
 monkiosk/
 ├── kiosk_web/
 │   ├── styles.css
@@ -29,3 +30,4 @@ monkiosk/
 ├── README_EN.md
 ├── GUIA_VIDEOS.md
 └── estructura.md
+```

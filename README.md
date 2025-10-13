@@ -347,4 +347,30 @@ Este pequeño proyecto está pensado para alguien sin conocimientos que pueda te
 Oye que igual nos calentamos :fire:, se nos pone el morro fino :lips: y nos ponemos con una versión 2 vitaminada :pill: :rocket:... 
 
 
+## Créditos
+# Imágenes y Dependencias de CSS y JS para la documentación
 Las imagenes usadas en la web son de [svgrepo.com](https://www.svgrepo.com).
+
+La documentación web utiliza los siguientes archivos, descargados originalmente de CDN:
+
+- `kiosk_info/assets/github-markdown.min.css` (GitHub Markdown CSS)
+- `kiosk_info/assets/marked.min.js` (Marked.js)
+
+Ambos archivos se han descargado localmente para evitar dependencias externas, pero su origen es:
+
+- https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.0/github-markdown.min.css
+- https://cdn.jsdelivr.net/npm/marked/marked.min.js
+
+Este proyecto también utiliza los siguientes archivos JavaScript de PDF.js, descargados originalmente de CDN:
+
+- `kiosk_web/vendor/pdfjs/pdf.min.js`
+- `kiosk_web/vendor/pdfjs/pdf.worker.min.js`
+
+Ambos son parte de PDF.js (Mozilla Foundation), bajo licencia Apache 2.0.
+Origen CDN:
+- https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js
+- https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js
+
+Ver licencias y actualizaciones en https://github.com/mozilla/pdf.js
+
+Se recomienda revisar las licencias y actualizaciones en sus repositorios oficiales.

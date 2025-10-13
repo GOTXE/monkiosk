@@ -1,4 +1,3 @@
-````markdown
 # Guía Rápida - Monkiosk con Videos
 
 ## 🚀 Inicio Rápido

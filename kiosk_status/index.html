@@ -5,22 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estado de los Quioscos</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
 </head>
 <body>
     <div class="container">
         <div style="display: flex; align-items: center; justify-content: space-between;">
             <div style="display:flex; align-items:center; gap:12px;">
-                <img src="/img/server.svg" alt="Servidor" class="header-icon">
+                <img src="img/server.svg" alt="Servidor" class="header-icon">
                 <h1>Estado de los Quioscos</h1>
             </div>
             <div>
                 <!-- Botón para abrir la documentación local (solo accesible desde el servidor) -->
-                <a href="http://localhost/kiosk_info/" target="_blank" style="background:#4ea3ff;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none;">Documentación local</a>
+                <a id="doc-link" class="doc-btn" href="../kiosk_info/index.html" target="_blank" aria-label="Abrir documentación">
+                    <!-- Icono libro (inline SVG) -->
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M3 6.5C3 5.67157 3.67157 5 4.5 5H17.5C18.3284 5 19 5.67157 19 6.5V18C19 18.8284 18.3284 19.5 17.5 19.5H4.5C3.67157 19.5 3 18.8284 3 18V6.5Z" stroke="rgba(255,255,255,0.95)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M7 8H15" stroke="rgba(255,255,255,0.95)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Documentación</span>
+                </a>
             </div>
         </div>
         <div id="quioscos-status"></div>
     </div>
+
+    <script>
+        // Manejar click en el botón Documentación: abrir SPA estática
+        (function() {
+            const link = document.getElementById('doc-link');
+            link.addEventListener('click', function(event){
+                // En entornos file:// fetch podría fallar; abrir directamente en nueva pestaña
+                // Se mantiene el target="_blank" y no se hace verificación previa
+            });
+        })();
+    </script>
 
     <script>
         const statusContainer = document.getElementById('quioscos-status');
@@ -93,7 +111,7 @@
                 kioskElement.id = `kiosk-${kioskName}`;
                 kioskElement.className = `quiosco ${newStatus.status.toLowerCase()}`;
                 kioskElement.innerHTML = `
-                    <img src="/img/quiosco.svg" alt="Quiosco">
+                    <img src="img/quiosco.svg" alt="Quiosco">
                     <div>
                         <span><strong>${kioskName}</strong>: <span class="status-text">${newStatus.status}</span></span>
                         <br>

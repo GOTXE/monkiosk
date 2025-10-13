@@ -273,6 +273,30 @@ sudo visudo
 
 This project is open-source and available under the MIT License. Feel free to use and modify it for your needs.
 
-## Image Credits
-
+## Credits
+# Image, CSS and JS dependencies for documentation
 The SVG images used in this project (e.g., `server.svg`, `quiosco.svg`) are sourced from [svgrepo.com](https://www.svgrepo.com).
+
+The web documentation uses the following files, originally downloaded from CDN:
+
+- `kiosk_info/assets/github-markdown.min.css` (GitHub Markdown CSS)
+- `kiosk_info/assets/marked.min.js` (Marked.js)
+
+Both files are stored locally to avoid external dependencies, but their original sources are:
+
+- https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.0/github-markdown.min.css
+- https://cdn.jsdelivr.net/npm/marked/marked.min.js
+
+Please check their official repositories for licenses and updates.
+
+This project also uses the following JavaScript files from PDF.js, originally downloaded from CDN:
+
+- `kiosk_web/vendor/pdfjs/pdf.min.js`
+- `kiosk_web/vendor/pdfjs/pdf.worker.min.js`
+
+Both are part of PDF.js (Mozilla Foundation), under the Apache 2.0 license.
+CDN sources:
+- https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js
+- https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js
+
+See licenses and updates at https://github.com/mozilla/pdf.js

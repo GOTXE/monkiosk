@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Información - Guía de Usuario</title>
+  <link rel="stylesheet" href="assets/github-markdown.min.css">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; }
+    #sidebar { width: 25%; background-color: #0b1220; color:#fff; padding: 20px; border-right: 1px solid #0b2136; overflow-y: auto; }
+    #sidebar h2 { margin-top: 0; }
+    #sidebar ul { list-style-type: none; padding: 0; }
+    #sidebar li { margin-bottom: 10px; }
+    #sidebar a { text-decoration: none; color: #cbd5e1; padding: 10px; display: block; border-radius: 6px; transition: background-color 0.2s; }
+    #sidebar a:hover { background-color: #071227; color:#fff }
+    #sidebar a.active { background: linear-gradient(90deg,#4ea3ff,#2b78d9); color:#fff; font-weight: bold; }
+    #content { width: 75%; padding: 20px; overflow-y: auto; background:#f5f7fa }
+    /* NO se pisa markdown-body ni pre ni code, solo layout y sidebar */
+  </style>
+  </style>
+  <script src="assets/marked.min.js"></script>
+</head>
+<body>
+  <div id="sidebar">
+      <h2>Guía de Monkiosk</h2>
+      <small style="color:#94a3b8">Archivos en local</small>
+      <ul id="file-list"></ul>
+  </div>
+  <div id="content">
+      <div class="markdown-body" id="markdown-content">
+          <p>Selecciona un archivo de la izquierda para ver su contenido.</p>
+      </div>
+  </div>
+
+  <script>
+    // Lista de archivos (en /src)
+    const mdFiles = [
+      'src/CHANGELOG.md',
+      'src/GUIA_RAPIDA.md',
+      'src/GUIA_VIDEOS.md',
+      'src/RESUMEN_MEJORAS.md'
+    ];
+
+    function unwrapOuterFence(text){
+      const lines = text.split(/\r?\n/);
+      while(lines.length && /^\s*`{3,}.*$/.test(lines[0])) lines.shift();
+      while(lines.length && /^\s*`{3,}.*$/.test(lines[lines.length-1])) lines.pop();
+      return lines.join('\n');
+    }
+
+    function loadSidebar(){
+      const ul = document.getElementById('file-list');
+      mdFiles.forEach((file, i) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#';
+        a.textContent = file.replace(/^.*\//,'').replace('.md','');
+        a.dataset.file = file;
+        a.addEventListener('click', loadContent);
+        li.appendChild(a);
+        ul.appendChild(li);
+        if (i === 0) setTimeout(() => a.click(), 0);
+      });
+    }
+
+    function loadContent(event){
+      event.preventDefault();
+      const file = event.target.dataset.file;
+      const contentDiv = document.getElementById('markdown-content');
+      document.querySelectorAll('#sidebar a').forEach(a => a.classList.remove('active'));
+      event.target.classList.add('active');
+      fetch(file)
+        .then(r => { if(!r.ok) throw new Error('No se pudo cargar'); return r.text(); })
+        .then(text => {
+          text = unwrapOuterFence(text);
+          contentDiv.innerHTML = marked.parse(text);
+          contentDiv.setAttribute('data-file', file);
+        })
+        .catch(err => {
+          contentDiv.innerHTML = `<p>Error al cargar el archivo: ${err.message}</p>`;
+        });
+    }
+
+    window.addEventListener('load', loadSidebar);
+  </script>
+</body>
+</html>

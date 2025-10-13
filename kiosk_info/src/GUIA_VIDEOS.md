@@ -1,4 +1,3 @@
-````markdown
 # Guía de Soporte de Videos en Monkiosk
 
 ## 🎬 Introducción
