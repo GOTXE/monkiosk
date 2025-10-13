@@ -28,9 +28,9 @@
 ## ⚙️ Configuración Rápida
 
 ### Cambiar duración de imágenes/PDFs
-Edita `kiosk_web/index.php` línea ~105:
+Edita `kiosk_web/index.php` y modifica la variable `intervalo` (valor en ms), por ejemplo:
 ```javascript
-var intervalo = 8000; // 8 segundos
+var intervalo = 8000; // 8 segundos (8000 ms)
 ```
 
 ### Verificar videos soportados
@@ -135,7 +135,11 @@ Los archivos se reproducen en orden numérico.
 - 🔊 Ajusta volumen de videos antes de subir
 - 📦 Comprime videos para ahorrar espacio
 - 🔢 Nombres numéricos: 1.jpg, 2.mp4, 3.png...
-- 🧪 Prueba siempre con test_video.html primero
+- 🧪 Prueba siempre con `kiosk_web/test_video.html` primero
+
+## Notas
+- Para visualizar PDFs sin la interfaz del navegador, coloca `pdf.min.js` y `pdf.worker.min.js` en `kiosk_web/vendor/pdfjs/` (esto permite renderizar PDFs en canvas en modo offline).
+- Por políticas de autoplay en navegadores, los videos pueden requerir `muted` para poder reproducirse automáticamente; el sistema inicia videos silenciados y permite activar audio mediante interacción del usuario.
 
 ## 🆘 Soporte
 

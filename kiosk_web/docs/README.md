@@ -63,3 +63,7 @@ docs/
 6. Las imágenes y PDFs se muestran según el intervalo configurado (5s por defecto)
 
 Para más información sobre videos, consulta `GUIA_VIDEOS.md` en la raíz del proyecto.
+
+### Notas adicionales
+- Para renderizar PDFs sin la UI del navegador y en modo offline, coloca `pdf.min.js` y `pdf.worker.min.js` en `vendor/pdfjs/` dentro de `kiosk_web/`.
+- En algunos navegadores, la reproducción automática con audio puede estar bloqueada; el sistema inicia vídeos silenciados y permite activar audio mediante interacción del usuario.

@@ -60,9 +60,9 @@ Here’s the complete folder structure for the network monitoring system, includ
 ## Installation
 
 1. **Clone the Repository**:
-    ```bash
-    git clone https://github.com/GOTXE/network-monitoring.git
-    ```
+  ```bash
+  git clone https://github.com/GOTXE/monkiosk.git
+  ```
 
 2. **Install Required Packages**:
     Make sure your system has Nginx installed. You can use:

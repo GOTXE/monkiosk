@@ -110,6 +110,10 @@ var intervalo = 5000; // 5 segundos (5000 ms)
 ### Videos
 Los videos se reproducen hasta completarse automáticamente. No usan el intervalo configurado.
 
+### Notas sobre autoplay y PDFs
+- Algunos navegadores bloquean la reproducción automática con audio. Para garantizar autoplay en kiosks, los videos suelen iniciarse en silencio (`muted`) y se permite activar audio mediante interacción del usuario.
+- Para renderizar PDFs sin la UI del navegador y en modo offline, coloca `pdf.min.js` y `pdf.worker.min.js` en `kiosk_web/vendor/pdfjs/`.
+
 ## 🔧 Solución de Problemas
 
 ### El video no se reproduce

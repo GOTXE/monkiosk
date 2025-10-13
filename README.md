@@ -332,11 +332,9 @@ chmod +x convert_video.sh
 
 Para más información, consulta `tools/README.md`
 
-### Páginas de Prueba y Conceptos
+### Páginas de Prueba
 
-- `kiosk_web/test_video.html` - Página para probar reproducción de videos
-- `kiosk_web/admin_concept.html` - Concepto de panel de administración futuro
-
+Las páginas de prueba y conceptos se mantienen fuera de la versión de producción. Si necesitas acceder a ellas, revisa la rama `futuros` o la carpeta local `kiosk_web/tests/`.
 
 ***Fin***
 ¿ Pero has llegado hasta aquí ? :clap::clap::clap:

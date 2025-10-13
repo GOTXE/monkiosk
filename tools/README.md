@@ -37,6 +37,8 @@ chmod +x convert_video.sh
   sudo apt install ffmpeg
   ```
 
+Nota: Se recomienda usar una versión reciente de FFmpeg (por ejemplo >= 4.2) para compatibilidad con códecs modernos (VP9, Opus, etc.).
+
 ### Ejemplos de uso
 
 #### Convertir múltiples videos
