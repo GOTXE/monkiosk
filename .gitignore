@@ -3,6 +3,10 @@ kiosk_web/test_*.html
 # Files not to be tracked by git
 *test*.txt
 
+# Development-only folders that should not go to production
+/futuros/
+kiosk_web/tests/
+
 # Media files in docs (except README)
 kiosk_web/docs/*.mp4
 kiosk_web/docs/*.webm
