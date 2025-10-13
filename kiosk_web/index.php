@@ -126,16 +126,34 @@ header("Pragma: no-cache");
     // Log para debugging
     error_log("Documentos encontrados: " . json_encode($documentos));
     ?>
+    <!-- Cargar PDF.js localmente (debe descargarse en vendor/pdfjs/) -->
+    <script src="vendor/pdfjs/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
+            console.log('PDF.js local cargado, workerSrc configurado');
+        } else {
+            console.warn('PDF.js no está disponible localmente en vendor/pdfjs/');
+        }
+    </script>
 </head>
 
 <body>
     <div id="contentContainer">
         <iframe id="documentFrame" style="display:none;"></iframe>
+    <canvas id="pdfCanvas" style="display:none;"></canvas>
         <video id="videoPlayer" style="display:none;" autoplay muted></video>
         <img id="imageViewer" style="display:none;">
     </div>
 
     <script>
+        // Usamos la copia local de PDF.js en vendor/pdfjs/
+        // La carga del script local y la configuración de workerSrc ya se realiza en el <head>
+
+        // Referencia al canvas para PDF
+        var pdfCanvas = document.getElementById('pdfCanvas');
+        var pdfRenderingTask = null;
+
         // Lista inicial de documentos generada desde PHP
         var documentos = <?php echo json_encode($documentos); ?>;
         console.log('Lista inicial de documentos:', documentos);
@@ -164,12 +182,27 @@ header("Pragma: no-cache");
             }
         }
 
+        // Limpia canvas de PDF si estaba renderizando
+        function cleanupPDF() {
+            try {
+                if (pdfRenderingTask && pdfRenderingTask.cancel) pdfRenderingTask.cancel();
+            } catch (e) {
+                console.warn('cleanupPDF:', e);
+            }
+            pdfRenderingTask = null;
+            if (pdfCanvas) {
+                pdfCanvas.style.display = 'none';
+                var ctx = pdfCanvas.getContext('2d');
+                if (ctx) ctx.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+            }
+        }
+
         // Función para ocultar todos los elementos
         function ocultarTodosElementos() {
             videoPlayer.style.display = 'none';
             documentFrame.style.display = 'none';
             imageViewer.style.display = 'none';
-            
+            cleanupPDF();
             // Asegurar limpieza del reproductor de video
             cleanupVideo();
         }
@@ -200,8 +233,25 @@ header("Pragma: no-cache");
                     videoPlayer.src = docActual;
                     videoPlayer.style.display = 'block';
                     
-                    // Activar audio
-                    videoPlayer.muted = false;
+                    // No forzamos audio para cumplir políticas de autoplay en navegadores.
+                    // Mantener muted=true permite autoplay; el audio podrá activarse mediante interacción del usuario.
+                    videoPlayer.muted = true;
+
+                    // Permitir unmute con un único click/tap del usuario (si se desea audio)
+                    function unmuteOnInteraction() {
+                        try {
+                            if (videoPlayer && videoPlayer.muted) {
+                                videoPlayer.muted = false;
+                                console.log('Audio activado por interacción del usuario');
+                            }
+                        } catch (e) {
+                            console.warn('unmuteOnInteraction error', e);
+                        }
+                        document.removeEventListener('click', unmuteOnInteraction);
+                        document.removeEventListener('touchstart', unmuteOnInteraction);
+                    }
+                    document.addEventListener('click', unmuteOnInteraction);
+                    document.addEventListener('touchstart', unmuteOnInteraction);
                     
                     // Cuando el video termine, avanzar al siguiente
                     videoPlayer.onended = function() {
@@ -226,9 +276,11 @@ header("Pragma: no-cache");
                         mostrarSiguienteDocumento();
                     };
                     
-                    // Reproducir video
+                    // Reproducir video (si el navegador lo permite). Si falla, avanzamos al siguiente.
                     videoPlayer.play().catch(function(error) {
                         console.error("Error al reproducir video:", error);
+                        // En algunos navegadores (especialmente Firefox ESR) la reproducción automática
+                        // con audio/estado puede estar bloqueada. En ese caso, avanzamos para no quedar bloqueados.
                         avanzarIndice();
                         mostrarSiguienteDocumento();
                     });
@@ -259,16 +311,47 @@ header("Pragma: no-cache");
                     imageViewer.src = docActual;
 
                 } else if (ext === 'pdf') {
-                    // Antes de mostrar PDF, aseguramos limpieza de video
+                    // Antes de mostrar PDF, aseguramos limpieza de video y canvas anterior
                     cleanupVideo();
-                    // PDF
+                    cleanupPDF();
+                    // Usar PDF.js para renderizar a pantalla completa (sin UI del navegador)
                     currentType = 'pdf';
-                    documentFrame.src = docActual;
-                    documentFrame.style.display = 'block';
-                    
-                    // Programar siguiente documento después del intervalo
-                    avanzarIndice();
-                    timeoutHandle = setTimeout(mostrarSiguienteDocumento, intervalo);
+                    if (window.pdfjsLib) {
+                        // Cargar y renderizar la primera página
+                        pdfjsLib.getDocument(docActual).promise.then(function(pdf) {
+                            return pdf.getPage(1);
+                        }).then(function(page) {
+                            var viewport = page.getViewport({ scale: 1 });
+                            // Ajustar escala para caber en pantalla
+                            var scale = Math.min(window.innerWidth / viewport.width, window.innerHeight / viewport.height);
+                            var scaledViewport = page.getViewport({ scale: scale });
+                            pdfCanvas.width = scaledViewport.width;
+                            pdfCanvas.height = scaledViewport.height;
+                            pdfCanvas.style.display = 'block';
+                            var ctx = pdfCanvas.getContext('2d');
+                            var renderContext = {
+                                canvasContext: ctx,
+                                viewport: scaledViewport
+                            };
+                            pdfRenderingTask = page.render(renderContext);
+                            // Avanzar al siguiente documento pasado el tiempo
+                            avanzarIndice();
+                            timeoutHandle = setTimeout(function() {
+                                cleanupPDF();
+                                mostrarSiguienteDocumento();
+                            }, intervalo);
+                        }).catch(function(err){
+                            console.error('Error renderizando PDF:', err);
+                            avanzarIndice();
+                            mostrarSiguienteDocumento();
+                        });
+                    } else {
+                        // Fallback: mostrar en iframe si PDF.js no está disponible
+                        documentFrame.src = docActual;
+                        documentFrame.style.display = 'block';
+                        avanzarIndice();
+                        timeoutHandle = setTimeout(mostrarSiguienteDocumento, intervalo);
+                    }
                 }
             }
         }
