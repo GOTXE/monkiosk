@@ -1,3 +1,5 @@
+# Ignorar archivos de prueba HTML
+kiosk_web/test_*.html
 # Files not to be tracked by git
 *test*.txt
 

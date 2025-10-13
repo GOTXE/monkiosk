@@ -1,3 +1,21 @@
+/* Imagen a pantalla completa y centrada */
+.contenedor-imagen {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+}
+
+img {
+    display: block;
+    margin: 0 auto;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+}
 /* Estilos básicos */
 body {
     font-family: Verdana, sans-serif;
@@ -119,8 +137,10 @@ span {
 }
 
 img {
-    max-width: 40px;
+    max-width: 100%;
     height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 /* Estilos para las imágenes */
@@ -134,9 +154,10 @@ img {
 }
 
 .quiosco img {
-    margin-right: 10px;
-    width: 40px;
-    height: 40px;
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    margin-right: 0;
 }
 
 .online {
