@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de los Quioscos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="container">
+        <header class="topbar">
+            <div class="title-wrap">
+                <img src="img/server.svg" alt="Servidor" class="header-icon">
+                <h1>Estado de los Quioscos</h1>
+            </div>
+            <a id="doc-link" class="doc-btn" href="../kiosk_info/index.html" target="_blank" aria-label="Abrir documentación">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M3 6.5C3 5.67157 3.67157 5 4.5 5H17.5C18.3284 5 19 5.67157 19 6.5V18C19 18.8284 18.3284 19.5 17.5 19.5H4.5C3.67157 19.5 3 18.8284 3 18V6.5Z" stroke="rgba(255,255,255,0.95)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7 8H15" stroke="rgba(255,255,255,0.95)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Documentación</span>
+            </a>
+        </header>
+
+        <section id="summary" class="summary"></section>
+
+        <section>
+            <h2 class="section-title">Equipos</h2>
+            <div id="quioscos-status" class="kiosk-strip"></div>
+        </section>
+    </div>
+
+    <script>
+        const statusContainer = document.getElementById('quioscos-status');
+        const summaryContainer = document.getElementById('summary');
+
+        const OFFLINE_TIMEOUT = 150;
+        const WARN_THRESHOLD = 60;
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function relativeTime(seconds) {
+            if (seconds < 60) return `hace ${seconds} s`;
+            const minutes = Math.floor(seconds / 60);
+            return `hace ${minutes} min`;
+        }
+
+        function normalizeStatus(info, now) {
+            const lastUpdated = Number(info.last_updated || 0);
+            const elapsed = Math.max(0, now - lastUpdated);
+
+            let stateClass = 'offline';
+            let stateLabel = 'Offline';
+
+            if (elapsed <= WARN_THRESHOLD) {
+                stateClass = 'online';
+                stateLabel = 'Online';
+            } else if (elapsed <= OFFLINE_TIMEOUT) {
+                stateClass = 'warning';
+                stateLabel = 'Advertencia';
+            }
+
+            return {
+                stateClass,
+                stateLabel,
+                lastUpdated,
+                elapsed,
+                unstable: Boolean(info.unstable),
+                history: Array.isArray(info.history) ? info.history : []
+            };
+        }
+
+        function renderSummary(stats) {
+            summaryContainer.innerHTML = `
+                <div class="summary-card"><span>Total</span><strong>${stats.total}</strong></div>
+                <div class="summary-card online"><span>Online</span><strong>${stats.online}</strong></div>
+                <div class="summary-card offline"><span>Offline</span><strong>${stats.offline}</strong></div>
+                <div class="summary-card unstable"><span>Inestables</span><strong>${stats.unstable}</strong></div>
+            `;
+        }
+
+        function renderHistory(events) {
+            if (!events.length) {
+                return '<li>Sin historial</li>';
+            }
+
+            return events.slice().reverse().map((event) => {
+                const ts = Number(event.ts || 0);
+                const state = escapeHtml(event.state || 'desconocido');
+                const time = ts > 0 ? new Date(ts * 1000).toLocaleString() : '-';
+                return `<li><span>${time}</span><strong>${state}</strong></li>`;
+            }).join('');
+        }
+
+        function renderKiosks(statusData) {
+            const now = Math.floor(Date.now() / 1000);
+            let onlineCount = 0;
+            let offlineCount = 0;
+            let unstableCount = 0;
+
+            const cards = Object.entries(statusData).sort((a, b) => a[0].localeCompare(b[0])).map(([name, info]) => {
+                const normalized = normalizeStatus(info, now);
+                const safeName = escapeHtml(name);
+
+                if (normalized.stateClass === 'online' || normalized.stateClass === 'warning') {
+                    onlineCount++;
+                } else {
+                    offlineCount++;
+                }
+
+                if (normalized.unstable) {
+                    unstableCount++;
+                }
+
+                const absoluteTime = normalized.lastUpdated > 0
+                    ? new Date(normalized.lastUpdated * 1000).toLocaleString()
+                    : 'Sin datos';
+
+                return `
+                    <article class="kiosk-card state-${normalized.stateClass}">
+                        <div class="kiosk-head">
+                            <div class="kiosk-title">
+                                <img src="img/quiosco.svg" alt="Quiosco">
+                                <strong>${safeName}</strong>
+                            </div>
+                            <div class="badges">
+                                <span class="badge status">${normalized.stateLabel}</span>
+                                ${normalized.unstable ? '<span class="badge unstable">Inestable</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="kiosk-meta">
+                            <span>${relativeTime(normalized.elapsed)}</span>
+                            <span>Último latido: ${absoluteTime}</span>
+                        </div>
+                        <details class="history">
+                            <summary>Ver historial</summary>
+                            <ul>${renderHistory(normalized.history)}</ul>
+                        </details>
+                    </article>
+                `;
+            });
+
+            statusContainer.innerHTML = cards.join('');
+            renderSummary({
+                total: Object.keys(statusData).length,
+                online: onlineCount,
+                offline: offlineCount,
+                unstable: unstableCount
+            });
+        }
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch('status.json', { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error('Error al obtener el estado');
+                }
+                const statusData = await response.json();
+                renderKiosks(statusData);
+            } catch (error) {
+                console.error('Error al actualizar los estados:', error);
+            }
+        }
+
+        setInterval(fetchStatus, 5000);
+        fetchStatus();
+    </script>
+</body>
+</html>
