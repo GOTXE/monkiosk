@@ -1,0 +1,19 @@
+# Configuracion de heartbeat para quioscos Alpine
+# Copiar como: /etc/kiosk/heartbeat.conf
+
+PRIMARY_URL="http://192.168.1.10/estado_quioscos/update_status.php"
+FALLBACK_URL="http://192.168.1.11/estado_quioscos/update_status.php"
+
+# Intervalo entre envios (segundos)
+INTERVAL=60
+
+# Reintentos por endpoint
+MAX_RETRIES=3
+RETRY_INTERVAL=10
+
+# Timeouts de curl
+CONNECT_TIMEOUT=3
+MAX_TIME=5
+
+# URL local opcional del quiosco (si vacio, se usa IP local detectada)
+KIOSK_URL=""

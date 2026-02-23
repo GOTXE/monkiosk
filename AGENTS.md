@@ -23,7 +23,7 @@ cd estado_quioscos && php -S 0.0.0.0:8081
 ```
 - Validate Bash script syntax:
 ```bash
-bash -n kiosks_report/report_status.sh
+bash -n kiosks_report/debian/report_status.sh
 ```
 - Validate PHP syntax:
 ```bash
@@ -54,5 +54,5 @@ Git history shows short, imperative commit messages (Spanish or English), e.g. `
 
 ## Security & Configuration Tips
 - Do not commit private keys, host secrets, or production URLs.
-- Replace placeholder server URL in `kiosks_report/report_status.sh` before deployment.
+- Replace placeholder server URL in `kiosks_report/debian/report_status.sh` before deployment.
 - Keep `allowed_hosts.txt` curated to trusted kiosk hostnames only.

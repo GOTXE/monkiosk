@@ -1,0 +1,14 @@
+#!/sbin/openrc-run
+
+name="kioskmonitoring"
+description="Heartbeat de monitorizacion de quiosco"
+command="/opt/monitoring/report_status.sh"
+command_background="yes"
+pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/log/kioskmonitoring.log"
+error_log="/var/log/kioskmonitoring.err"
+
+depend() {
+    need net
+}
+

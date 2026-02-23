@@ -107,6 +107,37 @@ function calculate_unstable(array $history, int $window_seconds, int $threshold,
     return $transitions >= $threshold;
 }
 
+function sanitize_string_field(array $data, string $key, int $max_len): ?string {
+    if (!isset($data[$key])) {
+        return null;
+    }
+    $value = trim((string)$data[$key]);
+    if ($value === '') {
+        return null;
+    }
+    if (strlen($value) > $max_len) {
+        $value = substr($value, 0, $max_len);
+    }
+    return $value;
+}
+
+function sanitize_int_field(array $data, string $key, int $min = 0, int $max = 2147483647): ?int {
+    if (!isset($data[$key])) {
+        return null;
+    }
+    if (!is_numeric($data[$key])) {
+        return null;
+    }
+    $value = (int)$data[$key];
+    if ($value < $min) {
+        $value = $min;
+    }
+    if ($value > $max) {
+        $value = $max;
+    }
+    return $value;
+}
+
 // Datos adicionales
 $remote_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $current_time = time();
@@ -132,12 +163,42 @@ $previous_last_updated = isset($existing_kiosk['last_updated']) ? (int)$existing
 $was_online = $previous_last_updated > 0 && (($current_time - $previous_last_updated) <= $offline_timeout);
 $history = isset($existing_kiosk['history']) && is_array($existing_kiosk['history']) ? $existing_kiosk['history'] : [];
 
+$extra_fields = [];
+$local_ip = sanitize_string_field($data, 'local_ip', 64);
+if ($local_ip !== null) {
+    $extra_fields['local_ip'] = $local_ip;
+}
+$kiosk_url = sanitize_string_field($data, 'kiosk_url', 255);
+if ($kiosk_url !== null) {
+    $extra_fields['kiosk_url'] = $kiosk_url;
+}
+$load1 = sanitize_string_field($data, 'load1', 32);
+if ($load1 !== null) {
+    $extra_fields['load1'] = $load1;
+}
+$report_target = sanitize_string_field($data, 'report_target', 255);
+if ($report_target !== null) {
+    $extra_fields['report_target'] = $report_target;
+}
+$uptime_s = sanitize_int_field($data, 'uptime_s');
+if ($uptime_s !== null) {
+    $extra_fields['uptime_s'] = $uptime_s;
+}
+$mem_free_mb = sanitize_int_field($data, 'mem_free_mb');
+if ($mem_free_mb !== null) {
+    $extra_fields['mem_free_mb'] = $mem_free_mb;
+}
+$disk_free_mb = sanitize_int_field($data, 'disk_free_mb');
+if ($disk_free_mb !== null) {
+    $extra_fields['disk_free_mb'] = $disk_free_mb;
+}
+
 // Actualiza o agrega el estado del quiosco que reporta.
 $status_data[$kiosk_name] = array_merge($existing_kiosk, [
     'status' => $status,
     'last_updated' => $current_time,
     'ip' => $remote_ip
-]);
+], $extra_fields);
 
 if (!$was_online) {
     $history = append_state_event($history, 'online', $current_time, $history_max_events);

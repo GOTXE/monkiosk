@@ -34,6 +34,7 @@
     <script>
         const statusContainer = document.getElementById('quioscos-status');
         const summaryContainer = document.getElementById('summary');
+        const reportOpenState = {};
 
         const OFFLINE_TIMEOUT = 150;
         const WARN_THRESHOLD = 60;
@@ -74,8 +75,33 @@
                 lastUpdated,
                 elapsed,
                 unstable: Boolean(info.unstable),
-                history: Array.isArray(info.history) ? info.history : []
+                history: Array.isArray(info.history) ? info.history : [],
+                report: {
+                    localIp: info.local_ip || '',
+                    kioskUrl: info.kiosk_url || '',
+                    uptimeS: Number(info.uptime_s || 0),
+                    load1: info.load1 || '',
+                    memFreeMb: Number(info.mem_free_mb || 0),
+                    diskFreeMb: Number(info.disk_free_mb || 0),
+                    reportTarget: info.report_target || ''
+                }
             };
+        }
+
+        function formatUptime(seconds) {
+            if (!seconds || seconds < 1) return '-';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            return `${h}h ${m}m`;
+        }
+
+        function formatStorageMb(valueMb) {
+            if (!valueMb || valueMb < 1) return '-';
+            if (valueMb >= 1024) {
+                const gb = valueMb / 1024;
+                return `${gb.toFixed(1)} GB`;
+            }
+            return `${valueMb} MB`;
         }
 
         function renderSummary(stats) {
@@ -100,6 +126,20 @@
             }).join('');
         }
 
+        function renderMiniReport(report) {
+            const rows = [];
+            if (report.localIp) rows.push(`<li><span>IP</span><strong>${escapeHtml(report.localIp)}</strong></li>`);
+            if (report.uptimeS) rows.push(`<li><span>Encendido</span><strong>${escapeHtml(formatUptime(report.uptimeS))}</strong></li>`);
+            if (report.load1) rows.push(`<li><span>Carga 1m</span><strong>${escapeHtml(report.load1)}</strong></li>`);
+            if (report.memFreeMb) rows.push(`<li><span>RAM libre</span><strong>${formatStorageMb(report.memFreeMb)}</strong></li>`);
+            if (report.diskFreeMb) rows.push(`<li><span>Disco libre</span><strong>${formatStorageMb(report.diskFreeMb)}</strong></li>`);
+
+            if (!rows.length) {
+                return '<div class="kiosk-report-empty">Sin reporte extendido</div>';
+            }
+            return `<ul class="kiosk-report-list">${rows.join('')}</ul>`;
+        }
+
         function renderKiosks(statusData) {
             const now = Math.floor(Date.now() / 1000);
             let onlineCount = 0;
@@ -109,6 +149,7 @@
             const cards = Object.entries(statusData).sort((a, b) => a[0].localeCompare(b[0])).map(([name, info]) => {
                 const normalized = normalizeStatus(info, now);
                 const safeName = escapeHtml(name);
+                const safeNameUpper = escapeHtml(String(name).toUpperCase());
 
                 if (normalized.stateClass === 'online' || normalized.stateClass === 'warning') {
                     onlineCount++;
@@ -124,15 +165,18 @@
                     ? new Date(normalized.lastUpdated * 1000).toLocaleString()
                     : 'Sin datos';
 
+                const reportOpenAttr = reportOpenState[name] ? ' open' : '';
+                const kioskKey = encodeURIComponent(name);
+
                 return `
                     <article class="kiosk-card state-${normalized.stateClass}">
                         <div class="kiosk-head">
                             <div class="kiosk-title">
                                 <img src="img/quiosco.svg" alt="Quiosco">
-                                <strong>${safeName}</strong>
+                                <strong>${safeNameUpper}</strong>
                             </div>
                             <div class="badges">
-                                <span class="badge status">${normalized.stateLabel}</span>
+                                <span class="badge status status-${normalized.stateClass}">${normalized.stateLabel}</span>
                                 ${normalized.unstable ? '<span class="badge unstable">Inestable</span>' : ''}
                             </div>
                         </div>
@@ -140,15 +184,21 @@
                             <span>${relativeTime(normalized.elapsed)}</span>
                             <span>Último latido: ${absoluteTime}</span>
                         </div>
-                        <details class="history">
-                            <summary>Ver historial</summary>
-                            <ul>${renderHistory(normalized.history)}</ul>
+                        <details class="kiosk-report"${reportOpenAttr} data-kiosk="${kioskKey}">
+                            <summary>Ver reporte</summary>
+                            ${renderMiniReport(normalized.report)}
                         </details>
                     </article>
                 `;
             });
 
             statusContainer.innerHTML = cards.join('');
+            statusContainer.querySelectorAll('.kiosk-report').forEach((details) => {
+                const kiosk = decodeURIComponent(details.dataset.kiosk || '');
+                details.addEventListener('toggle', () => {
+                    reportOpenState[kiosk] = details.open;
+                });
+            });
             renderSummary({
                 total: Object.keys(statusData).length,
                 online: onlineCount,

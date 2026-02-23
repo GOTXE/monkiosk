@@ -52,9 +52,20 @@ monkiosk/
 │   ├── index.html          [644]
 
 Quioscos/
-├── kiosk_report/           [750]
-│   ├── kioskmonitoring.service [644]
-│   ├── report_status.sh    [750]
+├── kiosks_report/          [750]
+│   ├── debian/
+│   │   ├── kioskmonitoring.service [644]
+│   │   ├── report_status.sh        [750]
+│   ├── alpine/
+│   │   ├── kioskmonitoring.openrc
+│   │   ├── heartbeat.conf.example
+│   │   ├── install_heartbeat_alpine.sh
+├── Quioscos_install_alpine/
+│   ├── install_report.sh
+│   ├── report/
+│   │   ├── report_status.sh
+│   │   ├── kioskmonitoring.openrc
+│   │   ├── heartbeat.conf.example
 ├── kiosk_/                 [750]
 │   ├── autostart           [644]
 
@@ -228,18 +239,20 @@ Para asegurarse de que el script de monitorización se ejecute como un servicio 
     ```bash
      wget https://github.com/GOTXE/monkiosk/archive/refs/heads/main.zip
     ```
-    Ahora la carpeta que hace falta es `kiosk_report`.
+    Ahora la carpeta que hace falta es `kiosks_report/debian` (Debian/systemd) o `Quioscos_install_alpine` (Alpine/OpenRC).
 
-2. Configurar el Script de Monitorización:
-    - Colocar `report_status.sh` `/opt/monitoring/report_status.sh`. Probablemente la carpeta monitoring no exista, así que tendrás que crearla
+2. Configurar el Script de Monitorización (Debian/systemd):
+    - Colocar `kiosks_report/debian/report_status.sh` en `/opt/monitoring/report_status.sh`.
      ```bash
      sudo mkdir /opt/monitoring
      ```
-    - coloca el archivo `report_status.sh`en esa carpeta y abrelo con tu editor favorito 
+    - Copiar también `kiosks_report/debian/kioskmonitoring.service` a `/etc/systemd/system/kioskmonitoring.service`.
     ```bash
-    sudo nano report_status.sh
+    sudo cp kiosks_report/debian/report_status.sh /opt/monitoring/report_status.sh
+    sudo cp kiosks_report/debian/kioskmonitoring.service /etc/systemd/system/kioskmonitoring.service
     ```
-    busca la línea: `server_url="http://<IP_DEL_SERVIDOR>/update_status.php`y pon la ip del servidor.
+    - Ajustar URL en `/opt/monitoring/report_status.sh` o usar `/etc/kiosk/heartbeat.conf`:
+      `http://<IP_DEL_SERVIDOR>/estado_quioscos/update_status.php`
 
      ***Recargar systemd***:
     ```bash
@@ -265,7 +278,14 @@ Para asegurarse de que el script de monitorización se ejecute como un servicio 
 
 ### Script de Monitorización (`report_status.sh`)
 
-Este script verifica continuamente la disponibilidad del servidor enviando una solicitud HTTP POST a `http://<IP_DEL_SERVIDOR>/update_status.php`. Obtiene el nombre del quiosco usando el comando `hostname` para enviarlo en la petición POST al servidor. 
+Este script verifica continuamente la disponibilidad del servidor enviando una solicitud HTTP POST a `http://<IP_DEL_SERVIDOR>/estado_quioscos/update_status.php`. Obtiene el nombre del quiosco usando el comando `hostname` para enviarlo en la petición POST al servidor.
+
+Para Alpine/OpenRC se puede usar el instalador no interactivo:
+```bash
+sudo ./Quioscos_install_alpine/install_report.sh \
+  --primary-url http://IP_PROD/estado_quioscos/update_status.php \
+  --fallback-url http://IP_TEST/estado_quioscos/update_status.php
+```
 
 ### Interfaz Web
 
