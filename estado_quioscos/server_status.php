@@ -20,6 +20,12 @@ function get_disk_free_mb(): int {
     return is_string($out) && trim($out) !== '' ? (int)trim($out) : 0;
 }
 
+function get_mount_free_mb(string $mountpoint): int {
+    $safe = escapeshellarg($mountpoint);
+    $out = @shell_exec("df -Pm {$safe} | awk 'NR==2 {print $4}'");
+    return is_string($out) && trim($out) !== '' ? (int)trim($out) : 0;
+}
+
 function systemd_active_enter_timestamp(string $unit): string {
     $cmd = "ts=\"\$(systemctl show " . escapeshellarg($unit) . " -p ActiveEnterTimestamp --value 2>/dev/null || true)\"; " .
         "[ -n \"\$ts\" ] && date -d \"\$ts\" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo unknown";
@@ -70,6 +76,9 @@ $status = [
     'load1' => run_single_line("awk '{print $1}' /proc/loadavg"),
     'mem_free_mb' => get_mem_free_mb(),
     'disk_free_mb' => get_disk_free_mb(),
+    'disk_root_free_mb' => get_mount_free_mb('/'),
+    'disk_var_free_mb' => get_mount_free_mb('/var'),
+    'disk_home_free_mb' => get_mount_free_mb('/home'),
     'slide_interval_seconds' => get_slide_interval_seconds(),
     'last_web_restart' => systemd_active_enter_timestamp('nginx'),
     'last_php_restart' => systemd_active_enter_timestamp('php8.2-fpm'),

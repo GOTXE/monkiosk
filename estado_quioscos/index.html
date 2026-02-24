@@ -30,6 +30,22 @@
             <h2 class="section-title">Equipos</h2>
             <div id="quioscos-status" class="kiosk-strip"></div>
         </section>
+
+        <footer class="app-footer">
+            <span class="footer-brand">OFAP 601</span>
+            <a
+                class="footer-github"
+                href="https://github.com/GOTXE/monkiosk"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Repositorio GitHub monkiosk"
+                title="Repositorio GitHub monkiosk"
+            >
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.49c-2.23.48-2.7-.95-2.7-.95-.36-.92-.89-1.16-.89-1.16-.73-.5.06-.49.06-.49.81.06 1.24.83 1.24.83.72 1.24 1.89.88 2.35.67.07-.52.28-.88.5-1.08-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.58.82-2.14-.08-.2-.36-1.01.08-2.1 0 0 .67-.21 2.2.82a7.62 7.62 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.09.16 1.9.08 2.1.51.56.82 1.27.82 2.14 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+                </svg>
+            </a>
+        </footer>
     </div>
 
     <script>
@@ -141,6 +157,12 @@
                 return `${gb.toFixed(1)} GB`;
             }
             return `${valueMb} MB`;
+        }
+
+        function formatFreeGb(valueMb) {
+            const n = Number(valueMb || 0);
+            if (!Number.isFinite(n) || n < 0) return 'Sin valor';
+            return `${(n / 1024).toFixed(1)}G libre`;
         }
 
         function formatSpainDateTime(value) {
@@ -285,7 +307,12 @@
                             <div><span>Encendido</span><strong>${escapeHtml(uptime)}</strong></div>
                             <div><span>Carga 1m</span><strong>${escapeHtml(String(data.load1 || '-'))}</strong></div>
                             <div><span>RAM libre</span><strong>${formatStorageMb(Number(data.mem_free_mb || 0))}</strong></div>
-                            <div><span>Disco libre</span><strong>${formatStorageMb(Number(data.disk_free_mb || 0))}</strong></div>
+                            <div>
+                                <span>Disco libre</span>
+                                <strong>/ ${formatFreeGb(Number(data.disk_root_free_mb || 0))}</strong><br>
+                                <strong>/var ${formatFreeGb(Number(data.disk_var_free_mb || 0))}</strong><br>
+                                <strong>/home ${formatFreeGb(Number(data.disk_home_free_mb || 0))}</strong>
+                            </div>
                             <div><span>Nginx</span><strong>${serviceStateLabel(data.services?.nginx)}</strong></div>
                             <div><span>PHP-FPM</span><strong>${serviceStateLabel(data.services?.php_fpm)}</strong></div>
                             <div class="server-wide slide-config-row">
