@@ -21,6 +21,7 @@ RETRY_INTERVAL="10"
 CONNECT_TIMEOUT="3"
 MAX_TIME="5"
 KIOSK_URL=""
+CONTROL_TOKEN=""
 START_SERVICE="1"
 ENABLE_SERVICE="1"
 FORCE_CONFIG="0"
@@ -39,6 +40,7 @@ Opciones:
   --connect-timeout N      Timeout de conexión curl (default: 3)
   --max-time N             Timeout total curl (default: 5)
   --kiosk-url URL          URL local del quiosco (opcional)
+  --control-token TOKEN    Token para consultar acciones remotas (opcional)
   --no-start               No arrancar servicio al final
   --no-enable              No habilitar en arranque OpenRC
   --force-config           Sobrescribir /etc/kiosk/heartbeat.conf si existe
@@ -84,6 +86,7 @@ while [ "$#" -gt 0 ]; do
         --connect-timeout) CONNECT_TIMEOUT="${2:-}"; shift 2 ;;
         --max-time) MAX_TIME="${2:-}"; shift 2 ;;
         --kiosk-url) KIOSK_URL="${2:-}"; shift 2 ;;
+        --control-token) CONTROL_TOKEN="${2:-}"; shift 2 ;;
         --no-start) START_SERVICE="0"; shift ;;
         --no-enable) ENABLE_SERVICE="0"; shift ;;
         --force-config) FORCE_CONFIG="1"; shift ;;
@@ -133,6 +136,7 @@ RETRY_INTERVAL=$RETRY_INTERVAL
 CONNECT_TIMEOUT=$CONNECT_TIMEOUT
 MAX_TIME=$MAX_TIME
 KIOSK_URL="$KIOSK_URL"
+CONTROL_TOKEN="$CONTROL_TOKEN"
 CFG
     chmod 644 "$CONFIG_FILE"
 fi

@@ -180,6 +180,10 @@ $report_target = sanitize_string_field($data, 'report_target', 255);
 if ($report_target !== null) {
     $extra_fields['report_target'] = $report_target;
 }
+$hdmi_connected = sanitize_string_field($data, 'hdmi_connected', 32);
+if ($hdmi_connected !== null) {
+    $extra_fields['hdmi_connected'] = $hdmi_connected;
+}
 $uptime_s = sanitize_int_field($data, 'uptime_s');
 if ($uptime_s !== null) {
     $extra_fields['uptime_s'] = $uptime_s;
@@ -197,7 +201,8 @@ if ($disk_free_mb !== null) {
 $status_data[$kiosk_name] = array_merge($existing_kiosk, [
     'status' => $status,
     'last_updated' => $current_time,
-    'ip' => $remote_ip
+    'ip' => $remote_ip,
+    'source_ip' => $remote_ip
 ], $extra_fields);
 
 if (!$was_online) {

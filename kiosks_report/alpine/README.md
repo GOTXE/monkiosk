@@ -19,6 +19,7 @@ sudo /ruta/monkiosk/kiosks_report/alpine/install_heartbeat_alpine.sh \
 - `--no-enable`: instala pero no lo agrega a arranque.
 - `--force-config`: sobrescribe `/etc/kiosk/heartbeat.conf` si ya existe.
 - `--kiosk-url http://IP_LOCAL/`: fija URL local del quiosco (si se omite, se autodetecta IP).
+- `--control-token TOKEN`: token para consulta de acciones remotas (`get_action.php`).
 
 Ayuda:
 ```sh

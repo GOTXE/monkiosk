@@ -17,3 +17,6 @@ MAX_TIME=5
 
 # URL local opcional del quiosco (si vacio, se usa IP local detectada)
 KIOSK_URL=""
+
+# Token para consultar acciones de control (get_action.php)
+CONTROL_TOKEN=""

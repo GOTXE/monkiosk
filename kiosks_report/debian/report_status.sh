@@ -3,7 +3,9 @@
 
 set -eu
 
-# Se puede sobreescribir en /etc/kiosk/heartbeat.conf
+# Valores por defecto (placeholder).
+# La configuración real debe ir en /etc/kiosk/heartbeat.conf.
+# Si ese archivo existe, sus valores tienen prioridad sobre estos.
 PRIMARY_URL="http://<IP_DEL_SERVIDOR>/estado_quioscos/update_status.php"
 FALLBACK_URL=""
 INTERVAL=60
@@ -12,6 +14,7 @@ RETRY_INTERVAL=10
 CONNECT_TIMEOUT=3
 MAX_TIME=5
 KIOSK_URL=""
+CONTROL_TOKEN=""
 
 CONFIG_FILE="/etc/kiosk/heartbeat.conf"
 if [ -f "$CONFIG_FILE" ]; then
@@ -21,6 +24,7 @@ fi
 
 KIOSK_NAME="$(hostname)"
 LOG_FILE="/var/log/kiosk-heartbeat.log"
+LAST_OK_URL=""
 
 json_escape() {
     printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
@@ -56,6 +60,23 @@ get_disk_free_mb() {
     df -Pm / 2>/dev/null | awk 'NR==2 {print $4}' || echo 0
 }
 
+get_hdmi_status() {
+    if ls /sys/class/drm/*HDMI*/status >/dev/null 2>&1; then
+        for f in /sys/class/drm/*HDMI*/status; do
+            if [ -f "$f" ]; then
+                state="$(cat "$f" 2>/dev/null || true)"
+                if [ "$state" = "connected" ]; then
+                    echo "connected"
+                    return 0
+                fi
+            fi
+        done
+        echo "disconnected"
+        return 0
+    fi
+    echo "unknown"
+}
+
 build_payload() {
     target="$1"
     local_ip="$(get_local_ip)"
@@ -72,6 +93,7 @@ build_payload() {
     load1="$(get_load1)"
     mem_free_mb="$(get_mem_free_mb)"
     disk_free_mb="$(get_disk_free_mb)"
+    hdmi_connected="$(get_hdmi_status)"
 
     printf '{'
     printf '"name":"%s",' "$(json_escape "$KIOSK_NAME")"
@@ -82,6 +104,7 @@ build_payload() {
     printf '"load1":"%s",' "$(json_escape "$load1")"
     printf '"mem_free_mb":%s,' "$mem_free_mb"
     printf '"disk_free_mb":%s,' "$disk_free_mb"
+    printf '"hdmi_connected":"%s",' "$(json_escape "$hdmi_connected")"
     printf '"report_target":"%s"' "$(json_escape "$target")"
     printf '}'
 }
@@ -98,6 +121,7 @@ send_with_retries() {
             -d "$payload" "$url" || echo "000")"
 
         if [ "$code" = "200" ]; then
+            LAST_OK_URL="$url"
             echo "$(date '+%F %T') heartbeat OK -> $url" >> "$LOG_FILE"
             return 0
         fi
@@ -109,8 +133,38 @@ send_with_retries() {
     return 1
 }
 
+derive_action_url() {
+    printf '%s' "$1" | sed 's#/update_status\.php$#/get_action.php#'
+}
+
+fetch_pending_action() {
+    target_url="$1"
+    action_url="$(derive_action_url "$target_url")"
+    if [ "$action_url" = "$target_url" ]; then
+        return 0
+    fi
+
+    headers=""
+    if [ -n "$CONTROL_TOKEN" ]; then
+        headers="-H X-Control-Token:$CONTROL_TOKEN"
+    fi
+
+    # shellcheck disable=SC2086
+    response="$(curl -s --connect-timeout "$CONNECT_TIMEOUT" --max-time "$MAX_TIME" \
+        $headers \
+        --get --data-urlencode "name=$KIOSK_NAME" "$action_url" || true)"
+
+    action="$(printf '%s' "$response" | sed -n 's/.*"action"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
+    if [ "$action" = "reboot" ]; then
+        echo "$(date '+%F %T') acción recibida: reboot" >> "$LOG_FILE"
+        sync
+        reboot
+    fi
+}
+
 while true; do
     start_time="$(date +%s)"
+    LAST_OK_URL=""
 
     primary_payload="$(build_payload "$PRIMARY_URL")"
     if ! send_with_retries "$PRIMARY_URL" "$primary_payload"; then
@@ -122,6 +176,10 @@ while true; do
         else
             echo "$(date '+%F %T') heartbeat FAIL en primary (sin fallback)" >> "$LOG_FILE"
         fi
+    fi
+
+    if [ -n "$LAST_OK_URL" ]; then
+        fetch_pending_action "$LAST_OK_URL"
     fi
 
     end_time="$(date +%s)"

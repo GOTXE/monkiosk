@@ -24,6 +24,7 @@
         </header>
 
         <section id="summary" class="summary"></section>
+        <section id="server-panel" class="server-panel"></section>
 
         <section>
             <h2 class="section-title">Equipos</h2>
@@ -34,7 +35,18 @@
     <script>
         const statusContainer = document.getElementById('quioscos-status');
         const summaryContainer = document.getElementById('summary');
+        const serverPanel = document.getElementById('server-panel');
         const reportOpenState = {};
+        let serverInfoOpen = false;
+        let currentServerHostname = 'servidor';
+        let currentSlideIntervalSeconds = 5;
+        let pendingSlideIntervalSeconds = null;
+        let slideIntervalDirty = false;
+        let kioskNames = [];
+        let overlayState = { enabled: false, target_kiosk: '', updated_at: '' };
+        let overlaySelection = '';
+        let overlaySelectionDirty = false;
+        const naturalSort = new Intl.Collator('es', { numeric: true, sensitivity: 'base' });
 
         const OFFLINE_TIMEOUT = 150;
         const WARN_THRESHOLD = 60;
@@ -57,11 +69,15 @@
         function normalizeStatus(info, now) {
             const lastUpdated = Number(info.last_updated || 0);
             const elapsed = Math.max(0, now - lastUpdated);
+            const backendStatus = String(info.status || '').toLowerCase();
 
             let stateClass = 'offline';
             let stateLabel = 'Offline';
 
-            if (elapsed <= WARN_THRESHOLD) {
+            if (backendStatus === 'reiniciando') {
+                stateClass = 'restarting';
+                stateLabel = 'Reiniciando';
+            } else if (elapsed <= WARN_THRESHOLD) {
                 stateClass = 'online';
                 stateLabel = 'Online';
             } else if (elapsed <= OFFLINE_TIMEOUT) {
@@ -83,6 +99,7 @@
                     load1: info.load1 || '',
                     memFreeMb: Number(info.mem_free_mb || 0),
                     diskFreeMb: Number(info.disk_free_mb || 0),
+                    hdmiConnected: info.hdmi_connected || '',
                     reportTarget: info.report_target || ''
                 }
             };
@@ -90,9 +107,31 @@
 
         function formatUptime(seconds) {
             if (!seconds || seconds < 1) return '-';
-            const h = Math.floor(seconds / 3600);
-            const m = Math.floor((seconds % 3600) / 60);
-            return `${h}h ${m}m`;
+            const MINUTE = 60;
+            const HOUR = 60 * MINUTE;
+            const DAY = 24 * HOUR;
+            const MONTH = 30 * DAY;  // aproximación operativa
+            const YEAR = 365 * DAY;  // aproximación operativa
+
+            let remaining = Math.floor(seconds);
+            const years = Math.floor(remaining / YEAR);
+            remaining %= YEAR;
+            const months = Math.floor(remaining / MONTH);
+            remaining %= MONTH;
+            const days = Math.floor(remaining / DAY);
+            remaining %= DAY;
+            const hours = Math.floor(remaining / HOUR);
+            remaining %= HOUR;
+            const minutes = Math.floor(remaining / MINUTE);
+
+            const parts = [];
+            if (years > 0) parts.push(`${years}A`);
+            if (months > 0) parts.push(`${months}M`);
+            if (days > 0) parts.push(`${days}d`);
+            if (hours > 0) parts.push(`${hours}h`);
+            if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
+
+            return parts.slice(0, 3).join(' ');
         }
 
         function formatStorageMb(valueMb) {
@@ -104,6 +143,52 @@
             return `${valueMb} MB`;
         }
 
+        function formatSpainDateTime(value) {
+            const raw = String(value || '').trim();
+            if (!raw || raw === '-' || raw.toLowerCase() === 'unknown') return '-';
+
+            // Ejemplo esperado desde backend: "2026-02-24 09:55:01"
+            const isoLike = raw.includes('T') ? raw : raw.replace(' ', 'T');
+            const d = new Date(isoLike);
+            if (Number.isNaN(d.getTime())) return escapeHtml(raw);
+
+            const parts = new Intl.DateTimeFormat('es-ES', {
+                timeZone: 'Europe/Madrid',
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).formatToParts(d);
+
+            const map = {};
+            parts.forEach((p) => { map[p.type] = p.value; });
+            return `${map.day}-${map.month}-${map.year} ${map.hour}:${map.minute}:${map.second}`;
+        }
+
+        function normalizeSlideInterval(value) {
+            let n = Number(value || 5);
+            if (!Number.isFinite(n)) n = 5;
+            n = Math.round(n);
+            if (n < 5) n = 5;
+            if (n > 120) n = 120;
+            if (n % 5 !== 0) n = Math.round(n / 5) * 5;
+            return n;
+        }
+
+        function buildKioskOptions(selectedName) {
+            if (!kioskNames.length) {
+                return '<option value="">Sin quioscos</option>';
+            }
+            return kioskNames.map((name) => {
+                const selected = name === selectedName ? ' selected' : '';
+                const safe = escapeHtml(name);
+                return `<option value="${safe}"${selected}>${safe}</option>`;
+            }).join('');
+        }
+
         function renderSummary(stats) {
             summaryContainer.innerHTML = `
                 <div class="summary-card"><span>Total</span><strong>${stats.total}</strong></div>
@@ -113,31 +198,330 @@
             `;
         }
 
-        function renderHistory(events) {
-            if (!events.length) {
-                return '<li>Sin historial</li>';
-            }
-
-            return events.slice().reverse().map((event) => {
-                const ts = Number(event.ts || 0);
-                const state = escapeHtml(event.state || 'desconocido');
-                const time = ts > 0 ? new Date(ts * 1000).toLocaleString() : '-';
-                return `<li><span>${time}</span><strong>${state}</strong></li>`;
-            }).join('');
-        }
-
         function renderMiniReport(report) {
             const rows = [];
+            const hdmiStateMap = {
+                connected: 'Conectado',
+                disconnected: 'Desconectado',
+                unknown: 'Desconocido'
+            };
             if (report.localIp) rows.push(`<li><span>IP</span><strong>${escapeHtml(report.localIp)}</strong></li>`);
             if (report.uptimeS) rows.push(`<li><span>Encendido</span><strong>${escapeHtml(formatUptime(report.uptimeS))}</strong></li>`);
             if (report.load1) rows.push(`<li><span>Carga 1m</span><strong>${escapeHtml(report.load1)}</strong></li>`);
             if (report.memFreeMb) rows.push(`<li><span>RAM libre</span><strong>${formatStorageMb(report.memFreeMb)}</strong></li>`);
             if (report.diskFreeMb) rows.push(`<li><span>Disco libre</span><strong>${formatStorageMb(report.diskFreeMb)}</strong></li>`);
+            if (report.hdmiConnected) {
+                const key = String(report.hdmiConnected).toLowerCase();
+                const label = hdmiStateMap[key] || report.hdmiConnected;
+                const valueClass = key === 'disconnected' ? 'report-danger' : '';
+                rows.push(`<li><span>HDMI</span><strong class="${valueClass}">${escapeHtml(label)}</strong></li>`);
+            }
 
             if (!rows.length) {
                 return '<div class="kiosk-report-empty">Sin reporte extendido</div>';
             }
             return `<ul class="kiosk-report-list">${rows.join('')}</ul>`;
+        }
+
+        async function queueReboot(kioskName) {
+            const confirmed = window.confirm(`¿Enviar orden de reinicio a ${kioskName.toUpperCase()}?`);
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch('control_proxy.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: kioskName,
+                        action: 'reboot'
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'No se pudo encolar la orden');
+                }
+                window.alert(`Orden de reinicio encolada para ${kioskName.toUpperCase()}`);
+            } catch (error) {
+                window.alert(`Error enviando orden: ${error.message}`);
+            }
+        }
+
+        function serviceStateLabel(value) {
+            const v = String(value || '').toLowerCase();
+            if (v === 'active') return '<span class="srv-ok">OK</span>';
+            if (v === 'inactive' || v === 'failed') return '<span class="srv-bad">Fallo</span>';
+            return '<span class="srv-warn">Advertencia</span>';
+        }
+
+        function renderServerPanel(data) {
+            const uptime = formatUptime(Number(data.uptime || 0));
+            currentServerHostname = String(data.hostname || 'servidor');
+            const serverSlideInterval = normalizeSlideInterval(data.slide_interval_seconds || 5);
+            if (!slideIntervalDirty) {
+                currentSlideIntervalSeconds = serverSlideInterval;
+                pendingSlideIntervalSeconds = null;
+            }
+            const displaySlideInterval = slideIntervalDirty && pendingSlideIntervalSeconds !== null
+                ? pendingSlideIntervalSeconds
+                : currentSlideIntervalSeconds;
+            if (!overlaySelectionDirty) {
+                if (overlayState.enabled && overlayState.target_kiosk) {
+                    overlaySelection = overlayState.target_kiosk;
+                } else if (kioskNames.length && !overlaySelection) {
+                    overlaySelection = kioskNames[0];
+                }
+            }
+            const selectedOverlayKiosk = overlaySelection || '';
+            const overlayActiveText = overlayState.enabled && overlayState.target_kiosk
+                ? `<div class="overlay-active">Mostrando tiempo en: <strong>${escapeHtml(String(overlayState.target_kiosk).toUpperCase())}</strong></div>`
+                : '<div class="overlay-inactive">Cuenta regresiva desactivada</div>';
+            serverPanel.innerHTML = `
+                <article class="server-card">
+                    <h2 class="section-title server-title">SERVIDOR</h2>
+                    <details class="server-info"${serverInfoOpen ? ' open' : ''}>
+                        <summary>Información</summary>
+                        <div class="server-grid">
+                            <div><span>Host</span><strong>${escapeHtml(String(data.hostname || '-').toUpperCase())}</strong></div>
+                            <div><span>Encendido</span><strong>${escapeHtml(uptime)}</strong></div>
+                            <div><span>Carga 1m</span><strong>${escapeHtml(String(data.load1 || '-'))}</strong></div>
+                            <div><span>RAM libre</span><strong>${formatStorageMb(Number(data.mem_free_mb || 0))}</strong></div>
+                            <div><span>Disco libre</span><strong>${formatStorageMb(Number(data.disk_free_mb || 0))}</strong></div>
+                            <div><span>Nginx</span><strong>${serviceStateLabel(data.services?.nginx)}</strong></div>
+                            <div><span>PHP-FPM</span><strong>${serviceStateLabel(data.services?.php_fpm)}</strong></div>
+                            <div class="server-wide slide-config-row">
+                                <span>Tiempo de diapositiva (s)</span>
+                                <div class="slide-config-control">
+                                    <input id="slide-interval-input" class="slide-interval-input" type="number" min="5" max="120" step="5" value="${displaySlideInterval}" aria-label="Tiempo de diapositiva en segundos">
+                                    <button id="save-slide-interval" class="server-btn" type="button">Guardar</button>
+                                </div>
+                                <div class="slide-config-values">
+                                    <span>Actual: <strong id="slide-actual-value">${currentSlideIntervalSeconds}s</strong></span>
+                                    <span>Nuevo: <strong id="slide-new-value">${displaySlideInterval}s</strong></span>
+                                </div>
+                            </div>
+                            <div class="server-wide overlay-control-row">
+                                <span>Quiosco para ver cuenta regresiva</span>
+                                <div class="overlay-control-main">
+                                    <select id="overlay-kiosk-select" class="overlay-kiosk-select" aria-label="Seleccionar quiosco">
+                                        ${buildKioskOptions(selectedOverlayKiosk)}
+                                    </select>
+                                    <button id="overlay-enable-btn" class="server-btn" type="button">Mostrar tiempo</button>
+                                    <button id="overlay-disable-btn" class="server-btn danger" type="button">Desactivar tiempo</button>
+                                </div>
+                                ${overlayActiveText}
+                            </div>
+                            <div class="server-wide"><span>Ult. reinicio web</span><strong>${formatSpainDateTime(data.last_web_restart || '-')}</strong></div>
+                            <div class="server-wide"><span>Ult. reinicio servidor</span><strong>${formatSpainDateTime(data.last_server_restart || '-')}</strong></div>
+                        </div>
+                        <div class="server-actions">
+                            <button class="server-btn" data-action="restart_web" type="button">Reiniciar Web</button>
+                            <button class="server-btn danger" data-action="reboot_server" type="button">Reiniciar Servidor</button>
+                        </div>
+                    </details>
+                </article>
+            `;
+
+            const serverInfo = serverPanel.querySelector('.server-info');
+            if (serverInfo) {
+                serverInfo.addEventListener('toggle', () => {
+                    serverInfoOpen = serverInfo.open;
+                });
+            }
+
+            serverPanel.querySelectorAll('.server-btn').forEach((btn) => {
+                btn.addEventListener('click', () => triggerServerAction(btn.dataset.action || ''));
+            });
+
+            const intervalInput = document.getElementById('slide-interval-input');
+            const saveButton = document.getElementById('save-slide-interval');
+            if (intervalInput) {
+                intervalInput.addEventListener('input', () => {
+                    pendingSlideIntervalSeconds = normalizeSlideInterval(intervalInput.value);
+                    slideIntervalDirty = true;
+                    const newValue = document.getElementById('slide-new-value');
+                    if (newValue) newValue.textContent = `${pendingSlideIntervalSeconds}s`;
+                });
+                intervalInput.addEventListener('change', () => {
+                    const normalized = normalizeSlideInterval(intervalInput.value);
+                    intervalInput.value = String(normalized);
+                    pendingSlideIntervalSeconds = normalized;
+                    slideIntervalDirty = true;
+                    const newValue = document.getElementById('slide-new-value');
+                    if (newValue) newValue.textContent = `${pendingSlideIntervalSeconds}s`;
+                });
+            }
+            if (saveButton && intervalInput) {
+                saveButton.addEventListener('click', () => {
+                    const targetSeconds = normalizeSlideInterval(pendingSlideIntervalSeconds !== null ? pendingSlideIntervalSeconds : intervalInput.value);
+                    const originalSeconds = normalizeSlideInterval(currentSlideIntervalSeconds);
+                    if (targetSeconds === originalSeconds) {
+                        window.alert('Los tiempos son iguales!');
+                        return;
+                    }
+                    const ok = window.confirm(`Cambiar tiempo diapositiva de ${originalSeconds}s a ${targetSeconds}s?`);
+                    if (!ok) return;
+                    saveSlideInterval(targetSeconds);
+                });
+            }
+
+            const overlaySelect = document.getElementById('overlay-kiosk-select');
+            const overlayEnableBtn = document.getElementById('overlay-enable-btn');
+            const overlayDisableBtn = document.getElementById('overlay-disable-btn');
+            if (overlaySelect) {
+                overlaySelect.addEventListener('change', () => {
+                    overlaySelection = overlaySelect.value;
+                    overlaySelectionDirty = true;
+                });
+            }
+            if (overlayEnableBtn && overlaySelect) {
+                overlayEnableBtn.addEventListener('click', async () => {
+                    const target = String(overlaySelect.value || '').trim();
+                    if (!target) {
+                        window.alert('Selecciona un quiosco');
+                        return;
+                    }
+                    await saveOverlayState('enable', target);
+                });
+            }
+            if (overlayDisableBtn) {
+                overlayDisableBtn.addEventListener('click', async () => {
+                    await saveOverlayState('disable', '');
+                });
+            }
+        }
+
+        async function fetchServerStatus() {
+            try {
+                const ts = Date.now();
+                const [serverResponse, overlayResponse] = await Promise.all([
+                    fetch(`server_status.php?_ts=${ts}`, { cache: 'no-store' }),
+                    fetch(`overlay_state.php?_ts=${ts}`, { cache: 'no-store' })
+                ]);
+                if (!serverResponse.ok) throw new Error('No se pudo leer estado servidor');
+                const data = await serverResponse.json();
+                if (overlayResponse.ok) {
+                    const overlayData = await overlayResponse.json();
+                    overlayState = {
+                        enabled: Boolean(overlayData.enabled),
+                        target_kiosk: String(overlayData.target_kiosk || ''),
+                        updated_at: String(overlayData.updated_at || '')
+                    };
+                }
+                renderServerPanel(data);
+            } catch (error) {
+                console.error('Error servidor:', error);
+            }
+        }
+
+        async function triggerServerAction(action) {
+            if (!action) return;
+            const serverName = String(currentServerHostname || 'servidor').toUpperCase();
+
+            if (action === 'reboot_server') {
+                const ok = window.confirm(`Vas a reiniciar el servidor ${serverName}. ¿Estas seguro?`);
+                if (!ok) return;
+                const confirmWord = window.prompt('Escribe REINICIAR para confirmar');
+                if (confirmWord !== 'REINICIAR') {
+                    window.alert('Confirmación inválida');
+                    return;
+                }
+                await sendServerAction(action, confirmWord);
+                return;
+            }
+
+            if (action === 'restart_web') {
+                const ok = window.confirm(`Vas a reiniciar el servidor web en ${serverName}. ¿Estas seguro?`);
+                if (!ok) return;
+                await sendServerAction(action, '');
+                return;
+            }
+
+            const ok = window.confirm(`Vas a ejecutar una acción en ${serverName}. ¿Estas seguro?`);
+            if (!ok) return;
+            await sendServerAction(action, '');
+        }
+
+        async function sendServerAction(action, confirmWord) {
+            try {
+                const response = await fetch('server_control.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action, confirm: confirmWord })
+                });
+                const raw = await response.text();
+                let data = null;
+                try {
+                    data = raw ? JSON.parse(raw) : null;
+                } catch (parseError) {
+                    if (action === 'restart_web') {
+                        window.alert('Orden enviada. La web puede tardar unos segundos en responder.');
+                        setTimeout(fetchServerStatus, 3000);
+                        return;
+                    }
+                    throw new Error('Respuesta no valida del servidor');
+                }
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || data.output || 'Acción fallida');
+                }
+                window.alert('Acción enviada correctamente');
+                fetchServerStatus();
+            } catch (error) {
+                window.alert(`Error de acción: ${error.message}`);
+            }
+        }
+
+        async function saveSlideInterval(rawValue) {
+            const seconds = normalizeSlideInterval(rawValue);
+            try {
+                const response = await fetch('slide_settings.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slide_interval_seconds: seconds })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'No se pudo guardar el tiempo');
+                }
+                currentSlideIntervalSeconds = normalizeSlideInterval(data.slide_interval_seconds || seconds);
+                pendingSlideIntervalSeconds = null;
+                slideIntervalDirty = false;
+                window.alert(`Tiempo de diapositiva actualizado a ${currentSlideIntervalSeconds}s`);
+                fetchServerStatus();
+            } catch (error) {
+                window.alert(`Error guardando tiempo: ${error.message}`);
+            }
+        }
+
+        async function saveOverlayState(action, targetKiosk) {
+            try {
+                const response = await fetch('overlay_control.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: action,
+                        target_kiosk: targetKiosk
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'No se pudo actualizar cuenta regresiva');
+                }
+                overlayState = {
+                    enabled: Boolean(data.enabled),
+                    target_kiosk: String(data.target_kiosk || ''),
+                    updated_at: String(data.updated_at || '')
+                };
+                overlaySelectionDirty = false;
+                if (overlayState.enabled && overlayState.target_kiosk) {
+                    overlaySelection = overlayState.target_kiosk;
+                }
+                window.alert(overlayState.enabled
+                    ? `Cuenta regresiva activada en ${overlayState.target_kiosk.toUpperCase()}`
+                    : 'Cuenta regresiva desactivada');
+                fetchServerStatus();
+            } catch (error) {
+                window.alert(`Error actualizando cuenta regresiva: ${error.message}`);
+            }
         }
 
         function renderKiosks(statusData) {
@@ -146,7 +530,9 @@
             let offlineCount = 0;
             let unstableCount = 0;
 
-            const cards = Object.entries(statusData).sort((a, b) => a[0].localeCompare(b[0])).map(([name, info]) => {
+            kioskNames = Object.keys(statusData).sort((a, b) => naturalSort.compare(a, b));
+
+            const cards = Object.entries(statusData).sort((a, b) => naturalSort.compare(a[0], b[0])).map(([name, info]) => {
                 const normalized = normalizeStatus(info, now);
                 const safeName = escapeHtml(name);
                 const safeNameUpper = escapeHtml(String(name).toUpperCase());
@@ -171,10 +557,8 @@
                 return `
                     <article class="kiosk-card state-${normalized.stateClass}">
                         <div class="kiosk-head">
-                            <div class="kiosk-title">
-                                <img src="img/quiosco.svg" alt="Quiosco">
-                                <strong>${safeNameUpper}</strong>
-                            </div>
+                            <img class="kiosk-icon" src="img/quiosco.svg" alt="Quiosco">
+                            <strong class="kiosk-name">${safeNameUpper}</strong>
                             <div class="badges">
                                 <span class="badge status status-${normalized.stateClass}">${normalized.stateLabel}</span>
                                 ${normalized.unstable ? '<span class="badge unstable">Inestable</span>' : ''}
@@ -185,8 +569,11 @@
                             <span>Último latido: ${absoluteTime}</span>
                         </div>
                         <details class="kiosk-report"${reportOpenAttr} data-kiosk="${kioskKey}">
-                            <summary>Ver reporte</summary>
+                            <summary>Información</summary>
                             ${renderMiniReport(normalized.report)}
+                            <div class="kiosk-actions">
+                                <button class="reboot-btn" data-kiosk="${kioskKey}" type="button">Reiniciar</button>
+                            </div>
                         </details>
                     </article>
                 `;
@@ -199,6 +586,10 @@
                     reportOpenState[kiosk] = details.open;
                 });
             });
+            statusContainer.querySelectorAll('.reboot-btn').forEach((btn) => {
+                const kiosk = decodeURIComponent(btn.dataset.kiosk || '');
+                btn.addEventListener('click', () => queueReboot(kiosk));
+            });
             renderSummary({
                 total: Object.keys(statusData).length,
                 online: onlineCount,
@@ -209,7 +600,7 @@
 
         async function fetchStatus() {
             try {
-                const response = await fetch('status.json', { cache: 'no-store' });
+                const response = await fetch(`status.json?_ts=${Date.now()}`, { cache: 'no-store' });
                 if (!response.ok) {
                     throw new Error('Error al obtener el estado');
                 }
@@ -221,7 +612,9 @@
         }
 
         setInterval(fetchStatus, 5000);
+        setInterval(fetchServerStatus, 5000);
         fetchStatus();
+        fetchServerStatus();
     </script>
 </body>
 </html>
