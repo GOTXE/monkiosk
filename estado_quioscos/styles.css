@@ -82,6 +82,29 @@ h2.section-title {
     height: 18px;
 }
 
+.topbar-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.logout-btn {
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+}
+
+.logout-btn:hover,
+.logout-btn:focus-visible {
+    background: rgba(255, 255, 255, 0.24);
+    outline: none;
+}
+
 .summary {
     display: flex;
     flex-wrap: wrap;
@@ -248,6 +271,41 @@ h2.section-title.server-title {
     color: #556b86;
     font-size: 0.88rem;
     text-align: right;
+}
+
+.password-control-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+    text-align: right;
+}
+
+.password-control-row > span {
+    width: 100%;
+    text-align: right;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.password-control-main {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.password-input {
+    min-width: 130px;
+    border: 1px solid #cdd9e8;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 0.88rem;
+    color: #1f4d86;
+    background: #f8fbff;
 }
 
 .slide-interval-input {

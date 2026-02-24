@@ -14,13 +14,16 @@
                 <img src="img/server.svg" alt="Servidor" class="header-icon">
                 <h1>Estado de los Quioscos</h1>
             </div>
-            <a id="doc-link" class="doc-btn" href="../kiosk_info/index.html" target="_blank" aria-label="Abrir documentación">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <path d="M3 6.5C3 5.67157 3.67157 5 4.5 5H17.5C18.3284 5 19 5.67157 19 6.5V18C19 18.8284 18.3284 19.5 17.5 19.5H4.5C3.67157 19.5 3 18.8284 3 18V6.5Z" stroke="rgba(255,255,255,0.95)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M7 8H15" stroke="rgba(255,255,255,0.95)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span>Documentación</span>
-            </a>
+            <div class="topbar-actions">
+                <a id="doc-link" class="doc-btn" href="../kiosk_info/index.html" target="_blank" aria-label="Abrir documentación">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M3 6.5C3 5.67157 3.67157 5 4.5 5H17.5C18.3284 5 19 5.67157 19 6.5V18C19 18.8284 18.3284 19.5 17.5 19.5H4.5C3.67157 19.5 3 18.8284 3 18V6.5Z" stroke="rgba(255,255,255,0.95)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M7 8H15" stroke="rgba(255,255,255,0.95)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Documentación</span>
+                </a>
+                <button id="logout-btn" class="logout-btn" type="button">Cerrar sesión</button>
+            </div>
         </header>
 
         <section id="summary" class="summary"></section>
@@ -52,6 +55,7 @@
         const statusContainer = document.getElementById('quioscos-status');
         const summaryContainer = document.getElementById('summary');
         const serverPanel = document.getElementById('server-panel');
+        const logoutBtn = document.getElementById('logout-btn');
         const reportOpenState = {};
         let serverInfoOpen = false;
         let currentServerHostname = 'servidor';
@@ -337,6 +341,15 @@
                                 </div>
                                 ${overlayActiveText}
                             </div>
+                            <div class="server-wide password-control-row">
+                                <span>Cambiar contrasena de acceso</span>
+                                <div class="password-control-main">
+                                    <input id="pwd-current" class="password-input" type="password" placeholder="Actual" autocomplete="current-password" aria-label="Contrasena actual">
+                                    <input id="pwd-new" class="password-input" type="password" placeholder="Nueva" autocomplete="new-password" aria-label="Nueva contrasena">
+                                    <input id="pwd-confirm" class="password-input" type="password" placeholder="Repetir" autocomplete="new-password" aria-label="Repetir nueva contrasena">
+                                    <button id="pwd-change-btn" class="server-btn" type="button">Cambiar contrasena</button>
+                                </div>
+                            </div>
                             <div class="server-wide"><span>Ult. reinicio web</span><strong>${formatSpainDateTime(data.last_web_restart || '-')}</strong></div>
                             <div class="server-wide"><span>Ult. reinicio servidor</span><strong>${formatSpainDateTime(data.last_server_restart || '-')}</strong></div>
                         </div>
@@ -421,6 +434,19 @@
             if (overlayDisableBtn) {
                 overlayDisableBtn.addEventListener('click', async () => {
                     await saveOverlayState('disable', '');
+                });
+            }
+
+            const pwdCurrent = document.getElementById('pwd-current');
+            const pwdNew = document.getElementById('pwd-new');
+            const pwdConfirm = document.getElementById('pwd-confirm');
+            const pwdChangeBtn = document.getElementById('pwd-change-btn');
+            if (pwdChangeBtn && pwdCurrent && pwdNew && pwdConfirm) {
+                pwdChangeBtn.addEventListener('click', async () => {
+                    await changeManagerPassword(pwdCurrent.value, pwdNew.value, pwdConfirm.value);
+                    pwdCurrent.value = '';
+                    pwdNew.value = '';
+                    pwdConfirm.value = '';
                 });
             }
         }
@@ -559,6 +585,66 @@
             }
         }
 
+        async function logoutManagerSession() {
+            window.location.href = '/estado_quioscos/logout.php';
+        }
+
+        async function ensureAuthenticated() {
+            try {
+                const response = await fetch(`session_status.php?_ts=${Date.now()}`, { cache: 'no-store' });
+                if (!response.ok) {
+                    window.location.href = '/estado_quioscos/login.php';
+                    return false;
+                }
+                const data = await response.json();
+                if (!data.authenticated) {
+                    window.location.href = '/estado_quioscos/login.php';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                window.location.href = '/estado_quioscos/login.php';
+                return false;
+            }
+        }
+
+        async function changeManagerPassword(currentPassword, newPassword, confirmPassword) {
+            const curr = String(currentPassword || '');
+            const next = String(newPassword || '');
+            const again = String(confirmPassword || '');
+            if (!curr || !next || !again) {
+                window.alert('Completa los 3 campos de contrasena');
+                return;
+            }
+            if (next !== again) {
+                window.alert('La nueva contrasena no coincide');
+                return;
+            }
+            if (next.length < 8) {
+                window.alert('La nueva contrasena debe tener minimo 8 caracteres');
+                return;
+            }
+
+            try {
+                const response = await fetch('change_password.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        current_password: curr,
+                        new_password: next,
+                        confirm_password: again
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'No se pudo cambiar la contrasena');
+                }
+                window.alert('Contrasena cambiada correctamente');
+            } catch (error) {
+                window.alert(`Error cambiando contrasena: ${error.message}`);
+            }
+        }
+
         function renderKiosks(statusData) {
             const now = Math.floor(Date.now() / 1000);
             let onlineCount = 0;
@@ -646,10 +732,19 @@
             }
         }
 
-        setInterval(fetchStatus, 5000);
-        setInterval(fetchServerStatus, 5000);
-        fetchStatus();
-        fetchServerStatus();
+        async function startApp() {
+            const ok = await ensureAuthenticated();
+            if (!ok) return;
+            setInterval(fetchStatus, 5000);
+            setInterval(fetchServerStatus, 5000);
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', logoutManagerSession);
+            }
+            fetchStatus();
+            fetchServerStatus();
+        }
+
+        startApp();
     </script>
 </body>
 </html>

@@ -1,5 +1,7 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
+require_once __DIR__ . '/auth_lib.php';
+auth_require_json();
 
 $config_file = __DIR__ . '/control_config.php';
 if (!file_exists($config_file)) {

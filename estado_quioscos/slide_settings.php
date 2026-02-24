@@ -1,5 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
+require_once __DIR__ . '/auth_lib.php';
 
 $settings_file = __DIR__ . '/slide_settings.json';
 $default_seconds = 5;
@@ -45,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Method Not Allowed'], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
+auth_require_json();
 
 $raw = file_get_contents('php://input');
 $data = json_decode($raw, true);
