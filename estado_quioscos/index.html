@@ -65,6 +65,7 @@
                     <label for="modal-pwd-confirm">Repetir</label>
                     <input id="modal-pwd-confirm" type="password" autocomplete="new-password">
                 </div>
+                <div id="modal-pwd-error" class="modal-error" hidden>Las contraseñas no coinciden</div>
                 <div class="modal-actions">
                     <button id="modal-pwd-cancel" class="server-btn danger" type="button">Cancelar</button>
                     <button id="modal-pwd-save" class="server-btn" type="button">Cambiar contraseña</button>
@@ -85,6 +86,7 @@
         const modalPwdCurrent = document.getElementById('modal-pwd-current');
         const modalPwdNew = document.getElementById('modal-pwd-new');
         const modalPwdConfirm = document.getElementById('modal-pwd-confirm');
+        const modalPwdError = document.getElementById('modal-pwd-error');
         const modalPwdSave = document.getElementById('modal-pwd-save');
         const modalPwdCancel = document.getElementById('modal-pwd-cancel');
         const reportOpenState = {};
@@ -616,6 +618,15 @@
             if (modalPwdCurrent) modalPwdCurrent.value = '';
             if (modalPwdNew) modalPwdNew.value = '';
             if (modalPwdConfirm) modalPwdConfirm.value = '';
+            if (modalPwdError) modalPwdError.hidden = true;
+        }
+
+        function updatePasswordMatchError() {
+            if (!modalPwdNew || !modalPwdConfirm || !modalPwdError) return true;
+            const hasValues = modalPwdNew.value !== '' || modalPwdConfirm.value !== '';
+            const same = modalPwdNew.value === modalPwdConfirm.value;
+            modalPwdError.hidden = !hasValues || same;
+            return same;
         }
 
         async function ensureAuthenticated() {
@@ -787,8 +798,17 @@
             if (modalPwdCancel) {
                 modalPwdCancel.addEventListener('click', closePasswordModal);
             }
+            if (modalPwdNew) {
+                modalPwdNew.addEventListener('input', updatePasswordMatchError);
+            }
+            if (modalPwdConfirm) {
+                modalPwdConfirm.addEventListener('input', updatePasswordMatchError);
+            }
             if (modalPwdSave && modalPwdCurrent && modalPwdNew && modalPwdConfirm) {
                 modalPwdSave.addEventListener('click', async () => {
+                    if (!updatePasswordMatchError()) {
+                        return;
+                    }
                     await changeManagerPassword(modalPwdCurrent.value, modalPwdNew.value, modalPwdConfirm.value);
                     closePasswordModal();
                 });
