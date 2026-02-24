@@ -192,6 +192,10 @@ h2.section-title.server-title {
     color: #1f4d86;
 }
 
+.slide-config-values .slide-new-different {
+    color: #b35a00;
+}
+
 .overlay-control-row {
     display: flex;
     align-items: center;

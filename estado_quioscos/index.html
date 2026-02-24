@@ -286,6 +286,7 @@
             const displaySlideInterval = slideIntervalDirty && pendingSlideIntervalSeconds !== null
                 ? pendingSlideIntervalSeconds
                 : currentSlideIntervalSeconds;
+            const isNewSlideDifferent = Number(displaySlideInterval) !== Number(currentSlideIntervalSeconds);
             if (!overlaySelectionDirty) {
                 if (overlayState.enabled && overlayState.target_kiosk) {
                     overlaySelection = overlayState.target_kiosk;
@@ -305,7 +306,6 @@
                         <div class="server-grid">
                             <div><span>Host</span><strong>${escapeHtml(String(data.hostname || '-').toUpperCase())}</strong></div>
                             <div><span>Encendido</span><strong>${escapeHtml(uptime)}</strong></div>
-                            <div><span>Carga 1m</span><strong>${escapeHtml(String(data.load1 || '-'))}</strong></div>
                             <div><span>RAM libre</span><strong>${formatStorageMb(Number(data.mem_free_mb || 0))}</strong></div>
                             <div>
                                 <span>Disco libre</span>
@@ -323,7 +323,7 @@
                                 </div>
                                 <div class="slide-config-values">
                                     <span>Actual: <strong id="slide-actual-value">${currentSlideIntervalSeconds}s</strong></span>
-                                    <span>Nuevo: <strong id="slide-new-value">${displaySlideInterval}s</strong></span>
+                                    <span>Nuevo: <strong id="slide-new-value" class="${isNewSlideDifferent ? 'slide-new-different' : ''}">${displaySlideInterval}s</strong></span>
                                 </div>
                             </div>
                             <div class="server-wide overlay-control-row">
@@ -366,7 +366,11 @@
                     pendingSlideIntervalSeconds = normalizeSlideInterval(intervalInput.value);
                     slideIntervalDirty = true;
                     const newValue = document.getElementById('slide-new-value');
-                    if (newValue) newValue.textContent = `${pendingSlideIntervalSeconds}s`;
+                    if (newValue) {
+                        newValue.textContent = `${pendingSlideIntervalSeconds}s`;
+                        const different = pendingSlideIntervalSeconds !== normalizeSlideInterval(currentSlideIntervalSeconds);
+                        newValue.classList.toggle('slide-new-different', different);
+                    }
                 });
                 intervalInput.addEventListener('change', () => {
                     const normalized = normalizeSlideInterval(intervalInput.value);
@@ -374,7 +378,11 @@
                     pendingSlideIntervalSeconds = normalized;
                     slideIntervalDirty = true;
                     const newValue = document.getElementById('slide-new-value');
-                    if (newValue) newValue.textContent = `${pendingSlideIntervalSeconds}s`;
+                    if (newValue) {
+                        newValue.textContent = `${pendingSlideIntervalSeconds}s`;
+                        const different = pendingSlideIntervalSeconds !== normalizeSlideInterval(currentSlideIntervalSeconds);
+                        newValue.classList.toggle('slide-new-different', different);
+                    }
                 });
             }
             if (saveButton && intervalInput) {
