@@ -69,7 +69,9 @@
       const contentDiv = document.getElementById('markdown-content');
       document.querySelectorAll('#sidebar a').forEach(a => a.classList.remove('active'));
       event.target.classList.add('active');
-      fetch(file)
+      const cacheBust = `v=${Date.now()}`;
+      const sep = file.includes('?') ? '&' : '?';
+      fetch(`${file}${sep}${cacheBust}`, { cache: 'no-store' })
         .then(r => { if(!r.ok) throw new Error('No se pudo cargar'); return r.text(); })
         .then(text => {
           text = unwrapOuterFence(text);
