@@ -38,6 +38,14 @@ function auth_current_user(): string {
     return (string)($_SESSION['auth_user'] ?? '');
 }
 
+function auth_require_page(): void {
+    if (auth_is_authenticated()) {
+        return;
+    }
+    header('Location: /estado_quioscos/login.php');
+    exit;
+}
+
 function auth_require_json(): void {
     if (auth_is_authenticated()) {
         return;
@@ -47,3 +55,20 @@ function auth_require_json(): void {
     exit;
 }
 
+function auth_csrf_token(): string {
+    auth_session_start();
+    $token = (string)($_SESSION['csrf_token'] ?? '');
+    if ($token !== '') {
+        return $token;
+    }
+    $token = bin2hex(random_bytes(24));
+    $_SESSION['csrf_token'] = $token;
+    return $token;
+}
+
+function auth_verify_csrf(?string $token): bool {
+    auth_session_start();
+    $current = (string)($_SESSION['csrf_token'] ?? '');
+    $given = trim((string)$token);
+    return $current !== '' && $given !== '' && hash_equals($current, $given);
+}
