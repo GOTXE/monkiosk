@@ -35,6 +35,30 @@ START_SERVICE="1"
 ENABLE_SERVICE="1"
 FORCE_CONFIG="0"
 
+normalize_report_url() {
+    url_raw="$1"
+    if [ -z "$url_raw" ]; then
+        echo ""
+        return 0
+    fi
+
+    url="$(printf '%s' "$url_raw" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+    case "$url" in
+        *://*) ;;
+        *) url="http://$url" ;;
+    esac
+
+    case "$url" in
+        */update_status.php) echo "$url" ;;
+        */get_action.php) echo "${url%/get_action.php}/update_status.php" ;;
+        */estado_quioscos) echo "$url/update_status.php" ;;
+        */estado_quioscos/) echo "${url}update_status.php" ;;
+        *.php) echo "$url" ;;
+        */) echo "${url}estado_quioscos/update_status.php" ;;
+        *) echo "$url/estado_quioscos/update_status.php" ;;
+    esac
+}
+
 usage() {
     cat <<USAGE
 Uso:
@@ -107,6 +131,9 @@ if [ -z "$PRIMARY_URL" ]; then
     usage
     exit 1
 fi
+
+PRIMARY_URL="$(normalize_report_url "$PRIMARY_URL")"
+FALLBACK_URL="$(normalize_report_url "$FALLBACK_URL")"
 
 for n in "$INTERVAL" "$MAX_RETRIES" "$RETRY_INTERVAL" "$CONNECT_TIMEOUT" "$MAX_TIME"; do
     if ! is_int "$n"; then

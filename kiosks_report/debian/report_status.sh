@@ -22,6 +22,33 @@ if [ -f "$CONFIG_FILE" ]; then
     . "$CONFIG_FILE"
 fi
 
+normalize_report_url() {
+    url_raw="$1"
+    if [ -z "$url_raw" ]; then
+        echo ""
+        return 0
+    fi
+
+    url="$(printf '%s' "$url_raw" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+    case "$url" in
+        *://*) ;;
+        *) url="http://$url" ;;
+    esac
+
+    case "$url" in
+        */update_status.php) echo "$url" ;;
+        */get_action.php) echo "${url%/get_action.php}/update_status.php" ;;
+        */estado_quioscos) echo "$url/update_status.php" ;;
+        */estado_quioscos/) echo "${url}update_status.php" ;;
+        *.php) echo "$url" ;;
+        */) echo "${url}estado_quioscos/update_status.php" ;;
+        *) echo "$url/estado_quioscos/update_status.php" ;;
+    esac
+}
+
+PRIMARY_URL="$(normalize_report_url "$PRIMARY_URL")"
+FALLBACK_URL="$(normalize_report_url "$FALLBACK_URL")"
+
 KIOSK_NAME="$(hostname)"
 LOG_FILE="/var/log/kiosk-heartbeat.log"
 LAST_OK_URL=""
