@@ -42,6 +42,21 @@ if (strlen($new) < 8) {
     echo json_encode(['success' => false, 'error' => 'Minimo 8 caracteres'], JSON_UNESCAPED_UNICODE);
     exit;
 }
+if (!preg_match('/[A-Z]/', $new)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Debe incluir al menos 1 mayuscula'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+if (!preg_match('/[0-9]/', $new)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Debe incluir al menos 1 numero'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+if (!preg_match('/[^A-Za-z0-9]/', $new)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Debe incluir al menos 1 caracter especial'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $users = auth_load_users();
 $stored = (string)($users[$auth_user] ?? '');

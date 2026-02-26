@@ -610,6 +610,7 @@
         function openPasswordModal() {
             if (!passwordModal) return;
             passwordModal.hidden = false;
+            clearPasswordModalError();
             if (modalPwdCurrent) modalPwdCurrent.focus();
         }
 
@@ -619,14 +620,29 @@
             if (modalPwdCurrent) modalPwdCurrent.value = '';
             if (modalPwdNew) modalPwdNew.value = '';
             if (modalPwdConfirm) modalPwdConfirm.value = '';
-            if (modalPwdError) modalPwdError.hidden = true;
+            clearPasswordModalError();
+        }
+
+        function setPasswordModalError(message) {
+            if (!modalPwdError) return;
+            modalPwdError.textContent = String(message || 'Error');
+            modalPwdError.hidden = false;
+        }
+
+        function clearPasswordModalError() {
+            if (!modalPwdError) return;
+            modalPwdError.hidden = true;
         }
 
         function updatePasswordMatchError() {
             if (!modalPwdNew || !modalPwdConfirm || !modalPwdError) return true;
             const hasValues = modalPwdNew.value !== '' || modalPwdConfirm.value !== '';
             const same = modalPwdNew.value === modalPwdConfirm.value;
-            modalPwdError.hidden = !hasValues || same;
+            if (!hasValues || same) {
+                clearPasswordModalError();
+            } else {
+                setPasswordModalError('Las contraseñas no coinciden');
+            }
             return same;
         }
 
@@ -653,17 +669,30 @@
             const curr = String(currentPassword || '');
             const next = String(newPassword || '');
             const again = String(confirmPassword || '');
+            clearPasswordModalError();
             if (!curr || !next || !again) {
-                window.alert('Completa los 3 campos de contrasena');
-                return;
+                setPasswordModalError('Completa los 3 campos de contrasena');
+                return false;
             }
             if (next !== again) {
-                window.alert('La nueva contrasena no coincide');
-                return;
+                setPasswordModalError('La nueva contrasena no coincide');
+                return false;
             }
             if (next.length < 8) {
-                window.alert('La nueva contrasena debe tener minimo 8 caracteres');
-                return;
+                setPasswordModalError('La nueva contrasena debe tener minimo 8 caracteres');
+                return false;
+            }
+            if (!/[A-Z]/.test(next)) {
+                setPasswordModalError('La nueva contrasena debe incluir al menos 1 mayuscula');
+                return false;
+            }
+            if (!/[0-9]/.test(next)) {
+                setPasswordModalError('La nueva contrasena debe incluir al menos 1 numero');
+                return false;
+            }
+            if (!/[^A-Za-z0-9]/.test(next)) {
+                setPasswordModalError('La nueva contrasena debe incluir al menos 1 caracter especial');
+                return false;
             }
 
             try {
@@ -681,8 +710,10 @@
                     throw new Error(data.error || 'No se pudo cambiar la contrasena');
                 }
                 window.alert('Contrasena cambiada correctamente');
+                return true;
             } catch (error) {
-                window.alert(`Error cambiando contrasena: ${error.message}`);
+                setPasswordModalError(`Error cambiando contrasena: ${error.message}`);
+                return false;
             }
         }
 
@@ -810,8 +841,10 @@
                     if (!updatePasswordMatchError()) {
                         return;
                     }
-                    await changeManagerPassword(modalPwdCurrent.value, modalPwdNew.value, modalPwdConfirm.value);
-                    closePasswordModal();
+                    const ok = await changeManagerPassword(modalPwdCurrent.value, modalPwdNew.value, modalPwdConfirm.value);
+                    if (ok) {
+                        closePasswordModal();
+                    }
                 });
             }
             if (passwordModal) {
