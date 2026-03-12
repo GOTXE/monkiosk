@@ -49,6 +49,38 @@ $error = isset($_GET['e']) ? trim((string)$_GET['e']) : '';
             color: var(--ink);
             background: #f8fbff;
         }
+        .password-row {
+            position: relative;
+            width: 100%;
+        }
+        .password-row input {
+            display: block;
+            width: 100%;
+            padding-right: 44px;
+        }
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            border: 0;
+            background: transparent;
+            color: #55708f;
+            border-radius: 50%;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .password-toggle:hover { background: rgba(43, 120, 217, 0.1); }
+        .password-toggle svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
         .remember {
             margin-top: 12px;
             display: inline-flex;
@@ -90,7 +122,14 @@ $error = isset($_GET['e']) ? trim((string)$_GET['e']) : '';
 
             <div class="field">
                 <label for="password">Contraseña</label>
-                <input id="password" name="password" type="password" required autocomplete="current-password">
+                <div class="password-row">
+                    <input id="password" name="password" type="password" required autocomplete="current-password">
+                    <button id="password-toggle" class="password-toggle" type="button" aria-label="Mostrar contraseña" aria-controls="password" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 5c5.23 0 9.27 3.11 11 7-1.73 3.89-5.77 7-11 7S2.73 15.89 1 12c1.73-3.89 5.77-7 11-7Zm0 2C8.18 7 5.14 9.13 3.42 12 5.14 14.87 8.18 17 12 17s6.86-2.13 8.58-5C18.86 9.13 15.82 7 12 7Zm0 1.5A3.5 3.5 0 1 1 8.5 12 3.5 3.5 0 0 1 12 8.5Zm0 2A1.5 1.5 0 1 0 13.5 12 1.5 1.5 0 0 0 12 10.5Z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <label class="remember">
@@ -108,6 +147,7 @@ $error = isset($_GET['e']) ? trim((string)$_GET['e']) : '';
     <script>
         const u = document.getElementById('username');
         const p = document.getElementById('password');
+        const t = document.getElementById('password-toggle');
         const r = document.getElementById('remember');
         const f = document.getElementById('login-form');
 
@@ -116,6 +156,15 @@ $error = isset($_GET['e']) ? trim((string)$_GET['e']) : '';
             u.value = localStorage.getItem('estado_quioscos_user') || '';
             p.value = localStorage.getItem('estado_quioscos_pass') || '';
             r.checked = true;
+        }
+
+        if (t && p) {
+            t.addEventListener('click', () => {
+                const reveal = p.type === 'password';
+                p.type = reveal ? 'text' : 'password';
+                t.setAttribute('aria-label', reveal ? 'Ocultar contraseña' : 'Mostrar contraseña');
+                t.setAttribute('aria-pressed', reveal ? 'true' : 'false');
+            });
         }
 
         f.addEventListener('submit', () => {

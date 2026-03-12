@@ -405,6 +405,45 @@ h2.section-title.server-title {
     font-size: 0.92rem;
 }
 
+.modal-password-row {
+    position: relative;
+    width: 100%;
+}
+
+.modal-password-row input {
+    display: block;
+    width: 100%;
+    padding-right: 44px;
+}
+
+.modal-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: 0;
+    background: transparent;
+    color: #55708f;
+    border-radius: 50%;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.modal-password-toggle:hover {
+    background: rgba(43, 120, 217, 0.1);
+}
+
+.modal-password-toggle svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
 .modal-error {
     margin-top: 8px;
     color: #b42318;
