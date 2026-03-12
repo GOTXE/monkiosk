@@ -16,14 +16,15 @@ if ($username === '' || $password === '') {
 }
 
 $users = auth_load_users();
-$stored = (string)($users[$username] ?? '');
+$resolved_username = auth_resolve_username($users, $username);
+$stored = (string)($users[$resolved_username] ?? '');
 
 if ($stored === '' || !password_verify($password, $stored)) {
     header('Location: /estado_quioscos/login.php?e=' . urlencode('Usuario o contraseña incorrectos'));
     exit;
 }
 
-$_SESSION['auth_user'] = $username;
+$_SESSION['auth_user'] = $resolved_username;
 $_SESSION['auth_time'] = time();
 
 header('Location: /estado_quioscos/');

@@ -28,6 +28,19 @@ function auth_load_users(): array {
     return is_array($json) ? $json : [];
 }
 
+function auth_resolve_username(array $users, string $username): string {
+    $needle = strtolower(trim($username));
+    if ($needle === '') {
+        return '';
+    }
+    foreach ($users as $candidate => $_hash) {
+        if (strtolower((string)$candidate) === $needle) {
+            return (string)$candidate;
+        }
+    }
+    return '';
+}
+
 function auth_is_authenticated(): bool {
     auth_session_start();
     return isset($_SESSION['auth_user']) && is_string($_SESSION['auth_user']) && $_SESSION['auth_user'] !== '';
