@@ -47,3 +47,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: homogeneización visual de páginas de `estado_quioscos` con footer común y mejora del flujo de confirmación de guardado en `Quioscos permitidos` mediante modal.
 - Archivos: `estado_quioscos/login.php`, `estado_quioscos/docs_manager.php`, `estado_quioscos/allowed_kiosks.php`
 - Verificación: `php -l` y revisión visual en producción.
+
+### 2026-03-13 13:05
+- Área: monitorizacion
+- Cambio: mejora de usabilidad en `Quioscos permitidos`: etiqueta `Permitido` en lugar de `Activo`, activación por defecto de quioscos ya detectados cuando no existe lista previa, validación visual de IPv4 en `IP fija` y restricción de escritura a números y puntos.
+- Archivos: `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/app_config.php`
+- Verificación: `php -l` y comprobación visual del formulario desplegado en producción.

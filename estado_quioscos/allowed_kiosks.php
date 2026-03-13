@@ -62,6 +62,11 @@ $items = eq_load_allowed_kiosks_for_crud();
             color: var(--ink);
             background: #f8fbff;
         }
+        .ip-invalid {
+            border-color: #c92a2a !important;
+            background: #fff6f6 !important;
+            color: #a61e2a !important;
+        }
         .row-actions { display: inline-flex; gap: 6px; }
         .small-btn {
             border: 1px solid #c8d7ea;
@@ -334,14 +339,20 @@ $items = eq_load_allowed_kiosks_for_crud();
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><input type="text" data-field="hostname" value="${escapeHtml(item.hostname || '')}" placeholder="kiosk01"></td>
-                <td><input type="text" data-field="ip" value="${escapeHtml(item.ip || '')}" placeholder="192.168.1.10"></td>
+                <td><input type="text" inputmode="numeric" data-field="ip" value="${escapeHtml(item.ip || '')}" placeholder="192.168.1.10"></td>
                 <td><input type="checkbox" data-field="enabled" ${item.enabled !== false ? 'checked' : ''}></td>
                 <td class="row-actions"><button class="small-btn danger" type="button">Eliminar</button></td>
             `;
             const hostnameInput = tr.querySelector('[data-field="hostname"]');
+            const ipInput = tr.querySelector('[data-field="ip"]');
             hostnameInput.addEventListener('input', () => {
                 hostnameInput.value = hostnameInput.value.toLowerCase();
             });
+            ipInput.addEventListener('input', () => {
+                ipInput.value = ipInput.value.replace(/[^0-9.]/g, '');
+                updateIpInputState(ipInput);
+            });
+            updateIpInputState(ipInput);
             tr.querySelector('button').addEventListener('click', () => {
                 tr.remove();
                 if (!rowsEl.children.length) addRow({ hostname: '', ip: '', enabled: true });
@@ -358,12 +369,40 @@ $items = eq_load_allowed_kiosks_for_crud();
                 .replace(/'/g, '&#039;');
         }
 
+        function isValidIpv4(ip) {
+            const value = String(ip || '').trim();
+            if (value === '') return true;
+            if (!/^\d+(?:\.\d+){3}$/.test(value)) return false;
+            const parts = value.split('.');
+            if (parts.length !== 4) return false;
+            return parts.every((part) => {
+                if (part === '') return false;
+                const n = Number(part);
+                return Number.isInteger(n) && n >= 0 && n <= 255;
+            });
+        }
+
+        function updateIpInputState(input) {
+            input.classList.toggle('ip-invalid', !isValidIpv4(input.value));
+        }
+
         function collectItems() {
             return Array.from(rowsEl.querySelectorAll('tr')).map((row) => ({
                 hostname: row.querySelector('[data-field="hostname"]').value.trim().toLowerCase(),
                 ip: row.querySelector('[data-field="ip"]').value.trim(),
                 enabled: row.querySelector('[data-field="enabled"]').checked
             })).filter((item) => item.hostname !== '' || item.ip !== '');
+        }
+
+        function hasInvalidIpInputs() {
+            let invalid = false;
+            rowsEl.querySelectorAll('[data-field="ip"]').forEach((input) => {
+                updateIpInputState(input);
+                if (!isValidIpv4(input.value)) {
+                    invalid = true;
+                }
+            });
+            return invalid;
         }
 
         document.getElementById('add-row').addEventListener('click', () => {
@@ -373,6 +412,11 @@ $items = eq_load_allowed_kiosks_for_crud();
         async function submitSaveItems() {
             setStatus('');
             const items = collectItems();
+            if (hasInvalidIpInputs()) {
+                setStatus('Hay IPs fijas no válidas. Revisa los campos marcados en rojo.', 'err');
+                closeSaveModal();
+                return;
+            }
             if (!window.confirm('¿Seguro que quieres guardar los cambios?')) {
                 return;
             }
@@ -424,7 +468,6 @@ $items = eq_load_allowed_kiosks_for_crud();
                     body: JSON.stringify({
                         action: 'set_protection',
                         csrf_token: csrfToken,
-                        confirm_text: confirmTextEl.value,
                         enabled: nextEnabled
                     })
                 });

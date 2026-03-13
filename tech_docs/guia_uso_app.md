@@ -103,6 +103,9 @@ Notas practicas:
 - el `hostname` se normaliza a minusculas
 - si no existe todavia una lista guardada, los quioscos ya detectados aparecen marcados por defecto
 - puedes dejar un equipo en la lista pero sin `Permitido` para conservarlo sin autorizarlo
+- `IP fija` es opcional, pero si la rellenas debe ser una IPv4 valida
+- el campo `IP fija` solo admite numeros y puntos
+- si la IP es incorrecta, el campo se marca en rojo y no deja guardar
 
 ## 8. Proteccion de acceso de quioscos
 
