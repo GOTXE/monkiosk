@@ -1,7 +1,8 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
+require_once __DIR__ . '/app_config.php';
 
-$offline_timeout = 150; // segundos
+$offline_timeout = eq_offline_timeout_seconds();
 $cleanup_ttl = 7 * 24 * 60 * 60; // 7 dias
 $history_max_events = 5;
 $unstable_window_seconds = 10 * 60; // 10 minutos
@@ -45,15 +46,8 @@ if (strlen($status) > 64) {
     $status = substr($status, 0, 64);
 }
 
-// Ruta al archivo de estados y archivo de hostnames permitidos
 $status_file = __DIR__ . '/status.json';
-$allowed_hosts_file = __DIR__ . '/allowed_hosts.txt';
-
-// Cargar lista de hosts permitidos
-$allowed_hosts = [];
-if (file_exists($allowed_hosts_file)) {
-    $allowed_hosts = array_map('trim', file($allowed_hosts_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-}
+$allowed_kiosks_lookup = eq_allowed_kiosks_lookup(eq_load_allowed_kiosks());
 
 // Carga los estados actuales (si el archivo está vacío o inválido, iniciar array vacío)
 $status_data = [];
@@ -141,6 +135,26 @@ function sanitize_int_field(array $data, string $key, int $min = 0, int $max = 2
 // Datos adicionales
 $remote_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $current_time = time();
+$protection_enabled = eq_load_protection_state();
+$allowed_kiosk = eq_resolve_allowed_kiosk($allowed_kiosks_lookup, $kiosk_name);
+if ($protection_enabled && !empty($allowed_kiosks_lookup) && !is_array($allowed_kiosk)) {
+    eq_register_unknown_kiosk_attempt($kiosk_name, $remote_ip);
+    http_response_code(403);
+    echo json_encode(['error' => 'Hostname no permitido']);
+    exit;
+}
+if ($protection_enabled && is_array($allowed_kiosk)) {
+    $expected_ip = (string)($allowed_kiosk['ip'] ?? '');
+    if ($expected_ip !== '' && $expected_ip !== $remote_ip) {
+        eq_register_unknown_kiosk_attempt($kiosk_name, $remote_ip);
+        http_response_code(403);
+        echo json_encode(['error' => 'IP no permitida para ese hostname']);
+        exit;
+    }
+}
+if (is_array($allowed_kiosk)) {
+    eq_remove_unknown_kiosk_attempt($kiosk_name);
+}
 
 // Normaliza registros existentes para compatibilidad.
 foreach ($status_data as $name => $info) {
@@ -239,8 +253,7 @@ foreach ($status_data as $name => &$info) {
         continue;
     }
 
-    // Si hay lista blanca, también elimina equipos no permitidos cuando estan offline.
-    if (!empty($allowed_hosts) && !in_array($name, $allowed_hosts, true) && $is_offline) {
+    if ($protection_enabled && !empty($allowed_kiosks_lookup) && !is_array(eq_resolve_allowed_kiosk($allowed_kiosks_lookup, $name))) {
         unset($status_data[$name]);
     }
 }

@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/auth_lib.php';
+require_once __DIR__ . '/app_config.php';
 auth_require_json();
 
 $config_file = __DIR__ . '/control_config.php';
@@ -45,6 +46,16 @@ if ($action !== 'reboot') {
     exit;
 }
 
+$allowed_lookup = eq_allowed_kiosks_lookup(eq_load_allowed_kiosks());
+$allowed_kiosk = eq_resolve_allowed_kiosk($allowed_lookup, $name);
+if (!empty($allowed_lookup) && !is_array($allowed_kiosk)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Quiosco no permitido']);
+    exit;
+}
+
+$canonical_name = is_array($allowed_kiosk) ? (string)$allowed_kiosk['hostname'] : $name;
+
 $actions_file = __DIR__ . '/actions.json';
 $actions = [];
 if (file_exists($actions_file)) {
@@ -58,7 +69,7 @@ if (file_exists($actions_file)) {
 }
 
 $requested_by = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-$actions[$name] = [
+$actions[$canonical_name] = [
     'action' => $action,
     'requested_at' => time(),
     'requested_by' => $requested_by
@@ -102,11 +113,11 @@ if (file_exists($status_file)) {
         }
     }
 }
-if (!isset($status_data[$name]) || !is_array($status_data[$name])) {
-    $status_data[$name] = [];
+if (!isset($status_data[$canonical_name]) || !is_array($status_data[$canonical_name])) {
+    $status_data[$canonical_name] = [];
 }
-$status_data[$name]['status'] = 'Reiniciando';
-$status_data[$name]['reboot_requested_at'] = time();
+$status_data[$canonical_name]['status'] = 'Reiniciando';
+$status_data[$canonical_name]['reboot_requested_at'] = time();
 
 $status_out = json_encode($status_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 $status_fp = @fopen($status_file, 'c+');
@@ -119,4 +130,4 @@ if ($status_fp !== false && flock($status_fp, LOCK_EX)) {
     fclose($status_fp);
 }
 
-echo json_encode(['success' => true, 'queued' => ['name' => $name, 'action' => $action]]);
+echo json_encode(['success' => true, 'queued' => ['name' => $canonical_name, 'action' => $action]]);
