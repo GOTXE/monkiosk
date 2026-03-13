@@ -27,7 +27,7 @@ $error = isset($_GET['e']) ? trim((string)$_GET['e']) : '';
         }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; min-height: 100vh; font-family: Verdana, sans-serif; background: var(--bg); }
-        .page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
         .card {
             width: min(460px, 100%);
             background: var(--card);
@@ -37,6 +37,29 @@ $error = isset($_GET['e']) ? trim((string)$_GET['e']) : '';
             padding: 24px;
             box-shadow: 0 10px 28px rgba(8, 25, 48, 0.28);
         }
+        .app-footer {
+            margin-top: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #d6e7ff;
+            font-size: 0.84rem;
+            width: 100%;
+        }
+        .footer-brand { font-weight: 700; }
+        .footer-github {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            color: #d6e7ff;
+            border: 1px solid rgba(214, 231, 255, 0.35);
+            text-decoration: none;
+        }
+        .footer-github svg { width: 15px; height: 15px; fill: currentColor; }
         h1 { margin: 0 0 16px; font-size: 1.35rem; line-height: 1.3; text-align: center; }
         h1 .subline { display: block; }
         .field { display: grid; gap: 6px; margin-top: 10px; }
@@ -134,7 +157,7 @@ $error = isset($_GET['e']) ? trim((string)$_GET['e']) : '';
 
             <label class="remember">
                 <input id="remember" type="checkbox" name="remember">
-                <span>Recordar credenciales</span>
+                <span>Recordar usuario</span>
             </label>
 
             <button class="submit" type="submit">Entrar</button>
@@ -142,6 +165,14 @@ $error = isset($_GET['e']) ? trim((string)$_GET['e']) : '';
                 <div class="error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>
         </form>
+        <footer class="app-footer">
+            <span class="footer-brand">OFAP 601</span>
+            <a class="footer-github" href="https://github.com/GOTXE/monkiosk" target="_blank" rel="noopener noreferrer" aria-label="Repositorio GitHub monkiosk" title="Repositorio GitHub monkiosk">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.49c-2.23.48-2.7-.95-2.7-.95-.36-.92-.89-1.16-.89-1.16-.73-.5.06-.49.06-.49.81.06 1.24.83 1.24.83.72 1.24 1.89.88 2.35.67.07-.52.28-.88.5-1.08-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.58.82-2.14-.08-.2-.36-1.01.08-2.1 0 0 .67-.21 2.2.82a7.62 7.62 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.09.16 1.9.08 2.1.51.56.82 1.27.82 2.14 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+                </svg>
+            </a>
+        </footer>
     </div>
 
     <script>
@@ -152,9 +183,9 @@ $error = isset($_GET['e']) ? trim((string)$_GET['e']) : '';
         const f = document.getElementById('login-form');
 
         const remembered = localStorage.getItem('estado_quioscos_remember') === '1';
+        localStorage.removeItem('estado_quioscos_pass');
         if (remembered) {
             u.value = localStorage.getItem('estado_quioscos_user') || '';
-            p.value = localStorage.getItem('estado_quioscos_pass') || '';
             r.checked = true;
         }
 
@@ -171,11 +202,9 @@ $error = isset($_GET['e']) ? trim((string)$_GET['e']) : '';
             if (r.checked) {
                 localStorage.setItem('estado_quioscos_remember', '1');
                 localStorage.setItem('estado_quioscos_user', u.value);
-                localStorage.setItem('estado_quioscos_pass', p.value);
             } else {
                 localStorage.removeItem('estado_quioscos_remember');
                 localStorage.removeItem('estado_quioscos_user');
-                localStorage.removeItem('estado_quioscos_pass');
             }
         });
     </script>

@@ -91,6 +91,29 @@ $csrfToken = auth_csrf_token();
             font-size: 1.05rem;
             color: #1f4d86;
         }
+        .app-footer {
+            margin-top: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #d6e7ff;
+            font-size: 0.84rem;
+            width: 100%;
+        }
+        .footer-brand { font-weight: 700; }
+        .footer-github {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            color: #d6e7ff;
+            border: 1px solid rgba(214, 231, 255, 0.35);
+            text-decoration: none;
+        }
+        .footer-github svg { width: 15px; height: 15px; fill: currentColor; }
         .status {
             min-height: 20px;
             margin-bottom: 8px;
@@ -284,6 +307,14 @@ $csrfToken = auth_csrf_token();
                 </div>
             </section>
         </div>
+        <footer class="app-footer">
+            <span class="footer-brand">OFAP 601</span>
+            <a class="footer-github" href="https://github.com/GOTXE/monkiosk" target="_blank" rel="noopener noreferrer" aria-label="Repositorio GitHub monkiosk" title="Repositorio GitHub monkiosk">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.49c-2.23.48-2.7-.95-2.7-.95-.36-.92-.89-1.16-.89-1.16-.73-.5.06-.49.06-.49.81.06 1.24.83 1.24.83.72 1.24 1.89.88 2.35.67.07-.52.28-.88.5-1.08-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.58.82-2.14-.08-.2-.36-1.01.08-2.1 0 0 .67-.21 2.2.82a7.62 7.62 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.09.16 1.9.08 2.1.51.56.82 1.27.82 2.14 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+                </svg>
+            </a>
+        </footer>
     </div>
 
     <script>
