@@ -3,6 +3,16 @@
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
+$appConfigCandidates = [
+    __DIR__ . '/../estado_quioscos/app_config.php',
+    __DIR__ . '/estado_quioscos/app_config.php',
+];
+foreach ($appConfigCandidates as $appConfigPath) {
+    if (is_file($appConfigPath)) {
+        require_once $appConfigPath;
+        break;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -145,20 +155,9 @@ header("Pragma: no-cache");
 
     function obtenerIntervaloDiapositivaMs() {
         $defaultSeconds = 5;
-        $candidatePaths = [
-            __DIR__ . '/../estado_quioscos/slide_settings.json', // entorno repo: kiosk_web/
-            __DIR__ . '/estado_quioscos/slide_settings.json'     // entorno desplegado: /var/www/html/
-        ];
+        $settingsPath = eq_slide_settings_file();
 
-        $settingsPath = null;
-        foreach ($candidatePaths as $candidate) {
-            if (is_file($candidate)) {
-                $settingsPath = $candidate;
-                break;
-            }
-        }
-
-        if ($settingsPath === null) {
+        if (!is_file($settingsPath)) {
             return $defaultSeconds * 1000;
         }
 

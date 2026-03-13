@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/auth_lib.php';
+require_once __DIR__ . '/app_config.php';
 auth_require_json();
 
 function run_single_line(string $cmd): string {
@@ -12,20 +13,39 @@ function run_single_line(string $cmd): string {
     return $line === '' ? 'unknown' : $line;
 }
 
+function read_trimmed_file(string $path): string {
+    $raw = @file_get_contents($path);
+    if (!is_string($raw)) {
+        return 'unknown';
+    }
+    $value = trim($raw);
+    return $value === '' ? 'unknown' : $value;
+}
+
 function get_mem_free_mb(): int {
-    $out = @shell_exec("awk '/MemAvailable/ {printf \"%.0f\", $2/1024}' /proc/meminfo");
-    return is_string($out) && trim($out) !== '' ? (int)trim($out) : 0;
+    $raw = @file('/proc/meminfo', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!is_array($raw)) {
+        return 0;
+    }
+    foreach ($raw as $line) {
+        if (strpos($line, 'MemAvailable:') === 0) {
+            $parts = preg_split('/\s+/', trim($line));
+            return isset($parts[1]) ? (int)round(((int)$parts[1]) / 1024) : 0;
+        }
+    }
+    return 0;
 }
 
 function get_disk_free_mb(): int {
-    $out = @shell_exec("df -Pm / | awk 'NR==2 {print $4}'");
-    return is_string($out) && trim($out) !== '' ? (int)trim($out) : 0;
+    return get_mount_free_mb('/');
 }
 
 function get_mount_free_mb(string $mountpoint): int {
-    $safe = escapeshellarg($mountpoint);
-    $out = @shell_exec("df -Pm {$safe} | awk 'NR==2 {print $4}'");
-    return is_string($out) && trim($out) !== '' ? (int)trim($out) : 0;
+    $bytes = @disk_free_space($mountpoint);
+    if (!is_numeric($bytes) || $bytes === false) {
+        return 0;
+    }
+    return (int)round(((float)$bytes) / (1024 * 1024));
 }
 
 function systemd_active_enter_timestamp(string $unit): string {
@@ -36,7 +56,7 @@ function systemd_active_enter_timestamp(string $unit): string {
 
 function get_slide_interval_seconds(): int {
     $default = 5;
-    $path = __DIR__ . '/slide_settings.json';
+    $path = eq_slide_settings_file();
     if (!is_file($path)) {
         return $default;
     }
@@ -64,18 +84,19 @@ function get_slide_interval_seconds(): int {
     return $seconds;
 }
 
+$phpFpmUnit = eq_php_fpm_unit();
 $services = [
     'nginx' => run_single_line("systemctl is-active nginx 2>/dev/null || true"),
-    'php_fpm' => run_single_line("systemctl is-active php8.2-fpm 2>/dev/null || true")
+    'php_fpm' => run_single_line("systemctl is-active " . escapeshellarg($phpFpmUnit) . " 2>/dev/null || true")
 ];
 
 $status = [
     'success' => true,
     'time' => time(),
-    'hostname' => run_single_line('hostname'),
+    'hostname' => gethostname() ?: read_trimmed_file('/etc/hostname'),
     'last_server_restart' => run_single_line("uptime -s 2>/dev/null || true"),
-    'uptime' => run_single_line("awk '{print int($1)}' /proc/uptime"),
-    'load1' => run_single_line("awk '{print $1}' /proc/loadavg"),
+    'uptime' => (string)((int)explode('.', read_trimmed_file('/proc/uptime'))[0]),
+    'load1' => explode(' ', read_trimmed_file('/proc/loadavg'))[0] ?? 'unknown',
     'mem_free_mb' => get_mem_free_mb(),
     'disk_free_mb' => get_disk_free_mb(),
     'disk_root_free_mb' => get_mount_free_mb('/'),
@@ -83,7 +104,7 @@ $status = [
     'disk_home_free_mb' => get_mount_free_mb('/home'),
     'slide_interval_seconds' => get_slide_interval_seconds(),
     'last_web_restart' => systemd_active_enter_timestamp('nginx'),
-    'last_php_restart' => systemd_active_enter_timestamp('php8.2-fpm'),
+    'last_php_restart' => systemd_active_enter_timestamp($phpFpmUnit),
     'services' => $services
 ];
 

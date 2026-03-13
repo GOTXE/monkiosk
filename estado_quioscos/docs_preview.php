@@ -1,18 +1,10 @@
 <?php
 require_once __DIR__ . '/auth_lib.php';
+require_once __DIR__ . '/app_config.php';
 auth_require_page();
 
 function docs_dir_path(): string {
-    $candidates = [
-        '/var/www/html/docs',
-        __DIR__ . '/../kiosk_web/docs',
-    ];
-    foreach ($candidates as $candidate) {
-        if (is_dir($candidate)) {
-            return $candidate;
-        }
-    }
-    return '/var/www/html/docs';
+    return eq_docs_dir();
 }
 
 function is_valid_filename(string $name): bool {

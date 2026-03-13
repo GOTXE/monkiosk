@@ -1,8 +1,9 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/auth_lib.php';
+require_once __DIR__ . '/app_config.php';
 
-$settings_file = __DIR__ . '/slide_settings.json';
+$settings_file = eq_slide_settings_file();
 $default_seconds = 5;
 
 function normalize_seconds(int $seconds): int {

@@ -1,0 +1,12 @@
+<?php
+
+return [
+    'docs_dir' => '/var/www/html/docs',
+    'slide_settings_file' => __DIR__ . '/slide_settings.json',
+    'allowed_kiosks_file' => __DIR__ . '/allowed_kiosks.json',
+    'legacy_allowed_hosts_file' => __DIR__ . '/allowed_hosts.txt',
+    'offline_timeout_seconds' => 150,
+    'server' => [
+        'php_fpm_unit' => 'php8.2-fpm',
+    ],
+];
