@@ -100,6 +100,7 @@ Desde el menu superior:
 
 Notas practicas:
 
+- `GUARDAR` debe escribirse exactamente en mayúsculas
 - el `hostname` se normaliza a minusculas
 - si no existe todavia una lista guardada, los quioscos ya detectados aparecen marcados por defecto
 - puedes dejar un equipo en la lista pero sin `Permitido` para conservarlo sin autorizarlo
@@ -108,6 +109,7 @@ Notas practicas:
 - el campo `IP fija` solo admite numeros y puntos
 - si la IP es incorrecta, el campo se marca en rojo y no deja guardar
 - los campos con valor se muestran en negrita y los textos de ejemplo aparecen en cursiva
+- si anades un quiosco a la tabla y aun no has guardado, aparece un aviso dorado parpadeante para recordar que falta aplicar los cambios
 
 ## 8. Proteccion de acceso de quioscos
 

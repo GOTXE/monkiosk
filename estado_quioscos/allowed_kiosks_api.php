@@ -54,7 +54,7 @@ if ($action === 'set_protection') {
 
 if ($action === 'save_items') {
     $confirmText = trim((string)($data['confirm_text'] ?? ''));
-    if (strtoupper($confirmText) !== 'GUARDAR') {
+    if ($confirmText !== 'GUARDAR') {
         http_response_code(400);
         echo json_encode([
             'success' => false,

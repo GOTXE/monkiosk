@@ -49,7 +49,15 @@ $items = eq_load_allowed_kiosks_for_crud();
         .hint { margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; }
         .status { min-height: 20px; margin-bottom: 10px; font-size: 0.9rem; font-weight: 700; color: var(--muted); }
         .status.ok { color: var(--ok); }
+        .status.warn {
+            color: #a35300;
+            animation: pending-save-blink 1s ease-in-out infinite;
+        }
         .status.err { color: var(--danger); }
+        @keyframes pending-save-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
         table { width: 100%; border-collapse: collapse; }
         th, td { border-bottom: 1px solid #e4ebf4; padding: 8px; text-align: left; vertical-align: middle; }
         th { color: var(--muted); font-size: 0.82rem; }
@@ -328,7 +336,7 @@ $items = eq_load_allowed_kiosks_for_crud();
                         });
                         renderRows(items);
                         renderUnknownAttempts(currentUnknownAttempts.filter((item) => String(item.hostname || '').toLowerCase() !== hostname));
-                        setStatus(`Añadido ${hostname} a la tabla. Falta guardar cambios.`, 'ok');
+                        setStatus(`Añadido ${hostname} a la tabla. Falta guardar cambios.`, 'warn');
                     }
                 });
             });
@@ -464,9 +472,6 @@ $items = eq_load_allowed_kiosks_for_crud();
             if (hasInvalidIpInputs()) {
                 setStatus('Hay IPs fijas no válidas. Revisa los campos marcados en rojo.', 'err');
                 closeSaveModal();
-                return;
-            }
-            if (!window.confirm('¿Seguro que quieres guardar los cambios?')) {
                 return;
             }
             try {

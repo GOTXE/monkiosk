@@ -71,3 +71,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: añadido aviso visual persistente en la tarjeta del servidor cuando el certificado HTTPS entra en los últimos 30 días de validez. La comprobación del certificado queda cacheada 24 horas para no repetir la consulta en cada refresco de la web.
 - Archivos: `estado_quioscos/server_status.php`, `estado_quioscos/index.html`, `estado_quioscos/styles.css`
 - Verificación: `php -l` en `server_status.php` y despliegue en producción del aviso condicionado por días restantes.
+
+### 2026-03-16 10:35
+- Área: monitorizacion
+- Cambio: simplificado el guardado en `Quioscos permitidos` para dejar una sola confirmación mediante el modal con `GUARDAR` exacto en mayúsculas. Además, el aviso de cambios pendientes pasa a mostrarse en dorado parpadeante para remarcar que todavía falta guardar.
+- Archivos: `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/allowed_kiosks_api.php`
+- Verificación: `php -l` en `allowed_kiosks_api.php` y comprobación manual en producción del flujo de guardado y del aviso visual.
