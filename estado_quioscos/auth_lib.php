@@ -2,11 +2,13 @@
 
 function auth_session_start(): void {
     if (session_status() === PHP_SESSION_NONE) {
+        $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
         session_name('estado_quioscos_sid');
         session_start([
+            'cookie_path' => '/',
             'cookie_httponly' => true,
             'cookie_samesite' => 'Lax',
-            'cookie_secure' => false
+            'cookie_secure' => $isHttps
         ]);
     }
 }
