@@ -59,3 +59,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: ajustes de usabilidad en `Quioscos permitidos` para que un intento añadido desaparezca al instante de `Intentos de conexion`, una `IP fija` borrada permanezca vacía tras guardar y los campos rellenos se vean en negrita con ejemplos en cursiva.
 - Archivos: `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/app_config.php`
 - Verificación: prueba manual en producción del alta desde `Intentos de conexion`, borrado de `IP fija` y revisión visual de estilos en los campos.
+
+### 2026-03-16 10:05
+- Área: monitorizacion
+- Cambio: `Intentos de conexion` pasa a refrescarse automáticamente cada 15 segundos, muestra un aviso visual de autoactualización y no reintroduce en la lista equipos que el usuario ya ha añadido a la tabla de `Quioscos permitidos` aunque todavía no haya guardado.
+- Archivos: `estado_quioscos/allowed_kiosks.php`
+- Verificación: comprobación manual en producción del auto-refresco y del filtrado local tras pulsar `Añadir`.

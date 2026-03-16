@@ -228,7 +228,8 @@ $items = eq_load_allowed_kiosks_for_crud();
 
             <div class="attempts-box">
                 <h2 class="section-title" style="margin-top:0;">Intentos de conexión</h2>
-                <div class="attempt-meta" style="margin-bottom:8px;">Equipos detectados que no están autorizados o no coinciden con la IP esperada.</div>
+                <div class="attempt-meta" style="margin-bottom:8px;">Equipos detectados a la espera de otorgar permiso de acceso.</div>
+                <div class="attempt-meta" style="margin-bottom:8px;color:#7a8da7;">Actualización automática cada 15 s.</div>
                 <div id="unknown-attempts"></div>
             </div>
         </div>
@@ -265,9 +266,11 @@ $items = eq_load_allowed_kiosks_for_crud();
         const saveConfirmTextEl = document.getElementById('save-confirm-text');
         const saveModalCancel = document.getElementById('save-modal-cancel');
         const saveModalConfirm = document.getElementById('save-modal-confirm');
+        const attemptsRefreshIntervalMs = 15000;
         let currentItems = Array.isArray(initialItems) ? initialItems : [];
         let currentProtectionEnabled = true;
         let currentUnknownAttempts = [];
+        let attemptsRefreshTimer = null;
 
         function setStatus(message, cls) {
             statusEl.textContent = message || '';
@@ -293,7 +296,11 @@ $items = eq_load_allowed_kiosks_for_crud();
         }
 
         function renderUnknownAttempts(items) {
-            currentUnknownAttempts = Array.isArray(items) ? items : [];
+            const currentHostnames = new Set(collectItems().map((item) => String(item.hostname || '').toLowerCase()).filter((hostname) => hostname !== ''));
+            currentUnknownAttempts = (Array.isArray(items) ? items : []).filter((item) => {
+                const hostname = String(item.hostname || '').toLowerCase();
+                return hostname !== '' && !currentHostnames.has(hostname);
+            });
             if (!currentUnknownAttempts.length) {
                 unknownAttemptsEl.innerHTML = '<div class="attempt-meta">No hay intentos pendientes.</div>';
                 return;
@@ -332,6 +339,31 @@ $items = eq_load_allowed_kiosks_for_crud();
             protectionBadgeEl.textContent = currentProtectionEnabled ? 'Protección activada' : 'Protección desactivada';
             protectionBadgeEl.className = `protection-badge ${currentProtectionEnabled ? 'protection-on' : 'protection-off'}`;
             toggleProtectionBtn.textContent = currentProtectionEnabled ? 'Desactivar protección' : 'Activar protección';
+        }
+
+        async function refreshAttemptsOnly() {
+            try {
+                const response = await fetch('/estado_quioscos/allowed_kiosks_api.php', { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok || !data || !data.success) {
+                    return;
+                }
+                renderProtection(Boolean(data.protection_enabled));
+                renderUnknownAttempts(Array.isArray(data.unknown_attempts) ? data.unknown_attempts : []);
+            } catch (_) {
+            }
+        }
+
+        function startAttemptsAutoRefresh() {
+            if (attemptsRefreshTimer) {
+                window.clearInterval(attemptsRefreshTimer);
+            }
+            attemptsRefreshTimer = window.setInterval(() => {
+                if (document.hidden) {
+                    return;
+                }
+                refreshAttemptsOnly();
+            }, attemptsRefreshIntervalMs);
         }
 
         function openSaveModal() {
@@ -512,6 +544,7 @@ $items = eq_load_allowed_kiosks_for_crud();
                 renderProtection(true);
                 renderUnknownAttempts([]);
             });
+        startAttemptsAutoRefresh();
     </script>
 </body>
 </html>

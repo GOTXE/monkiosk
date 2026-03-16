@@ -136,6 +136,8 @@ Desde ahi puedes:
 - ver la IP reportada
 - ver cuantos intentos ha hecho
 - añadirlo rapidamente a la tabla principal; al hacerlo desaparece de `Intentos de conexion` y queda solo en `Quioscos permitidos`
+- la lista se actualiza sola cada 15 segundos sin recargar toda la pagina
+- si un equipo ya fue añadido a la tabla, no vuelve a salir en `Intentos de conexion` mientras siga en esa tabla
 
 ## 10. Recomendaciones de uso
 
