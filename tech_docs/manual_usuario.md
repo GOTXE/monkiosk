@@ -124,3 +124,30 @@ No hace falta volver a escribir usuario y contrasena si ya tienes sesion iniciad
 - no compartas capturas con datos de red visibles
 - si un quiosco aparece `Inestable`, revisa si tiene cortes o reinicios
 - despues de cambios importantes, vuelve a comprobar la pantalla principal
+
+## 11. Recuperacion desde backup
+
+Si se ha preparado un backup del sistema, la recuperacion debe hacerse siguiendo el asistente del script.
+
+Pasos:
+
+1. abre una terminal en el servidor
+2. entra en la carpeta `tools` del proyecto
+3. ejecuta:
+   - `sudo ./restore_monkiosk.sh`
+4. el script mostrara la lista de backups disponibles
+5. escribe solo el numero del backup que quieres restaurar
+6. el script mostrara un resumen de lo que va a recuperar
+7. si estas seguro, escribe `RESTAURAR`
+8. espera a que termine
+9. cuando finalice, comprueba:
+   - la web principal del quiosco
+   - `estado_quioscos`
+   - que las paginas cargan con normalidad
+
+Recomendaciones:
+
+- no cierres la terminal mientras se ejecuta
+- si tienes dudas, usa primero:
+  - `sudo ./restore_monkiosk.sh --dry-run`
+- no hace falta indicar rutas ni archivos si sigues el asistente

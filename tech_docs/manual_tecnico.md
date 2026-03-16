@@ -118,6 +118,42 @@ Preguntas utiles:
 - coincide la `IP fija`
 - el token de `get_action.php` sigue siendo correcto
 
+### Backup local
+
+El backup local recomendado se hace con:
+
+- `tools/backup_monkiosk.sh`
+
+Incluye:
+
+- `/home/kiosk/kioskos`
+- `/var/www/html`
+- `/etc/nginx/sites-available/default`
+
+Caracteristicas:
+
+- crea `tar.gz` locales en `/var/backups/monkiosk`
+- conserva permisos y propietarios
+- mantiene `14` copias por defecto
+
+### Restauracion guiada
+
+La restauracion se hace con:
+
+- `tools/restore_monkiosk.sh`
+
+Comportamiento:
+
+- lista backups por numero
+- pide confirmacion fuerte con `RESTAURAR`
+- crea una copia previa del estado actual
+- restaura sobre `/`
+- recarga `nginx`
+
+Modo de prueba:
+
+- `sudo ./tools/restore_monkiosk.sh --dry-run`
+
 ## 10. Principios de mantenimiento
 
 - evitar complejidad innecesaria

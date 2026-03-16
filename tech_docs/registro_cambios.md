@@ -101,3 +101,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: mejoras de usabilidad en `Gestión diapositivas`: selector de archivo con nombre visible solo en dorado, botones más compactos, ayuda de nombre reordenada en dos líneas, errores autolimpiables a los 5 segundos, limpieza de la vista previa al borrar el archivo cargado y botón activo de `Vista previa` resaltado.
 - Archivos: `estado_quioscos/docs_manager.php`, `estado_quioscos/docs_api.php`
 - Verificación: `php -l` en `docs_api.php` y comprobación manual en producción del flujo de selección, subida, vista previa y borrado.
+
+### 2026-03-16 13:10
+- Área: backup
+- Cambio: se añaden `tools/backup_monkiosk.sh` y `tools/restore_monkiosk.sh` para backup local con retención de `14` copias y restauración guiada con opción `--dry-run`.
+- Archivos: `tools/backup_monkiosk.sh`, `tools/restore_monkiosk.sh`, `tools/README.md`, `tech_docs/manual_usuario.md`, `tech_docs/manual_tecnico.md`
+- Verificación: revisión manual del flujo previsto y ejecución real de backup más simulación de restauración.

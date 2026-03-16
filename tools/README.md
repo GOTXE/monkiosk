@@ -2,6 +2,54 @@
 
 Este directorio contiene scripts auxiliares para facilitar el trabajo con Monkiosk.
 
+## backup_monkiosk.sh
+
+Script para crear un backup local completo de Monkiosk.
+
+### Qué guarda
+
+- `/home/kiosk/kioskos`
+- `/var/www/html`
+- `/etc/nginx/sites-available/default`
+
+### Características
+
+- crea un `.tar.gz` fechado en `/var/backups/monkiosk`
+- mantiene permisos, propietarios y fechas
+- conserva las últimas `14` copias por defecto
+
+### Uso
+
+```bash
+sudo ./backup_monkiosk.sh
+```
+
+Variables opcionales:
+
+```bash
+sudo BACKUP_DIR=/ruta/backup RETENTION_COUNT=14 ./backup_monkiosk.sh
+```
+
+## restore_monkiosk.sh
+
+Script guiado para restaurar Monkiosk desde un backup local.
+
+### Características
+
+- lista los backups disponibles y pide elegir uno por número
+- solicita confirmación fuerte antes de sobrescribir
+- crea una copia previa del estado actual antes de restaurar
+- recarga `nginx` al final
+- dispone de simulación con `--dry-run`
+
+### Uso
+
+```bash
+sudo ./restore_monkiosk.sh
+sudo ./restore_monkiosk.sh --dry-run
+sudo ./restore_monkiosk.sh --file /var/backups/monkiosk/monkiosk_backup_YYYY-MM-DD_HHMMSS.tar.gz
+```
+
 ## convert_video.sh
 
 Script para convertir videos a formatos optimizados para reproducción en kiosks.
