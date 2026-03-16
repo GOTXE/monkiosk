@@ -107,3 +107,21 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: se añaden `tools/backup_monkiosk.sh` y `tools/restore_monkiosk.sh` para backup local con retención de `14` copias y restauración guiada con opción `--dry-run`.
 - Archivos: `tools/backup_monkiosk.sh`, `tools/restore_monkiosk.sh`, `tools/README.md`, `tech_docs/manual_usuario.md`, `tech_docs/manual_tecnico.md`
 - Verificación: revisión manual del flujo previsto y ejecución real de backup más simulación de restauración.
+
+### 2026-03-16 13:35
+- Área: releases
+- Cambio: se define política de versionado semántico con tags anotados, prereleases `beta` y `rc`, y se fija `VERSION` como fuente única de versión.
+- Archivos: `VERSION`, `tech_docs/politica_versionado.md`, `tech_docs/manual_tecnico.md`
+- Verificación: revisión manual de la política y de la coherencia entre formato de versión y tags esperados.
+
+### 2026-03-16 13:45
+- Área: docs
+- Cambio: se añade la plantilla oficial de Pull Request con IA y se fija en el manual técnico que debe utilizarse siempre para generar descripciones de PR del proyecto.
+- Archivos: `tech_docs/14.1_plantilla_pr_vibecoding.md`, `tech_docs/manual_tecnico.md`
+- Verificación: revisión manual de la plantilla y de su referencia explícita como uso obligatorio en documentación técnica.
+
+### 2026-03-16 13:55
+- Área: git
+- Cambio: se define la política de flujo Git del proyecto, con ramas `main`, `dev`, `feature/*` y `hotfix/*`, reglas de integración por PR, restricción de sensibles y referencia obligatoria en el manual técnico.
+- Archivos: `tech_docs/14_flujo_git_y_politicas_repos.md`, `tech_docs/manual_tecnico.md`
+- Verificación: revisión manual de la política y de su referencia explícita como norma del repositorio.

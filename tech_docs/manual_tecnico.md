@@ -160,3 +160,45 @@ Modo de prueba:
 - preferir archivos planos y PHP simple
 - documentar cambios operativos en `tech_docs/registro_cambios.md`
 - no eliminar documentacion historica hasta validar el flujo nuevo en produccion
+
+## 11. Versionado
+
+La politica de versionado del proyecto esta en:
+
+- `tech_docs/politica_versionado.md`
+
+La fuente unica de version es:
+
+- `VERSION`
+
+Regla base:
+
+- el tipo de rama no define la version
+- la version la define el impacto real del cambio
+
+## 12. Pull Requests con IA
+
+Para cualquier PR del proyecto se debe usar siempre la plantilla oficial:
+
+- `tech_docs/14.1_plantilla_pr_vibecoding.md`
+
+Uso esperado:
+
+- copiar la plantilla al prompt
+- adjuntar diff o commits reales
+- generar la descripcion del PR sin alterar estructura ni secciones
+
+## 13. Flujo Git del proyecto
+
+La politica oficial de ramas, PR y control de sensibles esta en:
+
+- `tech_docs/14_flujo_git_y_politicas_repos.md`
+
+Reglas base:
+
+- `main` solo estable y probado
+- `dev` para integracion
+- `feature/*` desde `dev`
+- `hotfix/*` desde `main`
+- sin commits directos a `main`
+- sin despliegue de produccion desde `dev`
