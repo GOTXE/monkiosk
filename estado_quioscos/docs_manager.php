@@ -20,6 +20,7 @@ $csrfToken = auth_csrf_token();
             --btn-hover: #1f66bf;
             --danger: #c92a2a;
             --ok: #2f9e44;
+            --docs-panel-height: 62vh;
         }
         * { box-sizing: border-box; }
         body {
@@ -162,7 +163,7 @@ $csrfToken = auth_csrf_token();
             overflow-y: auto;
             overflow-x: hidden;
             background: #f8fbff;
-            max-height: 62vh;
+            height: calc(var(--docs-panel-height) - 124px);
         }
         table {
             width: 100%;
@@ -220,7 +221,7 @@ $csrfToken = auth_csrf_token();
             border: 1px solid #d7e1ee;
             border-radius: 10px;
             background: #f8fbff;
-            height: 62vh;
+            height: var(--docs-panel-height);
             min-height: 340px;
             display: flex;
             align-items: center;
@@ -243,17 +244,17 @@ $csrfToken = auth_csrf_token();
             background: #fff;
         }
         @media (max-width: 1400px) {
+            :root {
+                --docs-panel-height: 58vh;
+            }
             .layout {
                 grid-template-columns: minmax(560px, 1.12fr) minmax(380px, 1fr);
             }
-            .files {
-                max-height: 58vh;
-            }
-            .preview-wrap {
-                height: 58vh;
-            }
         }
         @media (max-width: 1180px) {
+            :root {
+                --docs-panel-height: 54vh;
+            }
             .page {
                 padding: 12px;
             }
@@ -264,26 +265,17 @@ $csrfToken = auth_csrf_token();
             .card {
                 padding: 10px;
             }
-            .files {
-                max-height: 54vh;
-            }
-            .preview-wrap {
-                height: 54vh;
-                min-height: 300px;
-            }
+            .preview-wrap { min-height: 300px; }
             th, td {
                 padding: 6px;
             }
         }
         @media (max-width: 1024px) {
+            :root {
+                --docs-panel-height: 45vh;
+            }
             .layout {
                 grid-template-columns: 1fr;
-            }
-            .files {
-                max-height: 45vh;
-            }
-            .preview-wrap {
-                height: 45vh;
             }
         }
     </style>
