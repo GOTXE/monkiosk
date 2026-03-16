@@ -84,6 +84,76 @@ function get_slide_interval_seconds(): int {
     return $seconds;
 }
 
+function run_command_raw(string $cmd): string {
+    $out = @shell_exec($cmd);
+    return is_string($out) ? trim($out) : '';
+}
+
+function certificate_cache_file(): string {
+    return __DIR__ . '/certificate_status.json';
+}
+
+function get_certificate_expiry_info(): array {
+    $cacheFile = certificate_cache_file();
+    if (is_file($cacheFile)) {
+        $rawCache = @file_get_contents($cacheFile);
+        if (is_string($rawCache) && trim($rawCache) !== '') {
+            $cached = json_decode($rawCache, true);
+            $checkedAt = isset($cached['checked_at']) ? (int)$cached['checked_at'] : 0;
+            if (is_array($cached) && $checkedAt > 0 && (time() - $checkedAt) < 86400) {
+                return [
+                    'available' => !empty($cached['available']),
+                    'warning' => !empty($cached['warning']),
+                    'days_remaining' => isset($cached['days_remaining']) ? (int)$cached['days_remaining'] : null,
+                    'expires_at' => (string)($cached['expires_at'] ?? ''),
+                    'checked_at' => $checkedAt,
+                ];
+            }
+        }
+    }
+
+    $command = "openssl s_client -connect 127.0.0.1:443 -servername localhost </dev/null 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null";
+    $raw = run_command_raw($command);
+    if ($raw === '' || stripos($raw, 'notAfter=') !== 0) {
+        $result = [
+            'available' => false,
+            'warning' => false,
+            'days_remaining' => null,
+            'expires_at' => '',
+            'checked_at' => time(),
+        ];
+        @file_put_contents($cacheFile, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n", LOCK_EX);
+        return $result;
+    }
+
+    $dateText = trim(substr($raw, strlen('notAfter=')));
+    $timestamp = strtotime($dateText);
+    if ($timestamp === false) {
+        $result = [
+            'available' => false,
+            'warning' => false,
+            'days_remaining' => null,
+            'expires_at' => '',
+            'checked_at' => time(),
+        ];
+        @file_put_contents($cacheFile, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n", LOCK_EX);
+        return $result;
+    }
+
+    $secondsRemaining = $timestamp - time();
+    $daysRemaining = (int)floor($secondsRemaining / 86400);
+
+    $result = [
+        'available' => true,
+        'warning' => $daysRemaining <= 30,
+        'days_remaining' => $daysRemaining,
+        'expires_at' => gmdate('Y-m-d H:i:s', $timestamp),
+        'checked_at' => time(),
+    ];
+    @file_put_contents($cacheFile, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n", LOCK_EX);
+    return $result;
+}
+
 $phpFpmUnit = eq_php_fpm_unit();
 $services = [
     'nginx' => run_single_line("systemctl is-active nginx 2>/dev/null || true"),
@@ -105,7 +175,8 @@ $status = [
     'slide_interval_seconds' => get_slide_interval_seconds(),
     'last_web_restart' => systemd_active_enter_timestamp('nginx'),
     'last_php_restart' => systemd_active_enter_timestamp($phpFpmUnit),
-    'services' => $services
+    'services' => $services,
+    'certificate' => get_certificate_expiry_info(),
 ];
 
 echo json_encode($status, JSON_UNESCAPED_UNICODE);

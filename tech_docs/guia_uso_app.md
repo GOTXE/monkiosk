@@ -144,3 +144,13 @@ Desde ahi puedes:
 - no compartas capturas con datos de red visibles
 - evita hacer cambios simultaneos desde varias sesiones
 - tras cada cambio relevante, comprueba la vista principal y el comportamiento del quiosco afectado
+
+## 11. Aviso de certificado HTTPS
+
+En la tarjeta `SERVIDOR`, la aplicacion muestra un aviso rojo parpadeante cuando al certificado HTTPS del servidor le quedan `30 dias o menos` para caducar.
+
+Notas practicas:
+
+- el aviso sigue visible aunque el bloque `Informacion` este contraido
+- el calculo del certificado se reutiliza durante `24 horas`
+- si no aparece ningun aviso, el certificado todavia no ha entrado en la ventana de alerta

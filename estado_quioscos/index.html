@@ -349,6 +349,23 @@
             return '<span class="srv-warn">Advertencia</span>';
         }
 
+        function renderCertificateWarning(certificate) {
+            const info = certificate && typeof certificate === 'object' ? certificate : {};
+            if (!info.warning) return '';
+
+            const daysRemaining = Number(info.days_remaining);
+            const safeDays = Number.isFinite(daysRemaining) ? Math.max(0, Math.floor(daysRemaining)) : 0;
+            const daysLabel = safeDays === 1 ? '1 día' : `${safeDays} días`;
+            const expiresAt = info.expires_at ? formatSpainDateTime(info.expires_at) : '-';
+
+            return `
+                <div class="server-cert-warning" role="alert" aria-live="polite">
+                    <strong>Certificado HTTPS próximo a caducar</strong>
+                    <span>Quedan ${daysLabel}. Caduca: ${escapeHtml(expiresAt)}</span>
+                </div>
+            `;
+        }
+
         function renderServerPanel(data) {
             const uptime = formatUptime(Number(data.uptime || 0));
             currentServerHostname = String(data.hostname || 'servidor');
@@ -372,9 +389,11 @@
             const overlayActiveText = overlayState.enabled && overlayState.target_kiosk
                 ? `<div class="overlay-active">Mostrando tiempo en: <strong>${escapeHtml(String(overlayState.target_kiosk).toUpperCase())}</strong></div>`
                 : '<div class="overlay-inactive">Cuenta regresiva desactivada</div>';
+            const certificateWarning = renderCertificateWarning(data.certificate);
             serverPanel.innerHTML = `
                 <article class="server-card">
                     <h2 class="section-title server-title">SERVIDOR</h2>
+                    ${certificateWarning}
                     <details class="server-info"${serverInfoOpen ? ' open' : ''}>
                         <summary>Información</summary>
                         <div class="server-grid">

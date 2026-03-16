@@ -65,3 +65,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: `Intentos de conexion` pasa a refrescarse automáticamente cada 15 segundos, muestra un aviso visual de autoactualización y no reintroduce en la lista equipos que el usuario ya ha añadido a la tabla de `Quioscos permitidos` aunque todavía no haya guardado.
 - Archivos: `estado_quioscos/allowed_kiosks.php`
 - Verificación: comprobación manual en producción del auto-refresco y del filtrado local tras pulsar `Añadir`.
+
+### 2026-03-16 10:20
+- Área: seguridad
+- Cambio: añadido aviso visual persistente en la tarjeta del servidor cuando el certificado HTTPS entra en los últimos 30 días de validez. La comprobación del certificado queda cacheada 24 horas para no repetir la consulta en cada refresco de la web.
+- Archivos: `estado_quioscos/server_status.php`, `estado_quioscos/index.html`, `estado_quioscos/styles.css`
+- Verificación: `php -l` en `server_status.php` y despliegue en producción del aviso condicionado por días restantes.
