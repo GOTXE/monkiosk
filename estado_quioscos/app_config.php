@@ -287,10 +287,6 @@ function eq_load_allowed_kiosks_for_crud(): array {
         if ($key === '') {
             continue;
         }
-        $existing = $merged[$key] ?? null;
-        if (is_array($existing) && $item['ip'] === '' && $existing['ip'] !== '') {
-            $item['ip'] = $existing['ip'];
-        }
         $merged[$key] = $item;
     }
 

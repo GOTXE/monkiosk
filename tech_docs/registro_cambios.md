@@ -53,3 +53,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: mejora de usabilidad en `Quioscos permitidos`: etiqueta `Permitido` en lugar de `Activo`, activación por defecto de quioscos ya detectados cuando no existe lista previa, validación visual de IPv4 en `IP fija` y restricción de escritura a números y puntos.
 - Archivos: `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/app_config.php`
 - Verificación: `php -l` y comprobación visual del formulario desplegado en producción.
+
+### 2026-03-16 09:10
+- Área: monitorizacion
+- Cambio: ajustes de usabilidad en `Quioscos permitidos` para que un intento añadido desaparezca al instante de `Intentos de conexion`, una `IP fija` borrada permanezca vacía tras guardar y los campos rellenos se vean en negrita con ejemplos en cursiva.
+- Archivos: `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/app_config.php`
+- Verificación: prueba manual en producción del alta desde `Intentos de conexion`, borrado de `IP fija` y revisión visual de estilos en los campos.

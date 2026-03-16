@@ -59,9 +59,17 @@ $items = eq_load_allowed_kiosks_for_crud();
             border-radius: 8px;
             padding: 8px 10px;
             font-size: 0.92rem;
+            font-weight: 400;
+            font-style: normal;
             color: var(--ink);
             background: #f8fbff;
         }
+        input[type="text"]::placeholder {
+            font-style: italic;
+            font-weight: 400;
+            color: #6f839d;
+        }
+        .input-filled { font-weight: 700 !important; }
         .ip-invalid {
             border-color: #c92a2a !important;
             background: #fff6f6 !important;
@@ -312,6 +320,7 @@ $items = eq_load_allowed_kiosks_for_crud();
                             enabled: true,
                         });
                         renderRows(items);
+                        renderUnknownAttempts(currentUnknownAttempts.filter((item) => String(item.hostname || '').toLowerCase() !== hostname));
                         setStatus(`Añadido ${hostname} a la tabla. Falta guardar cambios.`, 'ok');
                     }
                 });
@@ -347,11 +356,15 @@ $items = eq_load_allowed_kiosks_for_crud();
             const ipInput = tr.querySelector('[data-field="ip"]');
             hostnameInput.addEventListener('input', () => {
                 hostnameInput.value = hostnameInput.value.toLowerCase();
+                updateFilledInputState(hostnameInput);
             });
             ipInput.addEventListener('input', () => {
                 ipInput.value = ipInput.value.replace(/[^0-9.]/g, '');
+                updateFilledInputState(ipInput);
                 updateIpInputState(ipInput);
             });
+            updateFilledInputState(hostnameInput);
+            updateFilledInputState(ipInput);
             updateIpInputState(ipInput);
             tr.querySelector('button').addEventListener('click', () => {
                 tr.remove();
@@ -384,6 +397,10 @@ $items = eq_load_allowed_kiosks_for_crud();
 
         function updateIpInputState(input) {
             input.classList.toggle('ip-invalid', !isValidIpv4(input.value));
+        }
+
+        function updateFilledInputState(input) {
+            input.classList.toggle('input-filled', String(input.value || '').trim() !== '');
         }
 
         function collectItems() {

@@ -104,8 +104,10 @@ Notas practicas:
 - si no existe todavia una lista guardada, los quioscos ya detectados aparecen marcados por defecto
 - puedes dejar un equipo en la lista pero sin `Permitido` para conservarlo sin autorizarlo
 - `IP fija` es opcional, pero si la rellenas debe ser una IPv4 valida
+- si borras una `IP fija` y guardas, el campo queda realmente vacio
 - el campo `IP fija` solo admite numeros y puntos
 - si la IP es incorrecta, el campo se marca en rojo y no deja guardar
+- los campos con valor se muestran en negrita y los textos de ejemplo aparecen en cursiva
 
 ## 8. Proteccion de acceso de quioscos
 
@@ -133,7 +135,7 @@ Desde ahi puedes:
 - ver `hostname`
 - ver la IP reportada
 - ver cuantos intentos ha hecho
-- añadirlo rapidamente a la tabla principal
+- añadirlo rapidamente a la tabla principal; al hacerlo desaparece de `Intentos de conexion` y queda solo en `Quioscos permitidos`
 
 ## 10. Recomendaciones de uso
 
