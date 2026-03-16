@@ -89,3 +89,15 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: la sección `Equipos` añade un único botón para `Desplegar todas` o `Cerrar todas` las tarjetas de quioscos, sin afectar al panel del servidor.
 - Archivos: `estado_quioscos/index.html`, `estado_quioscos/styles.css`
 - Verificación: comprobación manual en producción del cambio de texto dinámico y del despliegue/cierre global de tarjetas.
+
+### 2026-03-16 11:45
+- Área: seguridad
+- Cambio: la protección de quioscos se extiende también a la presentación web del quiosco. Cuando la protección está activada, la presentación solo admite accesos desde `IP fija` autorizada. Además, `Quioscos permitidos` añade un listado de `Accesos a presentación`, resuelve mejor el hostname usando la configuración conocida y resalta los quioscos ya dados de alta frente a accesos genéricos.
+- Archivos: `estado_quioscos/app_config.php`, `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/allowed_kiosks_api.php`, `kiosk_web/index.php`
+- Verificación: `php -l` en PHP modificados y comprobación manual en producción del bloqueo por IP fija y del listado de accesos.
+
+### 2026-03-16 11:55
+- Área: docs
+- Cambio: mejoras de usabilidad en `Gestión diapositivas`: selector de archivo con nombre visible solo en dorado, botones más compactos, ayuda de nombre reordenada en dos líneas, errores autolimpiables a los 5 segundos, limpieza de la vista previa al borrar el archivo cargado y botón activo de `Vista previa` resaltado.
+- Archivos: `estado_quioscos/docs_manager.php`, `estado_quioscos/docs_api.php`
+- Verificación: `php -l` en `docs_api.php` y comprobación manual en producción del flujo de selección, subida, vista previa y borrado.

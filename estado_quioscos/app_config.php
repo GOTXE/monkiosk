@@ -68,6 +68,10 @@ function eq_unknown_attempts_file(): string {
     return __DIR__ . '/unknown_kiosk_attempts.json';
 }
 
+function eq_presentation_viewers_file(): string {
+    return __DIR__ . '/presentation_viewers.json';
+}
+
 function eq_legacy_allowed_hosts_file(): string {
     $path = (string)(eq_config()['legacy_allowed_hosts_file'] ?? (__DIR__ . '/allowed_hosts.txt'));
     return $path !== '' ? $path : (__DIR__ . '/allowed_hosts.txt');
@@ -93,6 +97,12 @@ function eq_normalize_hostname(string $hostname): string {
 
 function eq_normalize_ip(string $ip): string {
     return trim($ip);
+}
+
+function eq_is_localhost_address(string $ip, string $hostname = ''): bool {
+    $normalizedIp = eq_normalize_ip($ip);
+    $normalizedHostname = strtolower(trim($hostname));
+    return in_array($normalizedIp, ['127.0.0.1', '::1'], true) || $normalizedHostname === 'localhost';
 }
 
 function eq_is_valid_ip_or_empty(string $ip): bool {
@@ -410,4 +420,206 @@ function eq_remove_unknown_kiosk_attempt(string $hostname): void {
         return eq_normalize_hostname((string)$item['hostname']) !== $key;
     }));
     eq_save_unknown_kiosk_attempts($filtered);
+}
+
+function eq_allowed_presentation_ips(): array {
+    $lookup = eq_allowed_kiosks_lookup(eq_load_allowed_kiosks());
+    $ips = [];
+    foreach ($lookup as $item) {
+        if (!is_array($item) || empty($item['enabled'])) {
+            continue;
+        }
+        $ip = eq_normalize_ip((string)($item['ip'] ?? ''));
+        if ($ip !== '' && eq_is_valid_ip_or_empty($ip)) {
+            $ips[$ip] = true;
+        }
+    }
+    return array_keys($ips);
+}
+
+function eq_resolve_kiosk_hostname_by_ip(string $ip): string {
+    $normalizedIp = eq_normalize_ip($ip);
+    if (!eq_is_valid_ip_or_empty($normalizedIp) || $normalizedIp === '') {
+        return '';
+    }
+
+    foreach (eq_load_allowed_kiosks() as $item) {
+        if (!is_array($item) || empty($item['enabled'])) {
+            continue;
+        }
+        $candidateIp = eq_normalize_ip((string)($item['ip'] ?? ''));
+        if ($candidateIp !== '' && $candidateIp === $normalizedIp) {
+            return eq_normalize_hostname((string)($item['hostname'] ?? ''));
+        }
+    }
+
+    $statusItems = eq_load_known_kiosks_from_status();
+    foreach ($statusItems as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $candidateIp = eq_normalize_ip((string)($item['ip'] ?? ''));
+        if ($candidateIp !== '' && $candidateIp === $normalizedIp) {
+            return eq_normalize_hostname((string)($item['hostname'] ?? ''));
+        }
+    }
+
+    return '';
+}
+
+function eq_is_known_kiosk_ip(string $ip): bool {
+    return eq_resolve_kiosk_hostname_by_ip($ip) !== '';
+}
+
+function eq_is_presentation_access_allowed(string $ip): bool {
+    $normalizedIp = eq_normalize_ip($ip);
+    if (!eq_is_valid_ip_or_empty($normalizedIp) || $normalizedIp === '') {
+        return false;
+    }
+    if (eq_is_localhost_address($normalizedIp)) {
+        return true;
+    }
+    if (!eq_load_protection_state()) {
+        return true;
+    }
+
+    $allowedLookup = eq_allowed_kiosks_lookup(eq_load_allowed_kiosks());
+    if (empty($allowedLookup)) {
+        return true;
+    }
+
+    $allowedIps = eq_allowed_presentation_ips();
+    if (empty($allowedIps)) {
+        return false;
+    }
+
+    return in_array($normalizedIp, $allowedIps, true);
+}
+
+function eq_load_presentation_viewers(): array {
+    $path = eq_presentation_viewers_file();
+    if (!is_file($path)) {
+        return [];
+    }
+    $raw = @file_get_contents($path);
+    if (!is_string($raw) || trim($raw) === '') {
+        return [];
+    }
+    $decoded = json_decode($raw, true);
+    if (!is_array($decoded)) {
+        return [];
+    }
+
+    $items = [];
+    foreach ($decoded as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $ip = eq_normalize_ip((string)($item['ip'] ?? ''));
+        if (!eq_is_valid_ip_or_empty($ip) || $ip === '') {
+            continue;
+        }
+        $hostname = trim((string)($item['hostname'] ?? ''));
+        $resolvedHostname = eq_resolve_kiosk_hostname_by_ip($ip);
+        if ($resolvedHostname !== '') {
+            $hostname = $resolvedHostname;
+        }
+        $lastSeen = max(0, (int)($item['last_seen'] ?? 0));
+        $firstSeen = max(0, (int)($item['first_seen'] ?? 0));
+        $hits = max(1, (int)($item['hits'] ?? 1));
+        $userAgent = trim((string)($item['user_agent'] ?? ''));
+        if (eq_is_localhost_address($ip, $hostname)) {
+            continue;
+        }
+        if (strlen($userAgent) > 255) {
+            $userAgent = substr($userAgent, 0, 255);
+        }
+        $items[] = [
+            'ip' => $ip,
+            'hostname' => $hostname,
+            'first_seen' => $firstSeen,
+            'last_seen' => $lastSeen,
+            'hits' => $hits,
+            'user_agent' => $userAgent,
+            'known_kiosk' => $resolvedHostname !== '',
+        ];
+    }
+
+    usort($items, static function (array $a, array $b): int {
+        return ($b['last_seen'] ?? 0) <=> ($a['last_seen'] ?? 0);
+    });
+    return $items;
+}
+
+function eq_save_presentation_viewers(array $items): bool {
+    $payload = json_encode(array_values($items), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    return is_string($payload) && @file_put_contents(eq_presentation_viewers_file(), $payload . "\n", LOCK_EX) !== false;
+}
+
+function eq_register_presentation_viewer(string $ip, string $userAgent = ''): void {
+    $ip = eq_normalize_ip($ip);
+    if (!eq_is_valid_ip_or_empty($ip) || $ip === '') {
+        return;
+    }
+    if (eq_is_localhost_address($ip)) {
+        return;
+    }
+
+    $items = eq_load_presentation_viewers();
+    $map = [];
+    foreach ($items as $item) {
+        $key = eq_normalize_ip((string)($item['ip'] ?? ''));
+        if ($key !== '') {
+            $map[$key] = $item;
+        }
+    }
+
+    $resolvedHostname = eq_resolve_kiosk_hostname_by_ip($ip);
+    $candidateHostname = @gethostbyaddr($ip);
+    if ($resolvedHostname === '' && is_string($candidateHostname) && $candidateHostname !== '' && $candidateHostname !== $ip) {
+        $resolvedHostname = trim($candidateHostname);
+        if (strlen($resolvedHostname) > 255) {
+            $resolvedHostname = substr($resolvedHostname, 0, 255);
+        }
+    }
+    if (eq_is_localhost_address($ip, $resolvedHostname)) {
+        return;
+    }
+
+    $now = time();
+    $existing = $map[$ip] ?? [
+        'ip' => $ip,
+        'hostname' => '',
+        'first_seen' => $now,
+        'last_seen' => 0,
+        'hits' => 0,
+        'user_agent' => '',
+        'known_kiosk' => false,
+    ];
+
+    if ($resolvedHostname !== '') {
+        $existing['hostname'] = $resolvedHostname;
+    }
+    if ($existing['first_seen'] <= 0) {
+        $existing['first_seen'] = $now;
+    }
+    $existing['last_seen'] = $now;
+    $existing['hits'] = ((int)$existing['hits']) + 1;
+
+    $agent = trim($userAgent);
+    if ($agent !== '') {
+        if (strlen($agent) > 255) {
+            $agent = substr($agent, 0, 255);
+        }
+        $existing['user_agent'] = $agent;
+    }
+    $existing['known_kiosk'] = eq_is_known_kiosk_ip($ip);
+
+    $map[$ip] = $existing;
+
+    $ttl = 7 * 24 * 60 * 60;
+    $filtered = array_values(array_filter($map, static function (array $item) use ($now, $ttl): bool {
+        return (($now - (int)($item['last_seen'] ?? 0)) <= $ttl);
+    }));
+    eq_save_presentation_viewers($filtered);
 }

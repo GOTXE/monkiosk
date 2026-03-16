@@ -63,6 +63,11 @@ $csrfToken = auth_csrf_token();
             justify-content: center;
         }
         .btn:hover { background: var(--btn-hover); }
+        .upload-row .btn {
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.86rem;
+        }
         .btn-danger {
             border-color: #b5252d;
             background: #d94848;
@@ -87,7 +92,7 @@ $csrfToken = auth_csrf_token();
             min-width: 0;
         }
         .card h2 {
-            margin: 0 0 10px;
+            margin: 0 0 6px;
             font-size: 1.05rem;
             color: #1f4d86;
         }
@@ -116,19 +121,34 @@ $csrfToken = auth_csrf_token();
         .footer-github svg { width: 15px; height: 15px; fill: currentColor; }
         .status {
             min-height: 20px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             color: var(--muted);
             font-size: 0.9rem;
             font-weight: 700;
         }
+        #selected-file {
+            text-align: center;
+        }
         .status.ok { color: var(--ok); }
+        .status.warn { color: #a35300; }
         .status.err { color: var(--danger); }
         .upload-row {
             display: grid;
-            grid-template-columns: 1fr auto;
+            grid-template-columns: auto auto;
             gap: 8px;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
+        }
+        .file-input-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
         .upload-hint {
             color: var(--muted);
@@ -185,6 +205,11 @@ $csrfToken = auth_csrf_token();
             white-space: nowrap;
         }
         .small-btn:hover { background: #edf4ff; }
+        .small-btn.active-preview {
+            color: #a35300;
+            border-color: #f0d1a8;
+            background: #fff4e5;
+        }
         .small-btn.danger {
             color: #a61e2a;
             border-color: #e8bcc1;
@@ -278,11 +303,13 @@ $csrfToken = auth_csrf_token();
                 <div id="status" class="status"></div>
 
                 <div class="upload-row">
-                    <input id="file-input" type="file" aria-label="Seleccionar archivo">
+                    <input id="file-input" class="file-input-hidden" type="file" aria-label="Seleccionar archivo">
+                    <button id="select-file-btn" class="btn" type="button">Seleccionar archivo</button>
                     <button id="upload-btn" class="btn" type="button">Subir</button>
                 </div>
-                <p class="upload-hint">Permitidos: .jpg .jpeg .png .webp .pdf .mp4 | Máx 200MB | Nombre: debe empezar por número y usar letras, números, ., -, _</p>
-                <p class="upload-hint">Ejemplo nombre: <strong>01_portada.pdf</strong> o <strong>02_slide.webp</strong></p>
+                <div id="selected-file" class="status" style="margin-top:-2px;"></div>
+                <p class="upload-hint">Permitidos: .jpg .jpeg .png .webp .pdf .mp4 | Máx 200MB</p>
+                <p class="upload-hint">Nombre: debe empezar por número y usar letras, números, ., -, _ | Ejemplo: <strong>4_texto.extension</strong></p>
 
                 <div class="files">
                     <table>
@@ -322,8 +349,12 @@ $csrfToken = auth_csrf_token();
         const statusEl = document.getElementById('status');
         const filesBody = document.getElementById('files-body');
         const fileInput = document.getElementById('file-input');
+        const selectFileBtn = document.getElementById('select-file-btn');
         const uploadBtn = document.getElementById('upload-btn');
+        const selectedFileEl = document.getElementById('selected-file');
         const previewEl = document.getElementById('preview');
+        let statusClearTimer = null;
+        let currentPreviewName = '';
 
         const extType = {
             jpg: 'imagen',
@@ -337,6 +368,23 @@ $csrfToken = auth_csrf_token();
         function setStatus(msg, mode = '') {
             statusEl.textContent = msg;
             statusEl.className = `status ${mode}`.trim();
+            if (statusClearTimer) {
+                window.clearTimeout(statusClearTimer);
+                statusClearTimer = null;
+            }
+            if (mode === 'err' && msg) {
+                statusClearTimer = window.setTimeout(() => {
+                    statusEl.textContent = '';
+                    statusEl.className = 'status';
+                    statusClearTimer = null;
+                }, 5000);
+            }
+        }
+
+        function setSelectedFileStatus(msg = '', mode = '') {
+            if (!selectedFileEl) return;
+            selectedFileEl.textContent = msg;
+            selectedFileEl.className = `status ${mode}`.trim();
         }
 
         function esc(text) {
@@ -363,7 +411,23 @@ $csrfToken = auth_csrf_token();
         }
 
         function clearPreview(message) {
+            currentPreviewName = '';
+            updatePreviewButtonsState();
             previewEl.innerHTML = `<div class="preview-msg">${esc(message)}</div>`;
+        }
+
+        function updatePreviewButtonsState() {
+            filesBody.querySelectorAll('button[data-preview]').forEach((btn) => {
+                const raw = decodeURIComponent(btn.getAttribute('data-preview') || '');
+                let itemName = '';
+                try {
+                    const item = JSON.parse(raw);
+                    itemName = String(item.name || '');
+                } catch (_e) {
+                    itemName = '';
+                }
+                btn.classList.toggle('active-preview', itemName !== '' && itemName === currentPreviewName);
+            });
         }
 
         function showPreview(item) {
@@ -374,6 +438,8 @@ $csrfToken = auth_csrf_token();
                 clearPreview('No hay URL de previsualización');
                 return;
             }
+            currentPreviewName = name;
+            updatePreviewButtonsState();
 
             if (extType[ext] === 'imagen') {
                 previewEl.innerHTML = `<img src="${esc(url)}" alt="${esc(name)}">`;
@@ -433,6 +499,7 @@ $csrfToken = auth_csrf_token();
                         }
                     });
                 });
+                updatePreviewButtonsState();
 
                 filesBody.querySelectorAll('button[data-delete]').forEach((btn) => {
                     btn.addEventListener('click', async () => {
@@ -488,6 +555,7 @@ $csrfToken = auth_csrf_token();
                 'ok'
             );
             fileInput.value = '';
+            setSelectedFileStatus('');
             await fetchList();
         }
 
@@ -503,10 +571,19 @@ $csrfToken = auth_csrf_token();
                     throw new Error(data.error || 'No se pudo eliminar');
                 }
                 setStatus(`Archivo eliminado: ${data.name}`, 'ok');
+                if (currentPreviewName && currentPreviewName === data.name) {
+                    clearPreview('Selecciona un archivo para previsualizar');
+                }
                 await fetchList();
             } catch (error) {
                 setStatus(`Error eliminando: ${error.message}`, 'err');
             }
+        }
+
+        if (selectFileBtn) {
+            selectFileBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
         }
 
         uploadBtn.addEventListener('click', async () => {
@@ -515,6 +592,15 @@ $csrfToken = auth_csrf_token();
             } catch (error) {
                 setStatus(`Error subiendo: ${error.message}`, 'err');
             }
+        });
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) {
+                setSelectedFileStatus('');
+                return;
+            }
+            setSelectedFileStatus(`Archivo seleccionado: ${file.name}`, 'warn');
         });
 
         fetchList();

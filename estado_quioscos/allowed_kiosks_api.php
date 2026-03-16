@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'items' => eq_load_allowed_kiosks_for_crud(),
         'protection_enabled' => eq_load_protection_state(),
         'unknown_attempts' => eq_load_unknown_kiosk_attempts(),
+        'presentation_viewers' => eq_load_presentation_viewers(),
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -48,6 +49,7 @@ if ($action === 'set_protection') {
         'protection_enabled' => eq_load_protection_state(),
         'items' => eq_load_allowed_kiosks_for_crud(),
         'unknown_attempts' => eq_load_unknown_kiosk_attempts(),
+        'presentation_viewers' => eq_load_presentation_viewers(),
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -111,6 +113,7 @@ $items = $data['items'] ?? null;
         'items' => eq_load_allowed_kiosks_for_crud(),
         'protection_enabled' => eq_load_protection_state(),
         'unknown_attempts' => eq_load_unknown_kiosk_attempts(),
+        'presentation_viewers' => eq_load_presentation_viewers(),
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }

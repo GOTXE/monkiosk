@@ -56,7 +56,7 @@ La orden se queda preparada para que el quiosco la recoja en su siguiente comuni
 
 ## 5. Gestion de documentos
 
-En `Gestion de documentos` puedes:
+En `Gestión diapositivas` puedes:
 
 - subir documentos
 - revisar una previsualizacion
@@ -65,6 +65,8 @@ En `Gestion de documentos` puedes:
 Recomendaciones:
 
 - usa nombres simples
+- el nombre debe empezar por numero
+- si el nombre es invalido, la web indica el motivo y como corregirlo
 - revisa el resultado antes de cerrar
 - evita hacer cambios simultaneos desde varias sesiones
 
@@ -90,6 +92,11 @@ Notas:
 
 - `Proteccion activada`: solo conectan los quioscos permitidos
 - `Proteccion desactivada`: cualquier quiosco puede conectar temporalmente
+
+Con proteccion activada:
+
+- el reporte del quiosco queda limitado a equipos permitidos
+- la presentacion del quiosco tambien queda limitada a `IP fija` autorizada
 
 Uso recomendado:
 

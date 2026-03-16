@@ -36,6 +36,7 @@ Este manual resume la parte tecnica de Monkiosk para instalacion, mantenimiento 
 - acceso web de gestion con login propio y CSRF
 - nombres de usuario no sensibles a mayusculas/minusculas
 - proteccion de quioscos por `hostname` y `IP fija` opcional
+- la presentacion web del quiosco, con proteccion activada, solo admite `IP fija` autorizada
 - lectura de acciones por token compartido `X-Control-Token`
 - `kiosk_info` protegido con la misma sesion web de `estado_quioscos`
 - no existe autenticacion fuerte en el heartbeat; la proteccion principal es la lista de quioscos permitidos
@@ -70,6 +71,13 @@ La configuracion comun se centraliza en:
 
 - desde la tarjeta `SERVIDOR`
 - el valor se guarda en `slide_settings.json`
+
+### Gestion de documentos
+
+- la pantalla visible al usuario es `Gestión diapositivas`
+- permite seleccionar archivo, subirlo, previsualizarlo y eliminarlo
+- la UI marca el archivo seleccionado como pendiente antes de subir
+- si el archivo previsualizado se elimina, la vista previa se limpia
 
 ### Reinicio remoto
 

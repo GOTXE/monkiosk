@@ -120,8 +120,19 @@ function action_upload(): void {
     $origName = (string)($file['name'] ?? '');
     $baseName = basename($origName);
     if (!is_valid_upload_filename($baseName)) {
+        $reason = 'Debe empezar por número y usar solo letras, números, ., -, _.';
+        if ($baseName !== '' && !preg_match('/^[0-9]/', $baseName)) {
+            $reason = 'Debe empezar por número.';
+        } elseif (preg_match('/\s/', $baseName)) {
+            $reason = 'No puede contener espacios. Usa _ o - en su lugar.';
+        } elseif (!preg_match('/^[0-9][A-Za-z0-9._-]{0,127}$/', $baseName)) {
+            $reason = 'Solo puede usar letras, números, ., -, _.';
+        }
         http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Nombre inválido. Debe empezar por número y usar solo letras, números, ., -, _'], JSON_UNESCAPED_UNICODE);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Nombre inválido. ' . $reason . ' Ejemplo válido: 33_error_menu.jpg',
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 

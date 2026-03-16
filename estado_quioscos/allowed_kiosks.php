@@ -137,6 +137,38 @@ $items = eq_load_allowed_kiosks_for_crud();
         }
         .attempt-item:last-child { border-bottom: 0; }
         .attempt-meta { color: var(--muted); font-size: 0.84rem; }
+        .viewer-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 4px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e4ebf4;
+        }
+        .viewer-item:last-child { border-bottom: 0; }
+        .viewer-item.known-kiosk {
+            background: #eef8f0;
+            border: 1px solid #b8e1c0;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        .viewer-badge {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .viewer-badge.known {
+            background: #d9f2e0;
+            color: #1f7a35;
+        }
+        .viewer-badge.generic {
+            background: #eef4fb;
+            color: #1f4d86;
+        }
         .app-footer {
             margin-top: 14px;
             display: inline-flex;
@@ -240,6 +272,13 @@ $items = eq_load_allowed_kiosks_for_crud();
                 <div class="attempt-meta" style="margin-bottom:8px;color:#7a8da7;">Actualización automática cada 15 s.</div>
                 <div id="unknown-attempts"></div>
             </div>
+
+            <div class="attempts-box">
+                <h2 class="section-title" style="margin-top:0;">Accesos a presentación</h2>
+                <div class="attempt-meta" style="margin-bottom:8px;">Listado de equipos que están abriendo la presentación web del quiosco.</div>
+                <div class="attempt-meta" style="margin-bottom:8px;color:#7a8da7;">Útil sobre todo cuando la protección está desactivada.</div>
+                <div id="presentation-viewers"></div>
+            </div>
         </div>
         <footer class="app-footer">
             <span class="footer-brand">OFAP 601</span>
@@ -268,6 +307,7 @@ $items = eq_load_allowed_kiosks_for_crud();
         const rowsEl = document.getElementById('rows');
         const statusEl = document.getElementById('status');
         const unknownAttemptsEl = document.getElementById('unknown-attempts');
+        const presentationViewersEl = document.getElementById('presentation-viewers');
         const protectionBadgeEl = document.getElementById('protection-badge');
         const toggleProtectionBtn = document.getElementById('toggle-protection-btn');
         const saveModal = document.getElementById('save-modal');
@@ -278,6 +318,7 @@ $items = eq_load_allowed_kiosks_for_crud();
         let currentItems = Array.isArray(initialItems) ? initialItems : [];
         let currentProtectionEnabled = true;
         let currentUnknownAttempts = [];
+        let currentPresentationViewers = [];
         let attemptsRefreshTimer = null;
 
         function setStatus(message, cls) {
@@ -349,6 +390,25 @@ $items = eq_load_allowed_kiosks_for_crud();
             toggleProtectionBtn.textContent = currentProtectionEnabled ? 'Desactivar protección' : 'Activar protección';
         }
 
+        function renderPresentationViewers(items) {
+            currentPresentationViewers = Array.isArray(items) ? items : [];
+            if (currentProtectionEnabled) {
+                presentationViewersEl.innerHTML = '<div class="attempt-meta">Protección activada. Solo deberían aparecer accesos de IPs fijas autorizadas.</div>';
+                return;
+            }
+            if (!currentPresentationViewers.length) {
+                presentationViewersEl.innerHTML = '<div class="attempt-meta">No hay accesos recientes a la presentación.</div>';
+                return;
+            }
+            presentationViewersEl.innerHTML = currentPresentationViewers.map((item) => `
+                <div class="viewer-item ${item.known_kiosk ? 'known-kiosk' : ''}">
+                    <strong>${escapeHtml(item.ip || '-')}</strong>
+                    <div><span class="viewer-badge ${item.known_kiosk ? 'known' : 'generic'}">${item.known_kiosk ? 'Quiosco conocido' : 'Acceso genérico'}</span></div>
+                    <div class="attempt-meta">Hostname: ${escapeHtml(item.hostname || 'sin resolver')} | Accesos: ${Number(item.hits || 0)} | Último: ${formatRelativeTime(item.last_seen)}</div>
+                </div>
+            `).join('');
+        }
+
         async function refreshAttemptsOnly() {
             try {
                 const response = await fetch('/estado_quioscos/allowed_kiosks_api.php', { cache: 'no-store' });
@@ -358,6 +418,7 @@ $items = eq_load_allowed_kiosks_for_crud();
                 }
                 renderProtection(Boolean(data.protection_enabled));
                 renderUnknownAttempts(Array.isArray(data.unknown_attempts) ? data.unknown_attempts : []);
+                renderPresentationViewers(Array.isArray(data.presentation_viewers) ? data.presentation_viewers : []);
             } catch (_) {
             }
         }
@@ -492,6 +553,7 @@ $items = eq_load_allowed_kiosks_for_crud();
                 renderRows(Array.isArray(data.items) ? data.items : items);
                 renderProtection(Boolean(data.protection_enabled));
                 renderUnknownAttempts(Array.isArray(data.unknown_attempts) ? data.unknown_attempts : []);
+                renderPresentationViewers(Array.isArray(data.presentation_viewers) ? data.presentation_viewers : []);
                 closeSaveModal();
                 setStatus('Configuración guardada correctamente.', 'ok');
             } catch (error) {
@@ -531,6 +593,7 @@ $items = eq_load_allowed_kiosks_for_crud();
                 }
                 renderProtection(Boolean(data.protection_enabled));
                 renderUnknownAttempts(Array.isArray(data.unknown_attempts) ? data.unknown_attempts : []);
+                renderPresentationViewers(Array.isArray(data.presentation_viewers) ? data.presentation_viewers : []);
             } catch (error) {
                 setStatus(error.message || 'No se pudo cambiar la protección', 'err');
             }
@@ -544,10 +607,12 @@ $items = eq_load_allowed_kiosks_for_crud();
                 renderRows(Array.isArray(data.items) ? data.items : currentItems);
                 renderProtection(Boolean(data.protection_enabled));
                 renderUnknownAttempts(Array.isArray(data.unknown_attempts) ? data.unknown_attempts : []);
+                renderPresentationViewers(Array.isArray(data.presentation_viewers) ? data.presentation_viewers : []);
             })
             .catch(() => {
                 renderProtection(true);
                 renderUnknownAttempts([]);
+                renderPresentationViewers([]);
             });
         startAttemptsAutoRefresh();
     </script>

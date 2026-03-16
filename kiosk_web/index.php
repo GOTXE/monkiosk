@@ -13,6 +13,19 @@ foreach ($appConfigCandidates as $appConfigPath) {
         break;
     }
 }
+$remoteAddr = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+if (function_exists('eq_is_presentation_access_allowed') && !eq_is_presentation_access_allowed($remoteAddr)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Acceso a presentacion no permitido\n";
+    exit;
+}
+if (function_exists('eq_register_presentation_viewer')) {
+    eq_register_presentation_viewer(
+        $remoteAddr,
+        (string)($_SERVER['HTTP_USER_AGENT'] ?? '')
+    );
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
