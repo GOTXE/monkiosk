@@ -125,3 +125,21 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: se define la política de flujo Git del proyecto, con ramas `main`, `dev`, `feature/*` y `hotfix/*`, reglas de integración por PR, restricción de sensibles y referencia obligatoria en el manual técnico.
 - Archivos: `tech_docs/14_flujo_git_y_politicas_repos.md`, `tech_docs/manual_tecnico.md`
 - Verificación: revisión manual de la política y de su referencia explícita como norma del repositorio.
+
+### 2026-03-16 14:05
+- Área: proceso
+- Cambio: se fija como flujo obligatorio `tarea -> planner -> coder -> tester (si aplica) -> documenta -> commit`, y se referencia en `tech_docs/README.md`, la política Git y el manual técnico.
+- Archivos: `tech_docs/README.md`, `tech_docs/14_flujo_git_y_politicas_repos.md`, `tech_docs/manual_tecnico.md`
+- Verificación: revisión manual de la secuencia y de su referencia explícita en la documentación base del proyecto.
+
+### 2026-03-16 14:20
+- Área: docs
+- Cambio: `AGENTS.md` se reduce a un índice breve de referencia y remite a documentación específica para flujo de trabajo, PR, Git y versionado, evitando duplicación de reglas.
+- Archivos: `AGENTS.md`, `tech_docs/registro_cambios.md`
+- Verificación: revisión manual de enlaces y de la reducción del contenido a referencias operativas.
+
+### 2026-03-16 14:30
+- Área: docs
+- Cambio: se añade una guía de lectura para agentes que indica qué archivos debe leer una IA según el tipo de tarea, y `AGENTS.md` pasa a referenciarla como punto de entrada operativo.
+- Archivos: `AGENTS.md`, `tech_docs/guia_lectura_agente.md`
+- Verificación: revisión manual del mapa de lectura por tarea y de las referencias desde `AGENTS.md`.

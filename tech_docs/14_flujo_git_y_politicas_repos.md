@@ -32,6 +32,19 @@ Ramas permitidas:
 
 ## Flujo de trabajo
 
+### Secuencia obligatoria
+
+Para cualquier cambio se seguirá este orden:
+
+1. `tarea`
+2. `planner`
+3. `coder`
+4. `tester` si es necesario
+5. `documenta`
+6. `commit`
+
+No se debe saltar esta secuencia.
+
 ### Nueva feature
 
 1. `checkout dev`
@@ -55,14 +68,15 @@ Ramas permitidas:
 ### Ciclo del proyecto
 
 1. `feature`
-2. tests y documentacion
-3. revision IA `99_revision_integral_app` si hay dudas
-4. PR a `dev`
-5. pruebas
-6. PR a `main`
-7. release
-8. publicar solo documentacion publica
-9. limpiar privadas
+2. `tarea -> planner -> coder`
+3. tests y documentacion
+4. revision IA `99_revision_integral_app` si hay dudas
+5. PR a `dev`
+6. pruebas
+7. PR a `main`
+8. release
+9. publicar solo documentacion publica
+10. limpiar privadas
 
 ## Commits
 

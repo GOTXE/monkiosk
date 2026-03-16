@@ -160,6 +160,8 @@ Modo de prueba:
 - preferir archivos planos y PHP simple
 - documentar cambios operativos en `tech_docs/registro_cambios.md`
 - no eliminar documentacion historica hasta validar el flujo nuevo en produccion
+- seguir siempre la secuencia `tarea -> planner -> coder -> tester (si aplica) -> documenta -> commit`
+- no modificar codigo sin nota previa en `tech_docs` segun `tech_docs/README.md`
 
 ## 11. Versionado
 

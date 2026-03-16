@@ -1,58 +1,40 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-This repository is split by runtime role:
-- `kiosk_web/`: kiosk player (`index.php`) and media content in `kiosk_web/docs/`.
-- `estado_quioscos/`: monitoring dashboard (`index.html`), API endpoint (`update_status.php`), and state file (`status.json`).
-- `kiosks_report/`: kiosk-side reporting script (`report_status.sh`) and sample systemd unit.
-- `kiosk_info/`: local documentation viewer and markdown sources in `kiosk_info/src/`.
-- `tools/`: helper scripts such as `convert_video.sh`.
+## Scope
+Use this file as a compact index. Read only the referenced document that applies to the task.
 
-Keep assets near their module (`img/`, `assets/`, `docs/`) and avoid cross-module hardcoded paths.
+Task-oriented reading map:
+- `tech_docs/guia_lectura_agente.md`
 
-## Build, Test, and Development Commands
-No build pipeline is required; this is a PHP/HTML/JS/Bash project.
+## Project Structure
+`estado_quioscos/` contains dashboard, auth, APIs, and control endpoints. `kiosk_web/` serves kiosk-facing content from `kiosk_web/docs/`. Heartbeat and install scripts live in `kiosks_report/` and `Quioscos_install_alpine/`. Technical references live in `tech_docs/` and helper scripts in `tools/`.
 
-- Run kiosk player locally:
-```bash
-cd kiosk_web && php -S 0.0.0.0:8080
-```
-- Run monitor locally:
-```bash
-cd estado_quioscos && php -S 0.0.0.0:8081
-```
-- Validate Bash script syntax:
-```bash
-bash -n kiosks_report/debian/report_status.sh
-```
-- Validate PHP syntax:
-```bash
-php -l kiosk_web/index.php
-php -l estado_quioscos/update_status.php
-```
+## Mandatory Workflow
+Before any code change, follow `tarea -> planner -> coder -> tester (if needed) -> documenta -> commit`.
 
-## Coding Style & Naming Conventions
-- Use 4-space indentation in PHP/JS/HTML/CSS and shell scripts.
-- Prefer descriptive names in Spanish/English consistent with existing files.
-- Keep kiosk media names numeric to preserve display order, e.g. `1.jpg`, `2.mp4`, `3.pdf`.
-- Avoid adding framework tooling unless requested; keep dependencies minimal and local-first.
+Reference:
+- `tech_docs/README.md`
 
-## Testing Guidelines
-There is currently no automated test suite. Use targeted manual checks:
-- Open `kiosk_web/index.php` and verify image/PDF/video rotation.
-- POST heartbeat data to `estado_quioscos/update_status.php` and confirm `status.json` updates.
-- Open `estado_quioscos/index.html` and verify online/offline transitions (timeout-based).
+## Git And Releases
+For branch rules, PR flow, protected `main`, and sensitive artifact policy, read:
+- `tech_docs/14_flujo_git_y_politicas_repos.md`
 
-If you add tests, place them under a module-local `tests/` folder and document run commands in the module README.
+For versioning, tags, and the single version source, read:
+- `tech_docs/politica_versionado.md`
+- `VERSION`
 
-## Commit & Pull Request Guidelines
-Git history shows short, imperative commit messages (Spanish or English), e.g. `reordenar`, `Add video support`.
-- Keep subject lines concise and action-oriented.
-- One logical change per commit when possible.
-- PRs should include: purpose, changed paths, deployment impact, and screenshots for UI updates (`kiosk_web`, `estado_quioscos`, `kiosk_info`).
-- Link related issues/tasks and include rollback notes for config or service changes.
+## Pull Requests
+Every PR description must use:
+- `tech_docs/14.1_plantilla_pr_vibecoding.md`
 
-## Security & Configuration Tips
-- Do not commit private keys, host secrets, or production URLs.
-- Replace placeholder server URL in `kiosks_report/debian/report_status.sh` before deployment.
-- Keep `allowed_hosts.txt` curated to trusted kiosk hostnames only.
+## Validation
+There is no central build system. Minimum checks for touched files:
+- `php -l <file>`
+- `sh -n <script>`
+- manual browser verification for affected flows
+
+## Style
+Use 4-space indentation. Match the existing procedural PHP and lowercase snake_case filenames. Keep comments short and targeted.
+
+## Security
+Do not commit credentials, tokens, private docs, internal logs, or host-specific secrets. Keep runtime secrets in server-local files such as `/etc/kiosk/heartbeat.conf`.
