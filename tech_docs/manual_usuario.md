@@ -44,6 +44,8 @@ Podras ver:
 - disco libre
 - estado HDMI
 
+Si quieres abrir o cerrar todas las tarjetas de `Equipos` de una vez, usa el boton general de esa seccion.
+
 ## 4. Como reiniciar un quiosco
 
 1. Abre `Informacion`.

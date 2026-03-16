@@ -32,7 +32,12 @@
         <section id="server-panel" class="server-panel"></section>
 
         <section>
-            <h2 class="section-title">Equipos</h2>
+            <div class="section-header">
+                <h2 class="section-title">Equipos</h2>
+                <div class="section-actions">
+                    <button id="toggle-all-kiosks-btn" class="server-btn" type="button">Desplegar todas</button>
+                </div>
+            </div>
             <div id="quioscos-status" class="kiosk-strip"></div>
         </section>
 
@@ -113,6 +118,7 @@
         const modalPwdSave = document.getElementById('modal-pwd-save');
         const modalPwdCancel = document.getElementById('modal-pwd-cancel');
         const passwordToggleButtons = document.querySelectorAll('[data-toggle-password]');
+        const toggleAllKiosksBtn = document.getElementById('toggle-all-kiosks-btn');
         const reportOpenState = {};
         let serverInfoOpen = false;
         let currentServerHostname = 'servidor';
@@ -772,6 +778,24 @@
             }
         }
 
+        function setAllKioskReportsOpen(isOpen) {
+            kioskNames.forEach((name) => {
+                reportOpenState[name] = isOpen;
+            });
+            statusContainer.querySelectorAll('.kiosk-report').forEach((details) => {
+                details.open = isOpen;
+            });
+            updateToggleAllKiosksButton();
+        }
+
+        function updateToggleAllKiosksButton() {
+            if (!toggleAllKiosksBtn) return;
+            const hasKiosks = kioskNames.length > 0;
+            const allOpen = hasKiosks && kioskNames.every((name) => Boolean(reportOpenState[name]));
+            toggleAllKiosksBtn.textContent = allOpen ? 'Cerrar todas' : 'Desplegar todas';
+            toggleAllKiosksBtn.disabled = !hasKiosks;
+        }
+
         function renderKiosks(statusData) {
             const now = Math.floor(Date.now() / 1000);
             let onlineCount = 0;
@@ -832,12 +856,14 @@
                 const kiosk = decodeURIComponent(details.dataset.kiosk || '');
                 details.addEventListener('toggle', () => {
                     reportOpenState[kiosk] = details.open;
+                    updateToggleAllKiosksButton();
                 });
             });
             statusContainer.querySelectorAll('.reboot-btn').forEach((btn) => {
                 const kiosk = decodeURIComponent(btn.dataset.kiosk || '');
                 btn.addEventListener('click', () => queueReboot(kiosk));
             });
+            updateToggleAllKiosksButton();
             renderSummary({
                 total: Object.keys(statusData).length,
                 online: onlineCount,
@@ -934,6 +960,12 @@
             });
             if (topbarMenu) {
                 setTopbarMenuOpen(false);
+            }
+            if (toggleAllKiosksBtn) {
+                toggleAllKiosksBtn.addEventListener('click', () => {
+                    const allOpen = kioskNames.length > 0 && kioskNames.every((name) => Boolean(reportOpenState[name]));
+                    setAllKioskReportsOpen(!allOpen);
+                });
             }
             fetchStatus();
             fetchServerStatus();

@@ -83,3 +83,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: `kiosk_info` pasa a quedar protegido con la misma sesión de `estado_quioscos`, evitando un segundo login. La documentación se sirve por PHP protegido y el acceso directo a los markdown deja de ser la vía principal. Además, el menú principal renombra `Gestión de documentos` a `Gestión diapositivas` y se cierra al pulsar cualquier opción.
 - Archivos: `estado_quioscos/auth_lib.php`, `estado_quioscos/index.html`, `kiosk_info/index.php`, `kiosk_info/doc.php`, `kiosk_info/index.html`, `kiosk_info/src/MANUAL_USUARIO.md`, `kiosk_info/src/MANUAL_TECNICO.md`, `kiosk_info/src/REGISTRO_CAMBIOS.md`, `kiosk_info/src/GUIA_USO_APP_RESPALDO.md`, `tech_docs/manual_usuario.md`, `tech_docs/manual_tecnico.md`
 - Verificación: `php -l` en nuevos PHP, comprobación de redirección a login sin sesión y validación manual del nuevo menú de documentación.
+
+### 2026-03-16 11:20
+- Área: monitorizacion
+- Cambio: la sección `Equipos` añade un único botón para `Desplegar todas` o `Cerrar todas` las tarjetas de quioscos, sin afectar al panel del servidor.
+- Archivos: `estado_quioscos/index.html`, `estado_quioscos/styles.css`
+- Verificación: comprobación manual en producción del cambio de texto dinámico y del despliegue/cierre global de tarjetas.
