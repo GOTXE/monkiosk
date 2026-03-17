@@ -13,6 +13,12 @@ Ramas permitidas:
 - `feature/*`
 - `hotfix/*`
 
+Estado adoptado en este repositorio:
+
+- `main` como rama estable
+- `dev` como rama de integracion
+- las ramas temporales actuales deben converger a `feature/*` o desaparecer tras integrarse
+
 ## Reglas obligatorias
 
 - `main` solo contiene estado estable y probado
@@ -64,6 +70,15 @@ No se debe saltar esta secuencia.
 1. PR de `dev` a `main`
 2. merge `--no-ff`
 3. tag semver anotado
+
+## Implantacion practica actual
+
+Mientras existan ramas temporales antiguas, la referencia operativa es:
+
+- trabajar en rama temporal o `feature/*`
+- integrar en `dev`
+- validar en `dev`
+- pasar a `main` solo cuando quede listo para produccion
 
 ### Ciclo del proyecto
 

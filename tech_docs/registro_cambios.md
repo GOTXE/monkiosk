@@ -149,3 +149,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: se adapta `.gitignore` a la realidad de `estado_quioscos`, se fija la política de archivos runtime locales fuera de Git y se añade un script de inicialización para crear esos archivos durante instalación.
 - Archivos: `.gitignore`, `tools/init_estado_quioscos_runtime.sh`, `tools/README.md`, `tech_docs/politica_archivos_runtime_locales.md`, `AGENTS.md`, `tech_docs/guia_lectura_agente.md`, `tech_docs/manual_tecnico.md`
 - Verificación: revisión manual de la lista de runtime local, sintaxis shell del script y coherencia con el flujo de instalación.
+
+### 2026-03-17 09:40
+- Área: git
+- Cambio: se implanta el modelo de ramas `main` + `dev` como base operativa del proyecto, manteniendo ramas de trabajo temporales solo mientras duran los cambios, y se actualizan referencias en documentación y agentes.
+- Archivos: `AGENTS.md`, `tech_docs/14_flujo_git_y_politicas_repos.md`, `tech_docs/guia_lectura_agente.md`, `tech_docs/manual_tecnico.md`
+- Verificación: revisión manual de la coherencia entre política escrita y ramas previstas.

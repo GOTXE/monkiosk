@@ -36,6 +36,12 @@ Lee:
 - `tech_docs/14_flujo_git_y_politicas_repos.md`
 - `tech_docs/politica_archivos_runtime_locales.md`
 
+Y asume este modelo operativo:
+
+- `main` estable
+- `dev` integracion
+- trabajo diario en `feature/*` o rama temporal equivalente
+
 ## Si vas a preparar version o release
 
 Lee:

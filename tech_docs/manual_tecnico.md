@@ -214,3 +214,9 @@ Reglas base:
 - `hotfix/*` desde `main`
 - sin commits directos a `main`
 - sin despliegue de produccion desde `dev`
+
+Estado operativo actual recomendado:
+
+- integrar cambios en `dev`
+- mantener `main` solo para estado listo para produccion
+- usar ramas `feature/*` para nuevos cambios
