@@ -97,28 +97,39 @@ $items = eq_load_allowed_kiosks_for_crud();
         .small-btn.danger { color: #a61e2a; border-color: #e8bcc1; background: #fff6f6; }
         .actions { margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
         .section-title { margin: 18px 0 10px; color: #1f4d86; font-size: 1.02rem; }
-        .protection-title { color: #1f4d86; }
-        .protection-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 12px;
+        .protection-box {
             border: 1px solid #d7e1ee;
             border-radius: 10px;
             background: #f8fbff;
-            margin-bottom: 14px;
+            padding: 6px 10px;
+            margin-bottom: 12px;
         }
-        .protection-badge {
-            display: inline-flex;
+        .protection-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
             align-items: center;
-            padding: 5px 10px;
-            border-radius: 999px;
-            font-size: 0.82rem;
+            gap: 12px;
+            padding: 6px 0;
+            border-bottom: 1px solid #e4ebf4;
+        }
+        .protection-row:last-child { border-bottom: 0; }
+        .protection-label {
+            color: #1f4d86;
+            font-size: 0.9rem;
             font-weight: 700;
         }
-        .protection-on { color: #1f7a35; background: #e9f8ec; border: 1px solid #b8e1c0; }
-        .protection-off { color: #a35300; background: #fff4e5; border: 1px solid #f0d1a8; }
+        .protection-toggle {
+            min-width: 110px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid #c8d7ea;
+            background: #fff;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .protection-toggle.protection-on { color: #1f7a35; background: #e9f8ec; border-color: #b8e1c0; }
+        .protection-toggle.protection-off { color: #a61e2a; background: #fff1f1; border-color: #efc2c2; }
         .warn-text { color: #a35300; }
         .attempts-box {
             margin-top: 18px;
@@ -201,15 +212,35 @@ $items = eq_load_allowed_kiosks_for_crud();
             justify-content: center;
             padding: 20px;
             z-index: 1200;
+            backdrop-filter: blur(2px);
         }
         .modal-backdrop[hidden] { display: none; }
         .confirm-modal-card {
             width: min(420px, 100%);
             background: #ffffff;
             color: var(--ink);
-            border: 1px solid var(--line);
+            border: 1px solid rgba(201, 42, 42, 0.55);
             border-radius: 12px;
             padding: 16px;
+            box-shadow:
+                0 0 0 4px rgba(201, 42, 42, 0.18),
+                0 0 28px rgba(201, 42, 42, 0.28),
+                0 20px 54px rgba(0, 0, 0, 0.3);
+            transform: translateY(-6px);
+        }
+        .confirm-modal-card.modal-safe {
+            border-color: rgba(47, 158, 68, 0.55);
+            box-shadow:
+                0 0 0 4px rgba(47, 158, 68, 0.18),
+                0 0 28px rgba(47, 158, 68, 0.22),
+                0 20px 54px rgba(0, 0, 0, 0.3);
+        }
+        .confirm-modal-card.modal-danger {
+            border-color: rgba(201, 42, 42, 0.55);
+            box-shadow:
+                0 0 0 4px rgba(201, 42, 42, 0.18),
+                0 0 28px rgba(201, 42, 42, 0.28),
+                0 20px 54px rgba(0, 0, 0, 0.3);
         }
         .confirm-modal-card h3 { margin: 0 0 12px; color: #1f4d86; }
         .confirm-modal-card p { margin: 0 0 12px; color: var(--muted); }
@@ -235,14 +266,14 @@ $items = eq_load_allowed_kiosks_for_crud();
                 Si una IP está informada, el sistema exigirá que coincida con el reporte recibido. Marca <strong>Permitido</strong> para autorizar ese quiosco.
             </p>
             <div id="status" class="status"></div>
-            <div class="protection-row">
-                <div>
-                    <strong class="protection-title">Protección de acceso de quioscos</strong>
-                    <div class="attempt-meta">Si está activada, solo se aceptan quioscos dados de alta. Si está desactivada, cualquier quiosco puede conectar.</div>
+            <div class="protection-box">
+                <div class="protection-row">
+                    <div class="protection-label">Reporte quioscos</div>
+                    <button id="toggle-report-protection-btn" class="protection-toggle" type="button"></button>
                 </div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                    <span id="protection-badge" class="protection-badge"></span>
-                    <button id="toggle-protection-btn" class="btn" type="button"></button>
+                <div class="protection-row">
+                    <div class="protection-label">Presentación</div>
+                    <button id="toggle-presentation-protection-btn" class="protection-toggle" type="button"></button>
                 </div>
             </div>
 
@@ -289,7 +320,7 @@ $items = eq_load_allowed_kiosks_for_crud();
             </a>
         </footer>
     </div>
-    <div id="save-modal" class="modal-backdrop" hidden>
+        <div id="save-modal" class="modal-backdrop" hidden>
         <div class="confirm-modal-card">
             <h3>Confirmar guardado</h3>
             <p>Escribe <strong class="warn-text">GUARDAR</strong> para aplicar los cambios de la lista.</p>
@@ -297,6 +328,16 @@ $items = eq_load_allowed_kiosks_for_crud();
             <div class="modal-actions">
                 <button id="save-modal-cancel" class="small-btn danger" type="button">Cancelar</button>
                 <button id="save-modal-confirm" class="btn" type="button">Guardar</button>
+            </div>
+        </div>
+    </div>
+        <div id="protection-modal" class="modal-backdrop" hidden>
+        <div id="protection-modal-card" class="confirm-modal-card modal-danger">
+            <h3 id="protection-modal-title">Confirmar cambio de protección</h3>
+            <p id="protection-modal-text">¿Seguro que quieres cambiar esta protección?</p>
+            <div class="modal-actions">
+                <button id="protection-modal-cancel" class="small-btn danger" type="button">Cancelar</button>
+                <button id="protection-modal-confirm" class="btn" type="button">Aceptar</button>
             </div>
         </div>
     </div>
@@ -308,18 +349,25 @@ $items = eq_load_allowed_kiosks_for_crud();
         const statusEl = document.getElementById('status');
         const unknownAttemptsEl = document.getElementById('unknown-attempts');
         const presentationViewersEl = document.getElementById('presentation-viewers');
-        const protectionBadgeEl = document.getElementById('protection-badge');
-        const toggleProtectionBtn = document.getElementById('toggle-protection-btn');
+        const toggleReportProtectionBtn = document.getElementById('toggle-report-protection-btn');
+        const togglePresentationProtectionBtn = document.getElementById('toggle-presentation-protection-btn');
         const saveModal = document.getElementById('save-modal');
         const saveConfirmTextEl = document.getElementById('save-confirm-text');
         const saveModalCancel = document.getElementById('save-modal-cancel');
         const saveModalConfirm = document.getElementById('save-modal-confirm');
+        const protectionModal = document.getElementById('protection-modal');
+        const protectionModalCard = document.getElementById('protection-modal-card');
+        const protectionModalTitle = document.getElementById('protection-modal-title');
+        const protectionModalText = document.getElementById('protection-modal-text');
+        const protectionModalCancel = document.getElementById('protection-modal-cancel');
+        const protectionModalConfirm = document.getElementById('protection-modal-confirm');
         const attemptsRefreshIntervalMs = 15000;
         let currentItems = Array.isArray(initialItems) ? initialItems : [];
-        let currentProtectionEnabled = true;
+        let currentProtection = { report_enabled: true, presentation_enabled: true };
         let currentUnknownAttempts = [];
         let currentPresentationViewers = [];
         let attemptsRefreshTimer = null;
+        let pendingProtectionChange = null;
 
         function setStatus(message, cls) {
             statusEl.textContent = message || '';
@@ -383,16 +431,22 @@ $items = eq_load_allowed_kiosks_for_crud();
             });
         }
 
-        function renderProtection(enabled) {
-            currentProtectionEnabled = Boolean(enabled);
-            protectionBadgeEl.textContent = currentProtectionEnabled ? 'Protección activada' : 'Protección desactivada';
-            protectionBadgeEl.className = `protection-badge ${currentProtectionEnabled ? 'protection-on' : 'protection-off'}`;
-            toggleProtectionBtn.textContent = currentProtectionEnabled ? 'Desactivar protección' : 'Activar protección';
+        function renderProtection(protection) {
+            currentProtection = {
+                report_enabled: !protection || protection.report_enabled !== false,
+                presentation_enabled: !protection || protection.presentation_enabled !== false,
+            };
+
+            toggleReportProtectionBtn.textContent = currentProtection.report_enabled ? 'Protegido' : 'Desprotegido';
+            toggleReportProtectionBtn.className = `protection-toggle ${currentProtection.report_enabled ? 'protection-on' : 'protection-off'}`;
+
+            togglePresentationProtectionBtn.textContent = currentProtection.presentation_enabled ? 'Protegido' : 'Desprotegido';
+            togglePresentationProtectionBtn.className = `protection-toggle ${currentProtection.presentation_enabled ? 'protection-on' : 'protection-off'}`;
         }
 
         function renderPresentationViewers(items) {
             currentPresentationViewers = Array.isArray(items) ? items : [];
-            if (currentProtectionEnabled) {
+            if (currentProtection.presentation_enabled) {
                 presentationViewersEl.innerHTML = '<div class="attempt-meta">Protección activada. Solo deberían aparecer accesos de IPs fijas autorizadas.</div>';
                 return;
             }
@@ -416,7 +470,7 @@ $items = eq_load_allowed_kiosks_for_crud();
                 if (!response.ok || !data || !data.success) {
                     return;
                 }
-                renderProtection(Boolean(data.protection_enabled));
+                renderProtection(data.protection || {});
                 renderUnknownAttempts(Array.isArray(data.unknown_attempts) ? data.unknown_attempts : []);
                 renderPresentationViewers(Array.isArray(data.presentation_viewers) ? data.presentation_viewers : []);
             } catch (_) {
@@ -443,6 +497,22 @@ $items = eq_load_allowed_kiosks_for_crud();
 
         function closeSaveModal() {
             saveModal.hidden = true;
+        }
+
+        function openProtectionModal(type, nextEnabled) {
+            const targetLabel = type === 'report' ? 'reporte' : 'presentación';
+            const actionLabel = nextEnabled ? 'activar' : 'desactivar';
+            protectionModalTitle.textContent = 'Confirmar cambio de protección';
+            protectionModalText.textContent = `¿Seguro que quieres ${actionLabel} la protección de ${targetLabel}?`;
+            protectionModalCard.classList.remove('modal-safe', 'modal-danger');
+            protectionModalCard.classList.add(nextEnabled ? 'modal-safe' : 'modal-danger');
+            pendingProtectionChange = { type, nextEnabled };
+            protectionModal.hidden = false;
+        }
+
+        function closeProtectionModal() {
+            protectionModal.hidden = true;
+            pendingProtectionChange = null;
         }
 
         function addRow(item) {
@@ -551,7 +621,7 @@ $items = eq_load_allowed_kiosks_for_crud();
                     throw new Error(data.error || 'No se pudo guardar');
                 }
                 renderRows(Array.isArray(data.items) ? data.items : items);
-                renderProtection(Boolean(data.protection_enabled));
+                renderProtection(data.protection || {});
                 renderUnknownAttempts(Array.isArray(data.unknown_attempts) ? data.unknown_attempts : []);
                 renderPresentationViewers(Array.isArray(data.presentation_viewers) ? data.presentation_viewers : []);
                 closeSaveModal();
@@ -570,19 +640,15 @@ $items = eq_load_allowed_kiosks_for_crud();
             }
         });
 
-        toggleProtectionBtn.addEventListener('click', async () => {
+        async function applyProtectionChange(type, nextEnabled) {
             setStatus('');
-            const nextEnabled = !currentProtectionEnabled;
-            const actionLabel = nextEnabled ? 'activar' : 'desactivar';
-            if (!window.confirm(`¿Seguro que quieres ${actionLabel} la protección?`)) {
-                return;
-            }
             try {
                 const response = await fetch('/estado_quioscos/allowed_kiosks_api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'set_protection',
+                        type,
                         csrf_token: csrfToken,
                         enabled: nextEnabled
                     })
@@ -591,11 +657,29 @@ $items = eq_load_allowed_kiosks_for_crud();
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || 'No se pudo cambiar la protección');
                 }
-                renderProtection(Boolean(data.protection_enabled));
+                renderProtection(data.protection || {});
                 renderUnknownAttempts(Array.isArray(data.unknown_attempts) ? data.unknown_attempts : []);
                 renderPresentationViewers(Array.isArray(data.presentation_viewers) ? data.presentation_viewers : []);
             } catch (error) {
                 setStatus(error.message || 'No se pudo cambiar la protección', 'err');
+            }
+        }
+
+        toggleReportProtectionBtn.addEventListener('click', () => openProtectionModal('report', !currentProtection.report_enabled));
+        togglePresentationProtectionBtn.addEventListener('click', () => openProtectionModal('presentation', !currentProtection.presentation_enabled));
+        protectionModalCancel.addEventListener('click', closeProtectionModal);
+        protectionModalConfirm.addEventListener('click', async () => {
+            if (!pendingProtectionChange) {
+                closeProtectionModal();
+                return;
+            }
+            const { type, nextEnabled } = pendingProtectionChange;
+            closeProtectionModal();
+            await applyProtectionChange(type, nextEnabled);
+        });
+        protectionModal.addEventListener('click', (event) => {
+            if (event.target === protectionModal) {
+                closeProtectionModal();
             }
         });
 
@@ -605,12 +689,12 @@ $items = eq_load_allowed_kiosks_for_crud();
             .then((data) => {
                 if (!data || !data.success) return;
                 renderRows(Array.isArray(data.items) ? data.items : currentItems);
-                renderProtection(Boolean(data.protection_enabled));
+                renderProtection(data.protection || {});
                 renderUnknownAttempts(Array.isArray(data.unknown_attempts) ? data.unknown_attempts : []);
                 renderPresentationViewers(Array.isArray(data.presentation_viewers) ? data.presentation_viewers : []);
             })
             .catch(() => {
-                renderProtection(true);
+                renderProtection({ report_enabled: true, presentation_enabled: true });
                 renderUnknownAttempts([]);
                 renderPresentationViewers([]);
             });

@@ -90,22 +90,25 @@ Notas:
 
 ## 7. Proteccion de acceso
 
-- `Proteccion activada`: solo conectan los quioscos permitidos
-- `Proteccion desactivada`: cualquier quiosco puede conectar temporalmente
+- `Proteccion de reporte`: controla qué equipos pueden enviar estado al servidor
+- `Proteccion de presentacion`: controla qué equipos pueden abrir la presentacion del quiosco
 
-Con proteccion activada:
+Con `Proteccion de reporte` activada:
 
 - el reporte del quiosco queda limitado a equipos permitidos
-- la presentacion del quiosco tambien queda limitada a `IP fija` autorizada
+- los equipos no autorizados siguen apareciendo en `Intentos de conexion` para poder autorizarlos manualmente
 
-Uso recomendado:
+Con `Proteccion de presentacion` activada:
 
-1. desactiva la proteccion si vas a dar de alta un quiosco nuevo
-2. espera a que aparezca en `Intentos de conexion`
-3. anadelo a la tabla
+- la presentacion del quiosco queda limitada a `IP fija` autorizada
+
+Uso recomendado para dar de alta un quiosco:
+
+1. espera a que aparezca en `Intentos de conexion`
+2. anadelo a la tabla
+3. revisa `hostname` e `IP fija`
 4. marca `Permitido`
 5. guarda
-6. vuelve a activar la proteccion
 
 ## 8. Aviso de certificado
 

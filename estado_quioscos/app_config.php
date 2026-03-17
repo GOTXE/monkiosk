@@ -308,25 +308,58 @@ function eq_load_allowed_kiosks_for_crud(): array {
     return $items;
 }
 
-function eq_load_protection_state(): bool {
+function eq_load_protection_state(): array {
     $path = eq_protection_file();
     if (!is_file($path)) {
-        return true;
+        return [
+            'report_enabled' => true,
+            'presentation_enabled' => true,
+        ];
     }
     $raw = @file_get_contents($path);
     if (!is_string($raw) || trim($raw) === '') {
-        return true;
+        return [
+            'report_enabled' => true,
+            'presentation_enabled' => true,
+        ];
     }
     $decoded = json_decode($raw, true);
     if (!is_array($decoded)) {
-        return true;
+        return [
+            'report_enabled' => true,
+            'presentation_enabled' => true,
+        ];
     }
-    return !isset($decoded['enabled']) || (bool)$decoded['enabled'];
+
+    // Compatibilidad con el formato antiguo: una sola protección global.
+    if (array_key_exists('enabled', $decoded)) {
+        $enabled = (bool)$decoded['enabled'];
+        return [
+            'report_enabled' => $enabled,
+            'presentation_enabled' => $enabled,
+        ];
+    }
+
+    return [
+        'report_enabled' => !isset($decoded['report_enabled']) || (bool)$decoded['report_enabled'],
+        'presentation_enabled' => !isset($decoded['presentation_enabled']) || (bool)$decoded['presentation_enabled'],
+    ];
 }
 
-function eq_save_protection_state(bool $enabled): bool {
+function eq_load_report_protection_enabled(): bool {
+    $state = eq_load_protection_state();
+    return !empty($state['report_enabled']);
+}
+
+function eq_load_presentation_protection_enabled(): bool {
+    $state = eq_load_protection_state();
+    return !empty($state['presentation_enabled']);
+}
+
+function eq_save_protection_state(bool $reportEnabled, bool $presentationEnabled): bool {
     $payload = json_encode([
-        'enabled' => $enabled,
+        'report_enabled' => $reportEnabled,
+        'presentation_enabled' => $presentationEnabled,
         'updated_at' => date('Y-m-d H:i:s'),
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     return is_string($payload) && @file_put_contents(eq_protection_file(), $payload . "\n", LOCK_EX) !== false;
@@ -479,7 +512,7 @@ function eq_is_presentation_access_allowed(string $ip): bool {
     if (eq_is_localhost_address($normalizedIp)) {
         return true;
     }
-    if (!eq_load_protection_state()) {
+    if (!eq_load_presentation_protection_enabled()) {
         return true;
     }
 

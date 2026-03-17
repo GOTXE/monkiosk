@@ -135,15 +135,15 @@ function sanitize_int_field(array $data, string $key, int $min = 0, int $max = 2
 // Datos adicionales
 $remote_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $current_time = time();
-$protection_enabled = eq_load_protection_state();
+$report_protection_enabled = eq_load_report_protection_enabled();
 $allowed_kiosk = eq_resolve_allowed_kiosk($allowed_kiosks_lookup, $kiosk_name);
-if ($protection_enabled && !empty($allowed_kiosks_lookup) && !is_array($allowed_kiosk)) {
+if ($report_protection_enabled && !empty($allowed_kiosks_lookup) && !is_array($allowed_kiosk)) {
     eq_register_unknown_kiosk_attempt($kiosk_name, $remote_ip);
     http_response_code(403);
     echo json_encode(['error' => 'Hostname no permitido']);
     exit;
 }
-if ($protection_enabled && is_array($allowed_kiosk)) {
+if ($report_protection_enabled && is_array($allowed_kiosk)) {
     $expected_ip = (string)($allowed_kiosk['ip'] ?? '');
     if ($expected_ip !== '' && $expected_ip !== $remote_ip) {
         eq_register_unknown_kiosk_attempt($kiosk_name, $remote_ip);
@@ -253,7 +253,7 @@ foreach ($status_data as $name => &$info) {
         continue;
     }
 
-    if ($protection_enabled && !empty($allowed_kiosks_lookup) && !is_array(eq_resolve_allowed_kiosk($allowed_kiosks_lookup, $name))) {
+    if ($report_protection_enabled && !empty($allowed_kiosks_lookup) && !is_array(eq_resolve_allowed_kiosk($allowed_kiosks_lookup, $name))) {
         unset($status_data[$name]);
     }
 }

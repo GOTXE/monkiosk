@@ -6,10 +6,11 @@ require_once __DIR__ . '/app_config.php';
 auth_require_json();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $protection = eq_load_protection_state();
     echo json_encode([
         'success' => true,
         'items' => eq_load_allowed_kiosks_for_crud(),
-        'protection_enabled' => eq_load_protection_state(),
+        'protection' => $protection,
         'unknown_attempts' => eq_load_unknown_kiosk_attempts(),
         'presentation_viewers' => eq_load_presentation_viewers(),
     ], JSON_UNESCAPED_UNICODE);
@@ -38,15 +39,30 @@ if (!auth_verify_csrf((string)($data['csrf_token'] ?? ''))) {
 
 $action = trim((string)($data['action'] ?? 'save_items'));
 if ($action === 'set_protection') {
+    $type = trim((string)($data['type'] ?? ''));
     $enabled = !empty($data['enabled']);
-    if (!eq_save_protection_state($enabled)) {
+    $current = eq_load_protection_state();
+    $reportEnabled = !empty($current['report_enabled']);
+    $presentationEnabled = !empty($current['presentation_enabled']);
+
+    if ($type === 'report') {
+        $reportEnabled = $enabled;
+    } elseif ($type === 'presentation') {
+        $presentationEnabled = $enabled;
+    } else {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Tipo de protección no válido'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if (!eq_save_protection_state($reportEnabled, $presentationEnabled)) {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'No se pudo guardar la protección'], JSON_UNESCAPED_UNICODE);
         exit;
     }
     echo json_encode([
         'success' => true,
-        'protection_enabled' => eq_load_protection_state(),
+        'protection' => eq_load_protection_state(),
         'items' => eq_load_allowed_kiosks_for_crud(),
         'unknown_attempts' => eq_load_unknown_kiosk_attempts(),
         'presentation_viewers' => eq_load_presentation_viewers(),
@@ -111,7 +127,7 @@ $items = $data['items'] ?? null;
     echo json_encode([
         'success' => true,
         'items' => eq_load_allowed_kiosks_for_crud(),
-        'protection_enabled' => eq_load_protection_state(),
+        'protection' => eq_load_protection_state(),
         'unknown_attempts' => eq_load_unknown_kiosk_attempts(),
         'presentation_viewers' => eq_load_presentation_viewers(),
     ], JSON_UNESCAPED_UNICODE);

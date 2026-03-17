@@ -36,7 +36,8 @@ Este manual resume la parte tecnica de Monkiosk para instalacion, mantenimiento 
 - acceso web de gestion con login propio y CSRF
 - nombres de usuario no sensibles a mayusculas/minusculas
 - proteccion de quioscos por `hostname` y `IP fija` opcional
-- la presentacion web del quiosco, con proteccion activada, solo admite `IP fija` autorizada
+- proteccion de reporte y proteccion de presentacion separadas
+- la presentacion web del quiosco, con su proteccion activada, solo admite `IP fija` autorizada
 - lectura de acciones por token compartido `X-Control-Token`
 - `kiosk_info` protegido con la misma sesion web de `estado_quioscos`
 - no existe autenticacion fuerte en el heartbeat; la proteccion principal es la lista de quioscos permitidos
@@ -63,13 +64,11 @@ La politica de archivos runtime locales esta en:
 
 ### Alta de quiosco
 
-1. desactivar proteccion si hace falta
-2. esperar a que el equipo aparezca en `Intentos de conexion`
-3. pulsar `Añadir`
-4. revisar `hostname` e `IP fija`
-5. marcar `Permitido`
-6. guardar con `GUARDAR`
-7. reactivar proteccion
+1. esperar a que el equipo aparezca en `Intentos de conexion`
+2. pulsar `Añadir`
+3. revisar `hostname` e `IP fija`
+4. marcar `Permitido`
+5. guardar con `GUARDAR`
 
 ### Cambio de tiempo de diapositiva
 

@@ -155,3 +155,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: se implanta el modelo de ramas `main` + `dev` como base operativa del proyecto, manteniendo ramas de trabajo temporales solo mientras duran los cambios, y se actualizan referencias en documentación y agentes.
 - Archivos: `AGENTS.md`, `tech_docs/14_flujo_git_y_politicas_repos.md`, `tech_docs/guia_lectura_agente.md`, `tech_docs/manual_tecnico.md`
 - Verificación: revisión manual de la coherencia entre política escrita y ramas previstas.
+
+### 2026-03-17 10:10
+- Área: seguridad
+- Cambio: se separa la protección de `Quioscos permitidos` en dos controles distintos, uno para reporte y otro para presentación. Los intentos de conexión siguen apareciendo con la protección de reporte activada para permitir alta manual sin abrir el acceso general.
+- Archivos: `estado_quioscos/app_config.php`, `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/allowed_kiosks_api.php`, `estado_quioscos/update_status.php`, `kiosk_web/index.php`, `tech_docs/manual_usuario.md`, `tech_docs/manual_tecnico.md`
+- Verificación: `php -l` en PHP modificados y revisión manual del flujo esperado.

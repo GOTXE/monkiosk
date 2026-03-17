@@ -2,6 +2,51 @@
 
 Todos los cambios notables en este proyecto serán documentados en este archivo.
 
+## [2.2.0] - 2026-03-17
+
+### 🎉 Nuevas Características Principales
+
+#### Gestión de Quioscos Permitidos
+- ✨ Nueva pantalla para gestionar quioscos permitidos desde la web.
+- ✨ Alta de equipos detectados desde `Intentos de conexion` con paso directo a la tabla principal.
+- ✨ Protección global activable/desactivable para controlar qué quioscos pueden reportar al servidor.
+- ✨ Validación por `hostname` y `IP fija` opcional para cada quiosco.
+- ✨ Actualización automática de `Intentos de conexion` sin necesidad de recargar la página.
+
+#### Gestión y Acceso a la Presentación
+- ✨ Protección de la presentación web del quiosco cuando la protección global está activada.
+- ✨ Nuevo listado de `Accesos a presentación` con IP, hostname si se puede resolver y clasificación de quioscos conocidos.
+- ✨ Restricción de acceso a la presentación por `IP fija` autorizada.
+
+#### Mejoras de Interfaz en Estado Quioscos
+- ✨ Recordatorio solo de usuario en login, sin guardar la contraseña en local.
+- ✨ Mostrar u ocultar contraseña con icono integrado en login y cambio de contraseña.
+- ✨ Botón único para `Desplegar todas` o `Cerrar todas` las tarjetas de quioscos.
+- ✨ Footer común centrado y ajustes de navegación en menú hamburguesa.
+- ✨ Aviso visual de caducidad del certificado HTTPS del servidor cuando faltan 30 días o menos.
+
+#### Gestión de Diapositivas
+- ✨ Mejoras de usabilidad en `Gestión diapositivas` con selección de archivo más clara y vista previa resaltada.
+- ✨ Validación más explicativa de nombres de archivo en subidas.
+- ✨ Limpieza automática de la vista previa al borrar un archivo previsualizado.
+- ✨ Ajuste visual del panel de archivos con altura fija y scroll interno.
+
+#### Recuperación y Operación
+- ✨ Nuevos scripts de backup local y restauración guiada.
+- ✨ Script de inicialización para crear archivos runtime locales durante la instalación.
+
+### 🔒 Seguridad
+- 🔒 `kiosk_info` protegido con la misma sesión web de `estado_quioscos`.
+
+### 🛠️ Configuración y Operación
+- 🛠️ Centralización de configuración común en `app_config.php`.
+- 🛠️ Simplificación de rutas y reducción de dependencias implícitas entre código y despliegue.
+
+### 📚 Documentación
+- 📖 Nuevos manuales de usuario y técnico.
+- 📖 Nueva política de versionado con `VERSION` como fuente única.
+- 📖 Nueva guía de lectura para agentes y actualización de `AGENTS.md` como índice operativo.
+
 ## [2.1.0] - 2026-02-26
 
 ### 🎉 Nuevas Características Principales
@@ -36,6 +81,8 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 ### 🔒 Seguridad
 - 🔒 Migración a login web de gestor (sesión) en `estado_quioscos`.
 - 🔒 Cambio de contraseña desde la propia interfaz de gestión.
+- 🔒 Política de contraseña reforzada: mínimo 8 caracteres, 1 mayúscula, 1 número y 1 carácter especial.
+- 🔒 Flujo de cambio de contraseña endurecido: el modal no se cierra en error y muestra validación en rojo hasta corrección.
 - 🔒 Menú de gestión con Documentación, Cambiar contraseña y Cerrar sesión.
 - 🔒 `estado_quioscos` servido por **HTTPS** con redirección desde HTTP.
 - 🔒 Endpoints sensibles protegidos (sesión + validación + CSRF en gestión de documentos).
