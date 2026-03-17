@@ -120,6 +120,12 @@ $items = $data['items'] ?? null;
         exit;
     }
 
+    if (!eq_purge_status_for_allowed_kiosks($normalized)) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'No se pudo actualizar el estado de quioscos'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     foreach ($normalized as $entry) {
         eq_remove_unknown_kiosk_attempt((string)$entry['hostname']);
     }

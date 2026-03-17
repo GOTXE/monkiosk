@@ -39,6 +39,10 @@ $items = eq_load_allowed_kiosks_for_crud();
             text-decoration: none;
         }
         .btn:hover { background: var(--btn-hover); }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(31, 102, 191, 0.22);
+        }
         .card {
             background: var(--card);
             color: var(--ink);
@@ -46,8 +50,9 @@ $items = eq_load_allowed_kiosks_for_crud();
             border-radius: 12px;
             padding: 14px;
         }
-        .hint { margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; }
-        .status { min-height: 20px; margin-bottom: 10px; font-size: 0.9rem; font-weight: 700; color: var(--muted); }
+        .hint { margin: 0 0 6px; color: var(--muted); font-size: 0.9rem; }
+        .status { min-height: 0; margin-bottom: 0; font-size: 0.9rem; font-weight: 700; color: var(--muted); }
+        .status:not(:empty) { min-height: 20px; }
         .status.ok { color: var(--ok); }
         .status.warn {
             color: #a35300;
@@ -93,16 +98,39 @@ $items = eq_load_allowed_kiosks_for_crud();
             font-size: 0.82rem;
             font-weight: 700;
             cursor: pointer;
+            transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease, border-color 0.14s ease;
+        }
+        .small-btn:hover {
+            transform: translateY(-1px);
+            background: #edf4ff;
+            border-color: #9ebbe1;
+            box-shadow: 0 8px 18px rgba(31, 77, 134, 0.16);
         }
         .small-btn.danger { color: #a61e2a; border-color: #e8bcc1; background: #fff6f6; }
-        .actions { margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .small-btn.danger:hover {
+            background: #ffe9ea;
+            border-color: #e19aa3;
+            box-shadow: 0 8px 18px rgba(166, 30, 42, 0.14);
+        }
+        .actions { margin-top: 8px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .table-actions {
+            justify-content: space-between;
+            align-items: center;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 10px;
+        }
+        .table-actions .status {
+            text-align: center;
+            font-size: 0.84rem;
+        }
         .section-title { margin: 18px 0 10px; color: #1f4d86; font-size: 1.02rem; }
         .protection-box {
             border: 1px solid #d7e1ee;
             border-radius: 10px;
             background: #f8fbff;
             padding: 6px 10px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .protection-row {
             display: grid;
@@ -115,8 +143,13 @@ $items = eq_load_allowed_kiosks_for_crud();
         .protection-row:last-child { border-bottom: 0; }
         .protection-label {
             color: #1f4d86;
-            font-size: 0.9rem;
+            font-size: 0.84rem;
             font-weight: 700;
+        }
+        .protection-label span {
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 400;
         }
         .protection-toggle {
             min-width: 110px;
@@ -265,19 +298,18 @@ $items = eq_load_allowed_kiosks_for_crud();
                 Define los quioscos válidos por <strong>hostname</strong> y, opcionalmente, su <strong>IP fija</strong>.
                 Si una IP está informada, el sistema exigirá que coincida con el reporte recibido. Marca <strong>Permitido</strong> para autorizar ese quiosco.
             </p>
-            <div id="status" class="status"></div>
             <div class="protection-box">
                 <div class="protection-row">
-                    <div class="protection-label">Reporte quioscos</div>
+                    <div class="protection-label">Reporte quioscos: <span>permitir o denegar acceso a reporte</span></div>
                     <button id="toggle-report-protection-btn" class="protection-toggle" type="button"></button>
                 </div>
                 <div class="protection-row">
-                    <div class="protection-label">Presentación</div>
+                    <div class="protection-label">Presentación: <span>restringir o permitir acceso a la presentación</span></div>
                     <button id="toggle-presentation-protection-btn" class="protection-toggle" type="button"></button>
                 </div>
             </div>
 
-            <h2 class="section-title">Quioscos permitidos</h2>
+            <h2 class="section-title">Quioscos: Reporte permitido</h2>
             <table>
                 <thead>
                     <tr>
@@ -290,10 +322,9 @@ $items = eq_load_allowed_kiosks_for_crud();
                 <tbody id="rows"></tbody>
             </table>
 
-            <div class="actions" style="justify-content:flex-start;">
+            <div class="actions table-actions">
                 <button id="add-row" class="small-btn" type="button">Añadir quiosco</button>
-            </div>
-            <div class="actions">
+                <div id="status" class="status"></div>
                 <button id="save-btn" class="btn" type="button">Guardar cambios</button>
             </div>
 
@@ -367,11 +398,23 @@ $items = eq_load_allowed_kiosks_for_crud();
         let currentUnknownAttempts = [];
         let currentPresentationViewers = [];
         let attemptsRefreshTimer = null;
+        let statusClearTimer = null;
         let pendingProtectionChange = null;
 
         function setStatus(message, cls) {
             statusEl.textContent = message || '';
             statusEl.className = 'status' + (cls ? ` ${cls}` : '');
+            if (statusClearTimer) {
+                window.clearTimeout(statusClearTimer);
+                statusClearTimer = null;
+            }
+            if (message && (cls === 'ok' || cls === 'err')) {
+                statusClearTimer = window.setTimeout(() => {
+                    statusEl.textContent = '';
+                    statusEl.className = 'status';
+                    statusClearTimer = null;
+                }, 5000);
+            }
         }
 
         function renderRows(items) {
@@ -538,8 +581,15 @@ $items = eq_load_allowed_kiosks_for_crud();
             updateFilledInputState(ipInput);
             updateIpInputState(ipInput);
             tr.querySelector('button').addEventListener('click', () => {
+                const removedHostname = String(hostnameInput.value || '').trim().toLowerCase();
                 tr.remove();
                 if (!rowsEl.children.length) addRow({ hostname: '', ip: '', enabled: true });
+                setStatus(
+                    removedHostname !== ''
+                        ? `Eliminado ${removedHostname} de la tabla. Falta guardar cambios.`
+                        : 'Se ha eliminado un quiosco de la tabla. Falta guardar cambios.',
+                    'warn'
+                );
             });
             rowsEl.appendChild(tr);
         }

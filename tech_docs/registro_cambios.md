@@ -161,3 +161,15 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: se separa la protección de `Quioscos permitidos` en dos controles distintos, uno para reporte y otro para presentación. Los intentos de conexión siguen apareciendo con la protección de reporte activada para permitir alta manual sin abrir el acceso general.
 - Archivos: `estado_quioscos/app_config.php`, `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/allowed_kiosks_api.php`, `estado_quioscos/update_status.php`, `kiosk_web/index.php`, `tech_docs/manual_usuario.md`, `tech_docs/manual_tecnico.md`
 - Verificación: `php -l` en PHP modificados y revisión manual del flujo esperado.
+
+### 2026-03-17 10:45
+- Área: ui
+- Cambio: se compacta la cabecera de protecciones de `Quioscos permitidos`, se unifican `Añadir quiosco` y `Guardar cambios` en la misma fila, el mensaje de estado pasa al centro de esa fila, el modal de confirmación de protección deja de usar la ventana nativa del navegador y cambia de halo según la acción, y al eliminar un quiosco se muestra aviso dorado de cambio pendiente.
+- Archivos: `estado_quioscos/allowed_kiosks.php`
+- Verificación: `php -l estado_quioscos/allowed_kiosks.php` y comprobación manual en producción del flujo de proteger, desproteger, añadir, eliminar y guardar.
+
+### 2026-03-17 10:55
+- Área: estado
+- Cambio: al guardar `Quioscos: Reporte permitido`, los quioscos eliminados se purgan inmediatamente de `status.json` para desaparecer del reporte principal sin esperar a recarga manual o nuevo heartbeat.
+- Archivos: `estado_quioscos/app_config.php`, `estado_quioscos/allowed_kiosks_api.php`
+- Verificación: `php -l` en ambos PHP y comprobación manual en producción del flujo de borrado y guardado.

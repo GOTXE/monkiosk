@@ -276,6 +276,40 @@ function eq_load_known_kiosks_from_status(): array {
     return $items;
 }
 
+function eq_purge_status_for_allowed_kiosks(array $items): bool {
+    $path = eq_status_file();
+    if (!is_file($path)) {
+        return true;
+    }
+
+    $raw = @file_get_contents($path);
+    if (!is_string($raw) || trim($raw) === '') {
+        return true;
+    }
+
+    $decoded = json_decode($raw, true);
+    if (!is_array($decoded)) {
+        return true;
+    }
+
+    $allowedLookup = eq_allowed_kiosks_lookup($items);
+    if (empty($allowedLookup)) {
+        $filtered = [];
+    } else {
+        $filtered = [];
+        foreach ($decoded as $hostname => $info) {
+            $normalizedHostname = eq_normalize_hostname((string)$hostname);
+            if ($normalizedHostname === '' || !isset($allowedLookup[$normalizedHostname])) {
+                continue;
+            }
+            $filtered[$hostname] = $info;
+        }
+    }
+
+    $payload = json_encode($filtered, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    return is_string($payload) && @file_put_contents($path, $payload . "\n", LOCK_EX) !== false;
+}
+
 function eq_load_allowed_kiosks_for_crud(): array {
     $configured = eq_load_allowed_kiosks();
     $known = eq_load_known_kiosks_from_status();

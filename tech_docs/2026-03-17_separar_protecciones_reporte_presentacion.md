@@ -47,6 +47,9 @@ Y mantener visible el listado de `Intentos de conexion` sin necesidad de desacti
 - `kiosk_web/index.php` usa solo la proteccion de presentacion
 - la UI de `Quioscos permitidos` ahora muestra dos bloques separados
 - los `Intentos de conexion` siguen registrandose y mostrandose con la proteccion de reporte activada
+- la UI de protecciones se ha compactado en un único bloque con dos filas y un botón por fila
+- la confirmación de cambio de protección usa modal propio centrado con halo verde o rojo según la acción
+- el mensaje de estado se ha movido entre `Añadir quiosco` y `Guardar cambios`
 - se ha actualizado la documentacion de usuario y tecnica
 
 ### Pruebas
