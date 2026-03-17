@@ -15,7 +15,6 @@ $allowed = [
     'GUIA_USO_APP_RESPALDO.md',
     'CHANGELOG.md',
     'GUIA_RAPIDA.md',
-    'GUIA_VIDEOS.md',
     'RESUMEN_MEJORAS.md',
 ];
 

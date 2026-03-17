@@ -42,7 +42,6 @@ auth_require_page();
       { file: 'GUIA_USO_APP_RESPALDO.md', label: 'Guía Uso App', section: 'Respaldo' },
       { file: 'CHANGELOG.md', label: 'CHANGELOG', section: 'Respaldo' },
       { file: 'GUIA_RAPIDA.md', label: 'GUIA_RAPIDA', section: 'Respaldo' },
-      { file: 'GUIA_VIDEOS.md', label: 'GUIA_VIDEOS', section: 'Respaldo' },
       { file: 'RESUMEN_MEJORAS.md', label: 'RESUMEN_MEJORAS', section: 'Respaldo' }
     ];
 
