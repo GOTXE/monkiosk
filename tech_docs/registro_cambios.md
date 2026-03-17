@@ -143,3 +143,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: se añade una guía de lectura para agentes que indica qué archivos debe leer una IA según el tipo de tarea, y `AGENTS.md` pasa a referenciarla como punto de entrada operativo.
 - Archivos: `AGENTS.md`, `tech_docs/guia_lectura_agente.md`
 - Verificación: revisión manual del mapa de lectura por tarea y de las referencias desde `AGENTS.md`.
+
+### 2026-03-17 09:20
+- Área: configuración
+- Cambio: se adapta `.gitignore` a la realidad de `estado_quioscos`, se fija la política de archivos runtime locales fuera de Git y se añade un script de inicialización para crear esos archivos durante instalación.
+- Archivos: `.gitignore`, `tools/init_estado_quioscos_runtime.sh`, `tools/README.md`, `tech_docs/politica_archivos_runtime_locales.md`, `AGENTS.md`, `tech_docs/guia_lectura_agente.md`, `tech_docs/manual_tecnico.md`
+- Verificación: revisión manual de la lista de runtime local, sintaxis shell del script y coherencia con el flujo de instalación.

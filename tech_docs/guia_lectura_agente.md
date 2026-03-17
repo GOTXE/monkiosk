@@ -34,6 +34,7 @@ Y crea o actualiza una nota tecnica en `tech_docs/` con formato:
 Lee:
 
 - `tech_docs/14_flujo_git_y_politicas_repos.md`
+- `tech_docs/politica_archivos_runtime_locales.md`
 
 ## Si vas a preparar version o release
 
@@ -60,6 +61,13 @@ Lee:
 
 - `tech_docs/manual_tecnico.md`
 - `tech_docs/manual_usuario.md`
+- `tools/README.md`
+
+## Si la tarea toca instalacion, configuracion local o archivos runtime
+
+Lee:
+
+- `tech_docs/politica_archivos_runtime_locales.md`
 - `tools/README.md`
 
 ## Si la tarea toca monitorizacion, heartbeat o quioscos

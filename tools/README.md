@@ -2,6 +2,36 @@
 
 Este directorio contiene scripts auxiliares para facilitar el trabajo con Monkiosk.
 
+## init_estado_quioscos_runtime.sh
+
+Script para crear los archivos runtime locales necesarios de `estado_quioscos` durante la instalación.
+
+### Qué crea si no existen
+
+- `auth_users.json`
+- `allowed_hosts.txt`
+- `allowed_kiosks.json`
+- `allowed_kiosks_protection.json`
+- `status.json`
+- `actions.json`
+- `slide_settings.json`
+- `overlay_config.json`
+- `unknown_kiosk_attempts.json`
+- `presentation_viewers.json`
+- `control_config.php`
+
+### Uso
+
+```bash
+sudo ./tools/init_estado_quioscos_runtime.sh \
+  --target-dir /var/www/html/estado_quioscos \
+  --admin-user admin \
+  --admin-password 'CAMBIAR_CLAVE' \
+  --control-token 'CAMBIAR_TOKEN'
+```
+
+Si no se indican contraseña o token, el script genera valores iniciales aleatorios.
+
 ## backup_monkiosk.sh
 
 Script para crear un backup local completo de Monkiosk.

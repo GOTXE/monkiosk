@@ -1,7 +1,20 @@
+# Runtime local files for estado_quioscos
+estado_quioscos/auth_users.json
+estado_quioscos/allowed_hosts.txt
+estado_quioscos/allowed_kiosks.json
+estado_quioscos/allowed_kiosks_protection.json
+estado_quioscos/status.json
+estado_quioscos/actions.json
+estado_quioscos/slide_settings.json
+estado_quioscos/overlay_config.json
+estado_quioscos/unknown_kiosk_attempts.json
+estado_quioscos/presentation_viewers.json
+estado_quioscos/certificate_status.json
+estado_quioscos/control_config.php
+estado_quioscos/config.local.php
+
 # Ignorar archivos de prueba HTML
 kiosk_web/test_*.html
-# Files not to be tracked by git
-*test*.txt
 
 # Development-only folders that should not go to production
 /futuros/
@@ -22,6 +35,7 @@ kiosk_web/docs/*.gif
 # Configuration files (keep .example)
 kiosk_web/config.json
 !kiosk_web/config.json.example
+!estado_quioscos/*.example
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

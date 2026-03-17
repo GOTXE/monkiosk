@@ -55,6 +55,10 @@ La configuracion comun se centraliza en:
 - `estado_quioscos/app_config.php`
 - `estado_quioscos/config.local.php` si existe
 
+La politica de archivos runtime locales esta en:
+
+- `tech_docs/politica_archivos_runtime_locales.md`
+
 ## 6. Operaciones habituales
 
 ### Alta de quiosco
@@ -153,6 +157,12 @@ Comportamiento:
 Modo de prueba:
 
 - `sudo ./tools/restore_monkiosk.sh --dry-run`
+
+### Inicializacion de runtime local
+
+Para crear los archivos locales necesarios de `estado_quioscos` en una instalacion nueva:
+
+- `sudo ./tools/init_estado_quioscos_runtime.sh --target-dir /var/www/html/estado_quioscos`
 
 ## 10. Principios de mantenimiento
 

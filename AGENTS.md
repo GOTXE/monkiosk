@@ -18,6 +18,7 @@ Reference:
 ## Git And Releases
 For branch rules, PR flow, protected `main`, and sensitive artifact policy, read:
 - `tech_docs/14_flujo_git_y_politicas_repos.md`
+- `tech_docs/politica_archivos_runtime_locales.md`
 
 For versioning, tags, and the single version source, read:
 - `tech_docs/politica_versionado.md`
