@@ -5,392 +5,554 @@
 - Idea principal
 - Descripción General
 - Estructura del Proyecto
-- Instalación
-- Configuración
-- Archivos y Directorios
+- Instalación (Servidor)
+- Configuración de Quioscos
 - Funcionamiento
-- Personalización
+- Operación y uso diario
+- Versionado, ramas y PR
+- Validación mínima
 - Herramientas Auxiliares
+- Documentación recomendada por perfil
+- Créditos
 
-## Idea principal
+## La idea principal 🚀
 
-Este proyecto :floppy_disk: nace de una necesidad muy especial, la de `un amigo` que quería mostrar información en ciertos monitores. Los requisitos son claros y casi ~~patét~~ poéticos: `solo necesito algo extremadamente sencillo, de coste cercano a 0, fácil de usar y mantener, además se que a tí te gusta eso de los cacharros y así te entretienes`. :zipper_mouth_face:
+Este proyecto 🖥️ surgió de una necesidad real: `una amig@` seguía atrapado en métodos de los **años 90** para actualizar contenidos en pantallas: pendrives que volaban por los aires 🐌, caminatas matutinas con cara de lunes eterno 📬😤 y pánicos innecesarios cada vez que aparecía el temido “NO SIGNAL” o la misma presentación de PowerPoint de hace una década 🦖📊.
 
-No esperes encontrar aquí código digno de admiración o soluciones dignas de SpaceX. De hecho, lo único que compartimos con ellos es que estamos vivos y somos capaces de hacer cosas con un presupuesto que en nuestro caso roza casi el cero absoluto :money_with_wings:.
+Los requisitos que me transmitió fueron claros y directos:
 
-Entonces, ¿por qué documentar todo esto? Muy sencillo: porque el `gotxe` y el `panoramix` del futuro no querrán recordar cómo funcionaba esto y, cuando ese amigo **tenga un problema** :boom: (**porque lo tendrá**), nos llamará :telephone_receiver: preguntando cómo reinstalarlo . 
-Pero esa vez no se lo vamos a reinstalar porque los `dos` del futuro, que fueron los que lo hcicieron, seguro estarán a otras cosas y quien sabe si en otro lugar (vivos), así que más le vale leer esto 😅.
+- Extremadamente sencillo de implementar y usar 🤏
+- Coste lo más cercano posible a cero euros 💸
+- Fácil de mantener y escalar 🛠️
+- Y el comentario final que lo resume todo: “A ti te encantan estos cacharros raros 🔧🤓, ¡así te entretienes!”
+
+Aquí NO vas a encontrar código digno de un unicornio 🦄 ni arquitectura que haga babear a los devs de SpaceX.  
+Lo único que compartimos con SpaceX es que ambos proyectos **despegan**… pero el nuestro lo hace con:
+
+- Hardware reciclado que aún huele a sótano y nostalgia 🏚️🍓
+- Código pragmático (mucho copy-paste selectivo de Stack Overflow y ayuda de IAs modernas) 🤷‍♂️💻
+- Una dosis generosa de pruebas, fe y café para que nada se incendie 🔥🙏
+- Y fe ciega (más que en Y2K) en que no se queme todo al mismo tiempo 🔥🙏💥
+
+**Presupuesto estimado**: 0 € (reutilizando lo que ya existe) 😶‍🌫️  
+**Mantenimiento recomendado**: reinicio ocasional + monitorización remota básica + un poco de sentido común 🪵  
+**Soporte técnico**: ... cargando módulo de paciencia... 🤬🌙
+
+Bienvenidos al **futuro low-cost y eficiente** de la señalización digital: pantallas que se actualizan automáticamente por WiFi, sin paseos mañaneros ni dramas innecesarios 🚶‍♂️→🌐
+
+Porque a veces la mejor innovación no necesita millones… solo un poco de ingenio, hardware sobrante y ganas de resolver problemas reales. 😏
+
+#### Actualización de estado (o cómo mentimos sin remordimientos) 😂💀
+
+Prometimos solemnemente:  
+“Solo la v1, lo dejamos morir dignamente y nos olvidamos para siempre. Palabra de dev quemado.” 🪦🔥
+
+Mentimos como bellacos.  
+Ya estamos en la **v2** y contando features como si no hubiera un mañana. 😈🚀
+
+Porque nada dice “proyecto low-cost y sin scope creep” como añadirle 17 cosas más “porque total, ya estamos aquí” 🤡🛠️
+
+Presupuesto: sigue en 0 €  
+Tiempo invertido: infinito  
+Arrepentimiento: también infinito, pero con cafeína ☕😭
+
+Bienvenidos a la **versión 2: ahora sí que la liamos parda** edition.  
+(¡NO! no habrá v3, y lo sabes!!) 🤫👨‍💻📝💻🔥☕
+
+¿Quién necesita disciplina cuando tienes FOMO técnico y un amigo que dice “y si le metemos…”? 🫠💾
+
+#### Documentación para el futuro (o cómo no morir sin dejar rastro) 🧙‍♂️📜
+Entonces, ¿por qué documentar todo esto? Muy sencillo: porque el `gotxe` y el `panoramix` del futuro no querrán recordar cómo funcionaba esto y, cuando ese amig@ **tenga un problema** :boom: (**porque lo tendrá**), nos llamará :telephone_receiver: preguntando cómo reinstalarlo . 
+Pero esa vez no se lo vamos a reinstalar porque los `dos` del futuro, que fueron los que lo hicieron, seguramente estarán a otras cosas y hasta puede que en otro lugar, así que más le vale leer esto 😅 para poder hacerlo por sí mismo, y con la ayuda de la IA. 🙏✝️
 
 ## Descripción General
 
-Este proyecto es un sistema de presentación y monitorización de quioscos basado en web. Hay una pagina web `index.php`que pone a disposición de los quioscos los documentos a presentar y un sistema de monitorización de los quioscos `update_status.php` e `index.html`, que combina un script `Bash` que verifica la conectividad de la red de los quioscos y una interfaz web que presenta visualmente su estado en tiempo real.
+Monkiosk en su estado actual (fuente de versión: [`VERSION`](./VERSION), actual `0.2.0`) se compone de tres bloques principales:
 
-### Características Clave
+- **Presentación de contenido en quiosco** (`kiosk_web/index.php`) leyendo archivos de `kiosk_web/docs/`.
+- **Gestión web y monitorización** en `estado_quioscos/` con login, control de quioscos permitidos, estado del servidor, acciones remotas y gestión de documentos.
+- **Heartbeat en equipos** con scripts de `kiosks_report/alpine/` y soporte de instalación en `Quioscos_install_alpine/`.
 
-- Servidor quiosco que muestra documentos en un ciclo continuo.
-- Monitorización del estado de múltiples quioscos, servidor y puerta de enlace.
-- Muestra los resultados en una interfaz web dinámica utilizando HTML, CSS y JavaScript.
-- Actualiza el estado de los dispositivos cada 60 segundos sin necesidad de recargar toda la página.
-- Proporciona indicadores de estado en tiempo real (online/offline) con fecha_hora para cada elemento.
+El flujo operativo es:
+
+1. El quiosco reproduce contenido desde `kiosk_web/index.php`.
+2. El quiosco reporta estado a `estado_quioscos/update_status.php`.
+3. La web `estado_quioscos/index.html` muestra estado de quioscos y servidor.
+4. Si hay acciones pendientes (por ejemplo reinicio), el quiosco las recoge desde `estado_quioscos/get_action.php`.
 
 ## Estructura del Proyecto
 
-La estructura y los permisos del proyecto es la siguiente:
+Estructura principal actual:
 
 ```bash
 monkiosk/
-├── kiosk_web/              [750]
-│   ├── styles.css          [644]
-│   ├── img/                [755]
-│   │   └── ...svg
-│   ├── docs/               [755]
-│   │   └── ...jpg
-│   ├── index.php           [640]
-│   ├── update_status.php   [640]
-│   ├── status.json         [640]
-│   ├── allowed_hosts.txt   [600]
-│   ├── index.html          [644]
-
-Quioscos/
-├── kiosks_report/          [750]
-│   ├── debian/
-│   │   ├── kioskmonitoring.service [644]
-│   │   ├── report_status.sh        [750]
-│   ├── alpine/
-│   │   ├── kioskmonitoring.openrc
-│   │   ├── heartbeat.conf.example
+├── AGENTS.md
+├── README.md
+├── README_EN.md
+├── VERSION
+├── estado_quioscos/                         # Gestión web, auth y monitorización
+│   ├── index.html
+│   ├── login.php
+│   ├── update_status.php
+│   ├── get_action.php
+│   ├── docs_manager.php
+│   ├── slide_settings.php
+│   ├── app_config.php
+│   ├── config.local.php.example
+│   ├── control_config.php.example
+│   ├── styles.css
+│   └── img/
+├── kiosk_web/                               # Presentación en quiosco
+│   ├── index.php
+│   ├── docs/
+│   └── vendor/pdfjs/
+├── kiosks_report/                           # Heartbeat
+│   ├── alpine/                              # Activo (OpenRC)
 │   │   ├── install_heartbeat_alpine.sh
-├── Quioscos_install_alpine/
-│   ├── install_report.sh
-│   ├── report/
 │   │   ├── report_status.sh
 │   │   ├── kioskmonitoring.openrc
-│   │   ├── heartbeat.conf.example
-├── kiosk_/                 [750]
-│   ├── autostart           [644]
-
+│   │   └── heartbeat.conf.example
+│   └── debian/                              # Legado en repo
+├── Quioscos_install_alpine/
+│   ├── install_report.sh
+│   ├── setup_quiosco.sh
+│   └── report/
+├── kiosk_info/
+│   ├── index.php
+│   ├── doc.php
+│   ├── assets/
+│   └── src/
+├── tools/
+│   ├── init_estado_quioscos_runtime.sh
+│   ├── backup_monkiosk.sh
+│   ├── restore_monkiosk.sh
+│   ├── convert_video.sh
+│   └── manage_estado_quioscos_basic_auth.sh
+└── tech_docs/
+    ├── README.md
+    ├── manual_tecnico.md
+    ├── manual_usuario.md
+    ├── politica_versionado.md
+    ├── politica_archivos_runtime_locales.md
+    └── registro_cambios.md
 ```
 
-## Instalación del Servidor
+## Instalación (Servidor)
 
 ### Requisitos Previos
 
-- Servidor: El Linux que tu quieras con Nginx, php y caffeine, :coffee: de este también! En este caso es debian.
-
- [![debian](https://img.shields.io/badge/DEBIAN-d70a53)](https://www.debian.org/distrib/)   [![NGINX](https://img.shields.io/badge/NGINX-8A2BE2)](https://nginx.org/en/docs/http/ngx_http_index_module.html)    [![PHP](https://img.shields.io/badge/PHP-4D5D8C)](https://www.php.net/) [![CAFFEINE](https://img.shields.io/badge/CAFFEINE-a18262)](https://duckduckgo.com/?t=h_&q=caffeine+linux+&ia=web)
-
-### Pasos de Instalación
-
-1. **Descarga los archivos del Repositorio**:
-    Utiliza un navegador o si prefieres desde terminal con `wget`
-    ```bash
-     wget https://github.com/GOTXE/monkiosk/archive/refs/heads/main.zip
-    ```
-    Para el servidor solo te hace falta la carpeta `kiosk_web`.
-
-2. **Instalar Paquetes Requeridos en el Servidor**:
-    ```bash
-    sudo apt update
-    sudo apt install nginx curl php-fpm
-    ```
-
-3. **Configurar la Interfaz Web**:
-    - Copiar el contenido de la carpeta `kiosk_web` al directorio `/var/www/html/<tu_nombre_favorito>`
-    - Asegurarse de que Nginx esté configurado para servir el archivo `index.php`, `index.html` y `update_status.php`.
-
-4. **Configurar Nginx**
-        P E N D I E N T E
-
-5. **Configurar hostnames**:
-    En el archivo `allowed_hosts.txt`, agregar los nombres correspondientes para cada quiosco en el siguiente formato:
-    
-    ```
-    Kiosk1
-    Kiosk2
-    ```
-6. **Modificaciones en los archivos**
-    En el archivo `index.php`, hay una línea `var intervalo = 5000;` en la que tienes que establecer el tiempo que quieres que se presente cada diapositiva (está en ms).
-
-    En el archivo `index.html` hay una línea `const timeout = 150;` en la que puedes determinar si un equipo está offline (está en sg).
-
-# Configuración de los Quioscos
-
-## Instalación de Quioscos (en Xubuntu 24.04)
-
-Esta implementación se basa en una imagen limpia y minimalista de Xubuntu 24.04, donde se crea un único usuario, `kiosco`.
+- Debian 13 con acceso `root`/`sudo`
+- Repositorio clonado en el servidor
+- Conectividad entre servidor y quioscos
 
 ### Pasos de Instalación
 
-#### 1. Establecer Contraseña de Administrador
-```bash
-sudo passwd root
-```
-#### 2. Actualizar la Distrubución y los Paquetes
-```bash
-sudo apt update && sudo apt upgrade -y
-```
+1. Instala dependencias base web:
+   ```sh
+   sudo apt update
+   sudo apt install -y nginx php-fpm
+   ```
+2. Publica la aplicación en la raíz web (modelo actual del proyecto):
+   ```sh
+   sudo mkdir -p /var/www/html
+   sudo cp -a kiosk_web/. /var/www/html/
+   sudo cp -a estado_quioscos /var/www/html/
+   ```
+3. Prepara configuración local de `estado_quioscos`:
+   ```sh
+   cd /var/www/html/estado_quioscos
+   sudo cp -n config.local.php.example config.local.php
+   sudo cp -n control_config.php.example control_config.php
+   ```
+4. Edita `config.local.php` y ajusta al servidor:
+   - `docs_dir` debe apuntar a `/var/www/html/docs`
+   - `server.php_fpm_unit` en Debian 13 suele ser `php8.2-fpm`
+5. Inicializa runtime local (desde la raíz del repo clonado; crea usuarios, JSON runtime y token de control):
+   ```bash
+   cd /ruta/al/repo/monkiosk
+   sudo ./tools/init_estado_quioscos_runtime.sh --target-dir /var/www/html/estado_quioscos
+   ```
+   O versión explícita recomendada:
+   ```bash
+   sudo ./tools/init_estado_quioscos_runtime.sh \
+     --target-dir /var/www/html/estado_quioscos \
+     --admin-user admin \
+     --admin-password 'CAMBIAR_CLAVE' \
+     --control-token 'CAMBIAR_TOKEN'
+   ```
+6. Ajusta propietario/permisos para que Nginx y PHP-FPM escriban runtime:
+   ```sh
+   sudo chown -R nginx:nginx /var/www/html
+   sudo find /var/www/html -type d -exec chmod 755 {} \;
+   sudo find /var/www/html -type f -exec chmod 644 {} \;
+   ```
+7. Habilita y arranca servicios en systemd:
+   ```sh
+   sudo systemctl enable nginx php8.2-fpm
+   sudo systemctl restart nginx php8.2-fpm
+   ```
+8. Verifica acceso:
+   - Presentación: `http://IP_SERVIDOR/index.php`
+   - Gestión: `http://IP_SERVIDOR/estado_quioscos/login.php`
 
-#### 3. Instalar los Paquetes Necesarios
-```bash
-sudo apt install unclutter l3afpad curl chromium caffeine
-```
+Notas importantes:
 
-#### 4. Deshabilitar el Llavero del Navegador
-```bash
-sudo chmod -x /usr/bin/gnome-keyring*
-```
+- Los archivos runtime/locales no deben versionarse en Git.
+- La referencia oficial de esta política está en [`tech_docs/politica_archivos_runtime_locales.md`](./tech_docs/politica_archivos_runtime_locales.md).
 
-#### 5. Aplicar Capa de Personalización de Plymouth
-This will overwrite the default `xubuntu-logo`.V
-```bash
-sudo cp -R xubuntu-logo /usr/share/plymouth/themes
-sudo update-initramfs -u
-sudo reboot now
-```
+## Configuración de Quioscos
 
-#### 6. Deshabilitar Traductor de Google en Chromium
-- Open Chromium.
-- Navigate to settings and disable Google Translator (enabled by default).
+### 🖥️ Quiosco Alpine Linux + Chromium
 
-#### 7. Crear o Copiar el Script Autostart (inicia Chromium con la web que se desee); y Autorefresh (que refresca el navegador cada x segundos)
-**Referencia:** El script original de Autostart se puede en contrar en  [josfaber/debian-kiosk-installer](https://github.com/josfaber/debian-kiosk-installer). Solo se ha utilizado el script en sí para esta implementación.
+Instalación desatendida de un quiosco digital basado en **Alpine Linux 3.23** con **Chromium en modo kiosk**.
+El sistema arranca directamente en un navegador a pantalla completa apuntando a la URL configurada, sin escritorio ni interfaz de usuario adicional.
 
-Script de `autostart`:
-```bash
-#!/bin/bash
-unclutter -idle 0.1 -grab -root &
-while :
-do
-  chromium \
-    --no-first-run \
-    --start-maximized \
-    --disable \
-    --disable-translate \
-    --disable-infobars \
-    --disable-suggestions-service \
-    --disable-save-password-bubble \
-    --disable-session-crashed-bubble \
-    --incognito \
-    --kiosk "https://tuwebquiosco.com"
-  sleep 5
-done &
-```
+### 📋 Requisitos previos
 
-Script de `autorefresh`:
-```bash
-#!/bin/bash
-unclutter -idle 0.1 -grab -root &
-while true:
-do
-  chromium \
-    --no-first-run \
-    --start-maximized \
-    --disable \
-    --disable-translate \
-    --disable-infobars \
-    --disable-suggestions-service \
-    --disable-save-password-bubble \
-    --disable-session-crashed-bubble \
-    --incognito \
-    --kiosk "https://tuwebquiosco.com"
-  sleep 5
-done &
-```
+- Una máquina (física o virtual) con soporte para arranque desde USB/CD.
+- ISO de Alpine Linux 3.23 (edición **standard**).
+- El archivo `setup_quiosco.sh` disponible (vía USB o red).
+- Conexión a internet durante la instalación (para descargar paquetes).
 
-Copiar los scripts a la localización:
-```bash
-/home/kiosk/.config/autostart/
+### 🚀 Proceso de instalación
+
+#### Paso 0. Instalación base de Alpine Linux
+
+Arranca desde la ISO de Alpine y entra como root:
+
+```sh
+root
 ```
 
+Ejecuta el asistente:
 
-#### 8. Haz que los scripts del Quiosko sean Ejecutable y Pruébalo
-```bash
-sudo chmod +x /home/kiosk/.config/autostart/autostart
-sh /home/kiosk/.config/autostart/autostart
-
-sudo chmod +x /home/kiosk/.config/autostart/autorefresh
-sh /home/kiosk/.config/autostart/autorefresh
-
+```sh
+setup-alpine
 ```
 
-#### 9. Configurar Aplicacioned de Inicio
-Asegurarse que las siguientes aplicaciones y scripts estén configurados para ejecutarse al inicio:
-- **Caffeine:** Verificar que se está ejecutando, con alguno de estos comandos:
-  ```bash
-  ps aux | grep caffeine
-  pgrep caffeine
-  ```
-- **Script de Inicio:** Agrergar y habilitar el sript de inicio automático.
+Durante el asistente, usa estos valores:
 
-#### 10. Restringir el Usuario `kiosk`
-Eliminar derechos de `sudo` comentando la línea correspondiente:
-```bash
-sudo visudo
+| Parámetro | Valor recomendado |
+|---|---|
+| Keyboard layout | `es` / variante `es` |
+| Hostname | el que quieras (ej: `quiosco01`) |
+| Interfaz de red | `eth0` (o la disponible) |
+| IP | `dhcp` |
+| Root password | elige una segura |
+| Timezone | `Europe/Madrid` |
+| NTP client | `busybox` |
+| APK mirror | `1` (o el más cercano) |
+| Setup user | `no` |
+| SSH server | `openssh` |
+| Allow root SSH login | `yes` (temporal, el script lo desactivará) |
+| SSH key | `none` |
+| Disco | normalmente `sda` |
+| Modo de uso | `sys` (instalado en disco) |
+| Confirmar borrado | `y` |
+
+Cuando finalice:
+
+```sh
+reboot
 ```
 
+#### Paso 1. Copiar todos los archivos necesarios (como root)
 
-### Configuración del Servicio de Monitorización
+Antes de comenzar, copia tanto `setup_quiosco.sh` como la carpeta `Quioscos_install_alpine` (con el instalador de monitorización) al directorio `/root` del quiosco.
 
-Para asegurarse de que el script de monitorización se ejecute como un servicio en segundo plano y se reinicie automáticamente si falla, se debe crear una unidad de servicio `systemd`.
+Opción 1a. Desde un USB (formato NTFS):
 
-1. Descargar archivos del Repositorio:
-
-    Utiliza un navegador o si prefieres desde terminal con `wget`
-    ```bash
-     wget https://github.com/GOTXE/monkiosk/archive/refs/heads/main.zip
-    ```
-    Ahora la carpeta que hace falta es `kiosks_report/debian` (Debian/systemd) o `Quioscos_install_alpine` (Alpine/OpenRC).
-
-2. Configurar el Script de Monitorización (Debian/systemd):
-    - Colocar `kiosks_report/debian/report_status.sh` en `/opt/monitoring/report_status.sh`.
-     ```bash
-     sudo mkdir /opt/monitoring
-     ```
-    - Copiar también `kiosks_report/debian/kioskmonitoring.service` a `/etc/systemd/system/kioskmonitoring.service`.
-    ```bash
-    sudo cp kiosks_report/debian/report_status.sh /opt/monitoring/report_status.sh
-    sudo cp kiosks_report/debian/kioskmonitoring.service /etc/systemd/system/kioskmonitoring.service
-    ```
-    - Ajustar URL en `/opt/monitoring/report_status.sh` o usar `/etc/kiosk/heartbeat.conf`:
-      `http://<IP_DEL_SERVIDOR>/estado_quioscos/update_status.php`
-
-     ***Recargar systemd***:
-    ```bash
-    sudo systemctl daemon-reload
-    ```
-
-     ***Habilitar el servicio para que inicie al arrancar***:
-    ```bash
-    sudo systemctl enable kioskmonitoring.service
-    ```
-
-     ***Iniciar el servicio***:
-    ```bash
-    sudo systemctl start kioskmonitoring.service
-    ```
-
-     ***Verificar el estado del servicio***:
-    ```bash
-    sudo systemctl status kioskmonitoring.service
-    ```
-
-# Funcionamiento
-
-### Script de Monitorización (`report_status.sh`)
-
-Este script verifica continuamente la disponibilidad del servidor enviando una solicitud HTTP POST a `http://<IP_DEL_SERVIDOR>/estado_quioscos/update_status.php`. Obtiene el nombre del quiosco usando el comando `hostname` para enviarlo en la petición POST al servidor.
-
-Para Alpine/OpenRC se puede usar el instalador no interactivo:
-```bash
-sudo ./Quioscos_install_alpine/install_report.sh \
-  --primary-url http://IP_PROD/estado_quioscos/update_status.php \
-  --fallback-url http://IP_TEST/estado_quioscos/update_status.php
+```sh
+apk add ntfs-3g
+fdisk -l
+mkdir /root/USB
+mount -t ntfs-3g /dev/sdb1 /root/USB
+cp /root/USB/setup_quiosco.sh /root/
+cp -r /root/USB/Quioscos_install_alpine /root/
 ```
 
-### Interfaz Web
+Opción 1b. Desde otro equipo por SCP (red):
 
-Está dividida en dos partes:
+En la máquina Alpine, comprueba la IP:
 
-1. Recibe el estado del quiosco `(http POST)` en la web `update_status.php`, escribiendo en el archivo `status.json` el estado del quiosco.
+```sh
+ip a
+```
 
-2. La web `ìndex.html` lee el archivo `status.json` cada 5 segundos para actualizar el estado de los quioscos y el servidor sin necesidad de recargar la página. Los quioscos se presentan visualmente codificados por colores (verde para online, rojo para offline) y con iconos, además de presentar la fecha_hora de visto el equipo.
+Desde el equipo origen (Linux/macOS/WSL):
 
+```sh
+scp setup_quiosco.sh root@<IP_DEL_QUIOSCO>:/root/
+scp -r Quioscos_install_alpine root@<IP_DEL_QUIOSCO>:/root/
+```
 
-### Personalización
-Intervalo de Actualización:
-Puedes cambiar el intervalo de actualización en el script Bash `(report_status.sh)` modificando la variable `interval`.
+#### Paso 2. Ejecutar el script de configuración del quiosco
 
-### Iconos de Quioscos
-Para personalizar los iconos utilizados , reemplaza cada archivo `.svg` en el directorio img/ con tu imagen preferida (***manteniendo el mismo nombre***).
+El script `setup_quiosco.sh` realiza la instalación de forma totalmente desatendida tras un breve asistente inicial.
+Te pedirá:
 
-### Intervalo de Cambio de Documentos
-Este tiempo marca el cambio entre documentos. Para cambiar el intervalo de tiempo de presentación en los quiosco `index.php`, modifica el valor en milisegundos en la variable `var intervalo = 5000;`
+1. Tipo de conexión: Cable (`eth0` por DHCP), WiFi (SSID y contraseña) o saltar el paso.
+2. Contraseña SSH para el usuario `quiosco` (dos veces).
+3. URL del quiosco (para esta instalación: `http://192.168.244.254`).
 
-### Soporte de Videos
-El sistema ahora soporta videos en formato MP4 y WEBM con audio. Los videos se reproducen automáticamente y avanzan al siguiente contenido cuando terminan. 
+Ejecuta el script desde `/root`:
 
-**Formatos soportados:**
-- Imágenes: JPG, JPEG, PNG
-- Documentos: PDF
-- Videos: MP4, WEBM (recomendado: 1920x1080, códec H.264 para MP4)
+```sh
+chmod +x /root/setup_quiosco.sh
+sh /root/setup_quiosco.sh
+```
 
-**Características de video:**
-- Reproducción automática con audio
-- El sistema avanza automáticamente al terminar el video
-- Objeto-fit: contain para mantener proporciones
-- Fondo negro para mejor visualización
+Tras confirmar el resumen, el script ejecuta automáticamente:
 
-**Recomendaciones para videos:**
-- Resolución: 1920x1080 (Full HD)
-- Códec de video: H.264 (para MP4) o VP9 (para WEBM)
-- Códec de audio: AAC (para MP4) o Vorbis/Opus (para WEBM)
-- Bitrate de video: 5-10 Mbps para buena calidad
-- Bitrate de audio: 128-192 kbps
+| Fase | Acción |
+|---|---|
+| 1/8 | Habilita repositorios `community` e instala dependencias (Xorg, Openbox, Chromium…) |
+| 2/8 | Crea el usuario `quiosco` y lo añade a `video` e `input` |
+| 3/8 | Configura autologin en `tty1` para `quiosco` |
+| 4/8 | Aplica política de Chromium para deshabilitar traducción |
+| 5/8 | Configura red (cable/WiFi) o la omite |
+| 6/8 | Carga firmware WiFi si aplica (`rtl8xxxu`) |
+| 7/8 | Configura SSH: `quiosco` habilitado, root deshabilitado |
+| 8/8 | Genera `.profile` y `.xinitrc` y reinicia |
 
-Para añadir videos, simplemente colócalos en la carpeta `docs/` con el nombre numérico correspondiente (ej: `5.mp4`, `6.webm`).
+Al terminar, el sistema reinicia automáticamente en 5 segundos (`Ctrl+C` para cancelar).
+
+> ⚠️ Importante: una vez reiniciado, el acceso SSH como `root` queda deshabilitado. El Paso 3 debe ejecutarse antes del reinicio, cancelándolo con `Ctrl+C`.
+
+#### Paso 3. Instalar el agente de monitorización
+
+Este paso debe realizarse inmediatamente después de que `setup_quiosco.sh` termine, antes de reiniciar.
+
+```sh
+cd /root/Quioscos_install_alpine
+sh install_report.sh --primary-url 192.168.244.254 --fallback-url 192.2.254.4 --force-config
+```
+
+Ahora introducir el token de control (sustituir o completar por `CONTROL_TOKEN="8eba4b574f4b62e94aa8aa081b55a657a604fcff"`):
+
+```sh
+nano /etc/kiosk/heartbeat.conf
+```
+
+Al terminar, reinicia manualmente:
+
+```sh
+reboot
+```
+
+Verificar servicio activo:
+
+```sh
+rc-service kioskmonitoring status
+tail -f /var/log/kiosk-heartbeat.log
+```
+
+#### Opciones del instalador `install_report.sh`
+
+| Opción | Descripción | Valor por defecto |
+|---|---|---|
+| `--primary-url URL` | URL principal del servidor (**obligatoria**) | — |
+| `--fallback-url URL` | URL alternativa si la principal no responde | — |
+| `--interval N` | Intervalo entre heartbeats (segundos) | `60` |
+| `--max-retries N` | Reintentos por endpoint | `3` |
+| `--retry-interval N` | Espera entre reintentos (segundos) | `10` |
+| `--connect-timeout N` | Timeout de conexión curl (segundos) | `3` |
+| `--max-time N` | Timeout total curl (segundos) | `5` |
+| `--kiosk-url URL` | URL local del quiosco (informativa) | — |
+| `--control-token TOKEN` | Token para consultar acciones remotas | — |
+| `--no-start` | No arrancar el servicio al finalizar | — |
+| `--no-enable` | No habilitar en arranque | — |
+| `--force-config` | Sobrescribir `/etc/kiosk/heartbeat.conf` | — |
+
+> ⚠️ Si `/etc/kiosk/heartbeat.conf` ya existe, usa `--force-config` para sobrescribirla. Sin ese flag, se conserva.
+
+#### Archivos instalados
+
+```text
+/opt/monitoring/report_status.sh       -> Script principal heartbeat
+/etc/kiosk/heartbeat.conf              -> Configuración (URLs, intervalos, token…)
+/etc/init.d/kioskmonitoring            -> Servicio OpenRC
+```
+
+### ⚙️ Comportamiento del sistema tras la instalación
+
+```text
+Arranque -> autologin como quiosco (tty1)
+         -> .profile lanza startx
+         -> .xinitrc inicia Openbox + Chromium en modo kiosk
+         -> Chromium abre la URL configurada a pantalla completa
+```
+
+- El perfil de Chromium se borra en cada arranque (`~/.config/chromium`).
+- El cursor del ratón está oculto (`startx -- -nocursor`).
+- Protector de pantalla y energía del monitor desactivados (`xset s off -dpms`).
+- Chromium arranca en modo incógnito sin infobars ni prompts de contraseña.
+
+Flags de Chromium según esquema URL:
+
+| Esquema | Flags adicionales |
+|---|---|
+| `https://` | Ninguno extra |
+| `http://` | `--allow-running-insecure-content`, `--ignore-certificate-errors`, `--unsafely-treat-insecure-origin-as-secure` |
+
+### 🔧 Acceso de mantenimiento
+
+Acceso remoto SSH con usuario `quiosco`:
+
+```sh
+ssh quiosco@<IP_DEL_QUIOSCO>
+```
+
+> ⚠️ El acceso SSH como `root` queda deshabilitado tras la instalación. Para tareas privilegiadas usa `doas` o consola local.
+
+### 📁 Estructura de archivos relevantes
+
+```text
+/etc/inittab                                    -> Autologin en tty1
+/etc/network/interfaces                         -> Configuración de red
+/etc/wpa_supplicant/wpa_supplicant.conf         -> Credenciales WiFi (si aplica)
+/etc/ssh/sshd_config                            -> Configuración SSH
+/etc/chromium/policies/managed/disable_translate.json  -> Política Chromium
+/home/quiosco/.profile                          -> Lanza startx
+/home/quiosco/.xinitrc                          -> Inicia Openbox y Chromium
+/opt/monitoring/report_status.sh                -> Agente de monitorización
+/etc/kiosk/heartbeat.conf                       -> Configuración del agente
+/etc/init.d/kioskmonitoring                     -> Servicio OpenRC
+```
+
+### 📦 Paquetes instalados
+
+El script instala, según escenario:
+
+- `xorg-server`, `xf86-video-fbdev`, `xf86-input-libinput`, `eudev`
+- `xrandr`, `setxkbmap`, `xset`, `xsetroot`, `xinit`
+- `openbox`
+- `chromium`
+- `openssh`
+- `nano`
+- `wpa_supplicant`, `linux-firmware-rtlwifi` (solo WiFi)
+
+### 🛠️ Resolución de problemas comunes
+
+El sistema no arranca en gráficos:
+
+```sh
+id quiosco
+```
+
+WiFi no conecta:
+
+```sh
+modprobe rtl8xxxu
+rc-service wpa_supplicant status
+```
+
+Cambiar URL tras instalación:
+
+```sh
+nano /home/quiosco/.xinitrc
+```
+
+Reactivar temporalmente SSH root:
+
+```sh
+sed -i 's/^PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config
+rc-service sshd restart
+```
+
+Agente heartbeat no envía:
+
+```sh
+rc-service kioskmonitoring status
+tail -f /var/log/kiosk-heartbeat.log
+nano /etc/kiosk/heartbeat.conf
+rc-service kioskmonitoring restart
+```
+
+Cambio SSID/password:
+
+```sh
+wpa_passphrase "SSID" "passwd" > /etc/wpa_supplicant/wpa_supplicant.conf
+```
+
+### 📝 Notas
+
+- El script usa `set -e`: se detiene ante cualquier error.
+- Probado sobre Alpine Linux 3.23 con hardware compatible con `xf86-video-fbdev`.
+- Para WiFi, incluye firmware para chipsets Realtek RTL8xxxU. Si usas otro adaptador, ajusta paquetes/driver en el script.
+
+## Funcionamiento
+
+- `estado_quioscos/update_status.php` recibe heartbeat de los quioscos.
+- `estado_quioscos/index.html` muestra estado general, servidor y acciones de control.
+- `estado_quioscos/docs_manager.php` gestiona subida/eliminación de documentos de `kiosk_web/docs/`.
+- `estado_quioscos/get_action.php` permite al quiosco recoger acciones pendientes.
+- `estado_quioscos/slide_settings.php` ajusta tiempo de diapositiva desde la UI de gestión.
+
+## Operación y uso diario
+
+Para uso diario (sin detalle técnico), consulta:
+
+- [`tech_docs/manual_usuario.md`](./tech_docs/manual_usuario.md)
+
+Para instalación, mantenimiento, recuperación y arquitectura:
+
+- [`tech_docs/manual_tecnico.md`](./tech_docs/manual_tecnico.md)
+
+## Versionado, ramas y PR
+
+Referencias oficiales de trabajo:
+
+- Política de versionado: [`tech_docs/politica_versionado.md`](./tech_docs/politica_versionado.md)
+- Flujo Git y ramas: [`tech_docs/14_flujo_git_y_politicas_repos.md`](./tech_docs/14_flujo_git_y_politicas_repos.md)
+- Plantilla de Pull Request: [`tech_docs/14.1_plantilla_pr_vibecoding.md`](./tech_docs/14.1_plantilla_pr_vibecoding.md)
+- Flujo obligatorio de trabajo interno: [`tech_docs/README.md`](./tech_docs/README.md)
+
+Modelo de ramas actual:
+
+- `main`: estable y producción
+- `dev`: integración
+- `feature/*`: trabajo diario por cambio
+- `hotfix/*`: corrección urgente sobre producción
+
+## Validación mínima
+
+No hay build centralizado. Mínimo por archivo tocado:
+
+- `php -l <archivo.php>`
+- `sh -n <script.sh>`
+- Verificación manual en navegador del flujo afectado
 
 ## Herramientas Auxiliares
 
-El proyecto incluye scripts auxiliares en la carpeta `tools/` para facilitar el trabajo con contenido multimedia.
+Scripts disponibles en `tools/`:
 
-### Script de Conversión de Videos
+- `backup_monkiosk.sh`: backup local de proyecto y web.
+- `restore_monkiosk.sh`: restauración guiada desde backup.
+- `init_estado_quioscos_runtime.sh`: inicialización de runtime local.
+- `convert_video.sh`: conversión de vídeo para quiosco.
+- `manage_estado_quioscos_basic_auth.sh`: soporte de gestión basic auth (si aplica).
 
-`tools/convert_video.sh` - Convierte videos a formatos optimizados para kiosks.
+Documentación de uso:
 
-**Uso básico:**
-```bash
-cd tools
-chmod +x convert_video.sh
-./convert_video.sh input.avi output.mp4
-```
+- [`tools/README.md`](./tools/README.md)
 
-**Características:**
-- Conversión automática a 1920x1080
-- Optimización de códecs (H.264 + AAC para MP4)
-- Padding negro para mantener aspect ratio
-- Información detallada del archivo de salida
+## Documentación recomendada por perfil
 
-Para más información, consulta `tools/README.md`
+Si vienes a operar la aplicación:
 
-### Páginas de Prueba
+- [`tech_docs/manual_usuario.md`](./tech_docs/manual_usuario.md)
+- [`tech_docs/guia_uso_app.md`](./tech_docs/guia_uso_app.md)
 
-Las páginas de prueba y conceptos se mantienen fuera de la versión de producción. Si necesitas acceder a ellas, revisa la rama `futuros` o la carpeta local `kiosk_web/tests/`.
+Si vienes a tocar servidor, scripts o código:
 
-***Fin***
-¿ Pero has llegado hasta aquí ? :clap::clap::clap:
-
-Si has leído todo y lo llevaste a la práctica, tendrás un sistema [![RAE](https://img.shields.io/badge/FUNCIONAL-RAE:_2,_3-42FC)](https://dle.rae.es/funcional)
-
-
-Este pequeño proyecto está pensado para alguien sin conocimientos que pueda tener esta herramienta sencilla y sin complicaciones, :vulcan_salute:
-
-Oye que igual nos calentamos :fire:, se nos pone el morro fino :lips: y nos ponemos con una versión 2 vitaminada :pill: :rocket:... 
-
+- [`tech_docs/manual_tecnico.md`](./tech_docs/manual_tecnico.md)
+- [`tech_docs/guia_lectura_agente.md`](./tech_docs/guia_lectura_agente.md)
+- [`tech_docs/registro_cambios.md`](./tech_docs/registro_cambios.md)
 
 ## Créditos
-# Imágenes y Dependencias de CSS y JS para la documentación
-Las imagenes usadas en la web son de [svgrepo.com](https://www.svgrepo.com).
 
-La documentación web utiliza los siguientes archivos, descargados originalmente de CDN:
+### Imágenes y recursos locales
 
-- `kiosk_info/assets/github-markdown.min.css` (GitHub Markdown CSS)
-- `kiosk_info/assets/marked.min.js` (Marked.js)
-
-Ambos archivos se han descargado localmente para evitar dependencias externas, pero su origen es:
-
-- https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.0/github-markdown.min.css
-- https://cdn.jsdelivr.net/npm/marked/marked.min.js
-
-Este proyecto también utiliza los siguientes archivos JavaScript de PDF.js, descargados originalmente de CDN:
-
-- `kiosk_web/vendor/pdfjs/pdf.min.js`
-- `kiosk_web/vendor/pdfjs/pdf.worker.min.js`
-
-Ambos son parte de PDF.js (Mozilla Foundation), bajo licencia Apache 2.0.
-Origen CDN:
-- https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js
-- https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js
-
-Ver licencias y actualizaciones en https://github.com/mozilla/pdf.js
-
-Se recomienda revisar las licencias y actualizaciones en sus repositorios oficiales.
+- Iconos e imágenes usadas en UI: [svgrepo.com](https://www.svgrepo.com)
+- Los assets de documentación web y de visualización PDF están versionados localmente en el repositorio para evitar dependencias de CDN en tiempo de ejecución.
