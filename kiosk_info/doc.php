@@ -11,10 +11,7 @@ if (!auth_is_authenticated()) {
 $allowed = [
     'MANUAL_USUARIO.md',
     'MANUAL_TECNICO.md',
-    'REGISTRO_CAMBIOS.md',
-    'GUIA_USO_APP_RESPALDO.md',
     'CHANGELOG.md',
-    'GUIA_RAPIDA.md',
     'RESUMEN_MEJORAS.md',
 ];
 
