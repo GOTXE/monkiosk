@@ -17,13 +17,13 @@
 
 ## La idea principal 🚀
 
-Este proyecto 🖥️ surgió de una necesidad real: `una amig@` seguía atrapado en métodos de los **años 90** para actualizar contenidos en pantallas: pendrives que volaban por los aires 🐌, caminatas matutinas con cara de lunes eterno 📬😤 y pánicos innecesarios cada vez que aparecía el temido “NO SIGNAL” o la misma presentación de PowerPoint de hace una década 🦖📊.
+Este proyecto 🖥️ surgió de una necesidad real: `una amig@` seguía atrapada en métodos de los **años 90** para actualizar contenidos en pantallas: pendrives, caminatas matutinas con cara de lunes eterno 📬😤 y pánicos innecesarios cada vez que aparecía el temido “NO SIGNAL” o la misma presentación de PowerPoint de hace una década 🦖📊.
 
 Los requisitos que me transmitió fueron claros y directos:
 
 - Extremadamente sencillo de implementar y usar 🤏
-- Coste lo más cercano posible a cero euros 💸
-- Fácil de mantener y escalar 🛠️
+- Coste lo más cercano a cero euros 💸
+- Fácil de mantener 🛠️
 - Y el comentario final que lo resume todo: “A ti te encantan estos cacharros raros 🔧🤓, ¡así te entretienes!”
 
 Aquí NO vas a encontrar código digno de un unicornio 🦄 ni arquitectura que haga babear a los devs de SpaceX.  
@@ -32,13 +32,13 @@ Lo único que compartimos con SpaceX es que ambos proyectos **despegan**… pero
 - Hardware reciclado que aún huele a sótano y nostalgia 🏚️🍓
 - Código pragmático (mucho copy-paste selectivo de Stack Overflow y ayuda de IAs modernas) 🤷‍♂️💻
 - Una dosis generosa de pruebas, fe y café para que nada se incendie 🔥🙏
-- Y fe ciega (más que en Y2K) en que no se queme todo al mismo tiempo 🔥🙏💥
+- Y fe ciega en que no se queme todo al mismo tiempo 🔥🙏💥
 
 **Presupuesto estimado**: 0 € (reutilizando lo que ya existe) 😶‍🌫️  
 **Mantenimiento recomendado**: reinicio ocasional + monitorización remota básica + un poco de sentido común 🪵  
 **Soporte técnico**: ... cargando módulo de paciencia... 🤬🌙
 
-Bienvenidos al **futuro low-cost y eficiente** de la señalización digital: pantallas que se actualizan automáticamente por WiFi, sin paseos mañaneros ni dramas innecesarios 🚶‍♂️→🌐
+Bienvenidos al **futuro low-cost y eficiente** de los quiosocs digitales: pantallas que se actualizan automáticamente por WiFi, sin paseos mañaneros ni dramas innecesarios 🚶‍♂️→🌐
 
 Porque a veces la mejor innovación no necesita millones… solo un poco de ingenio, hardware sobrante y ganas de resolver problemas reales. 😏
 
@@ -50,20 +50,22 @@ Prometimos solemnemente:
 Mentimos como bellacos.  
 Ya estamos en la **v2** y contando features como si no hubiera un mañana. 😈🚀
 
-Porque nada dice “proyecto low-cost y sin scope creep” como añadirle 17 cosas más “porque total, ya estamos aquí” 🤡🛠️
+Porque no hay nada como un  “proyecto low-cost” y añadirle 17 cosas más “porque total, ya que estamos” 🤡🛠️
 
 Presupuesto: sigue en 0 €  
-Tiempo invertido: infinito  
+Tiempo invertido: más horas de las que quiero admitir  
 Arrepentimiento: también infinito, pero con cafeína ☕😭
 
-Bienvenidos a la **versión 2: ahora sí que la liamos parda** edition.  
-(¡NO! no habrá v3, y lo sabes!!) 🤫👨‍💻📝💻🔥☕
+Bienvenidos a la **versión 2** *La última lo juro edición final*  
+~~==(¡NO! no habrá v3, ¡¡lo sabes!!)==~~ 🤫👨‍💻📝💻🔥☕
 
 ¿Quién necesita disciplina cuando tienes FOMO técnico y un amigo que dice “y si le metemos…”? 🫠💾
 
 #### Documentación para el futuro (o cómo no morir sin dejar rastro) 🧙‍♂️📜
 Entonces, ¿por qué documentar todo esto? Muy sencillo: porque el `gotxe` y el `panoramix` del futuro no querrán recordar cómo funcionaba esto y, cuando ese amig@ **tenga un problema** :boom: (**porque lo tendrá**), nos llamará :telephone_receiver: preguntando cómo reinstalarlo . 
 Pero esa vez no se lo vamos a reinstalar porque los `dos` del futuro, que fueron los que lo hicieron, seguramente estarán a otras cosas y hasta puede que en otro lugar, así que más le vale leer esto 😅 para poder hacerlo por sí mismo, y con la ayuda de la IA. 🙏✝️
+
+## INFORMACIÓN QUE SI IMPORTA:
 
 ## Descripción General
 
@@ -90,7 +92,7 @@ monkiosk/
 ├── README.md
 ├── README_EN.md
 ├── VERSION
-├── estado_quioscos/                         # Gestión web, auth y monitorización
+├── estado_quioscos/                         
 │   ├── index.html
 │   ├── login.php
 │   ├── update_status.php
@@ -102,17 +104,16 @@ monkiosk/
 │   ├── control_config.php.example
 │   ├── styles.css
 │   └── img/
-├── kiosk_web/                               # Presentación en quiosco
+├── kiosk_web/                               
 │   ├── index.php
 │   ├── docs/
 │   └── vendor/pdfjs/
-├── kiosks_report/                           # Heartbeat
-│   ├── alpine/                              # Activo (OpenRC)
+├── kiosks_report/                           
+│   ├── alpine/                              
 │   │   ├── install_heartbeat_alpine.sh
 │   │   ├── report_status.sh
 │   │   ├── kioskmonitoring.openrc
-│   │   └── heartbeat.conf.example
-│   └── debian/                              # Legado en repo
+│   │   └── heartbeat.conf.example                            
 ├── Quioscos_install_alpine/
 │   ├── install_report.sh
 │   ├── setup_quiosco.sh
@@ -539,20 +540,12 @@ Documentación de uso:
 
 ## Documentación recomendada por perfil
 
-Si vienes a operar la aplicación:
-
 - [`tech_docs/manual_usuario.md`](./tech_docs/manual_usuario.md)
 - [`tech_docs/guia_uso_app.md`](./tech_docs/guia_uso_app.md)
-
-Si vienes a tocar servidor, scripts o código:
-
 - [`tech_docs/manual_tecnico.md`](./tech_docs/manual_tecnico.md)
 - [`tech_docs/guia_lectura_agente.md`](./tech_docs/guia_lectura_agente.md)
 - [`tech_docs/registro_cambios.md`](./tech_docs/registro_cambios.md)
 
-## Créditos
-
 ### Imágenes y recursos locales
 
 - Iconos e imágenes usadas en UI: [svgrepo.com](https://www.svgrepo.com)
-- Los assets de documentación web y de visualización PDF están versionados localmente en el repositorio para evitar dependencias de CDN en tiempo de ejecución.
