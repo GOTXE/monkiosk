@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Esta guia resume el uso habitual de la solucion:
+Esta guia resume el uso habitual de la aplicación:
 
 - visualizacion del estado de los quioscos desde `estado_quioscos`
 - acceso operativo a un quiosco para revision o soporte

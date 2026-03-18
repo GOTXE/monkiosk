@@ -44,6 +44,8 @@ Podras ver:
 - disco libre
 - estado HDMI
 
+Si quieres abrir o cerrar todas las tarjetas de `Equipos` de una vez, usa el boton general de esa seccion.
+
 ## 4. Como reiniciar un quiosco
 
 1. Abre `Informacion`.
@@ -54,7 +56,7 @@ La orden se queda preparada para que el quiosco la recoja en su siguiente comuni
 
 ## 5. Gestion de documentos
 
-En `Gestion de documentos` puedes:
+En `Gestión diapositivas` puedes:
 
 - subir documentos
 - revisar una previsualizacion
@@ -63,6 +65,8 @@ En `Gestion de documentos` puedes:
 Recomendaciones:
 
 - usa nombres simples
+- el nombre debe empezar por numero
+- si el nombre es invalido, la web indica el motivo y como corregirlo
 - revisa el resultado antes de cerrar
 - evita hacer cambios simultaneos desde varias sesiones
 
@@ -86,17 +90,25 @@ Notas:
 
 ## 7. Proteccion de acceso
 
-- `Proteccion activada`: solo conectan los quioscos permitidos
-- `Proteccion desactivada`: cualquier quiosco puede conectar temporalmente
+- `Proteccion de reporte`: controla qué equipos pueden enviar estado al servidor
+- `Proteccion de presentacion`: controla qué equipos pueden abrir la presentacion del quiosco
 
-Uso recomendado:
+Con `Proteccion de reporte` activada:
 
-1. desactiva la proteccion si vas a dar de alta un quiosco nuevo
-2. espera a que aparezca en `Intentos de conexion`
-3. anadelo a la tabla
+- el reporte del quiosco queda limitado a equipos permitidos
+- los equipos no autorizados siguen apareciendo en `Intentos de conexion` para poder autorizarlos manualmente
+
+Con `Proteccion de presentacion` activada:
+
+- la presentacion del quiosco queda limitada a `IP fija` autorizada
+
+Uso recomendado para dar de alta un quiosco:
+
+1. espera a que aparezca en `Intentos de conexion`
+2. anadelo a la tabla
+3. revisa `hostname` e `IP fija`
 4. marca `Permitido`
 5. guarda
-6. vuelve a activar la proteccion
 
 ## 8. Aviso de certificado
 
@@ -104,8 +116,41 @@ En la tarjeta `SERVIDOR` puede aparecer un aviso rojo parpadeante si al certific
 
 Si aparece, debes avisar a soporte tecnico para renovarlo.
 
-## 9. Recomendaciones
+## 9. Documentacion
+
+La opcion `Documentación` del menu usa el mismo login que `estado_quioscos`.
+
+No hace falta volver a escribir usuario y contrasena si ya tienes sesion iniciada.
+
+## 10. Recomendaciones
 
 - no compartas capturas con datos de red visibles
 - si un quiosco aparece `Inestable`, revisa si tiene cortes o reinicios
 - despues de cambios importantes, vuelve a comprobar la pantalla principal
+
+## 11. Recuperacion desde backup
+
+Si se ha preparado un backup del sistema, la recuperacion debe hacerse siguiendo el asistente del script.
+
+Pasos:
+
+1. abre una terminal en el servidor
+2. entra en la carpeta `tools` del proyecto
+3. ejecuta:
+   - `sudo ./restore_monkiosk.sh`
+4. el script mostrara la lista de backups disponibles
+5. escribe solo el numero del backup que quieres restaurar
+6. el script mostrara un resumen de lo que va a recuperar
+7. si estas seguro, escribe `RESTAURAR`
+8. espera a que termine
+9. cuando finalice, comprueba:
+   - la web principal del quiosco
+   - `estado_quioscos`
+   - que las paginas cargan con normalidad
+
+Recomendaciones:
+
+- no cierres la terminal mientras se ejecuta
+- si tienes dudas, usa primero:
+  - `sudo ./restore_monkiosk.sh --dry-run`
+- no hace falta indicar rutas ni archivos si sigues el asistente

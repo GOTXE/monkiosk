@@ -36,7 +36,10 @@ Este manual resume la parte tecnica de Monkiosk para instalacion, mantenimiento 
 - acceso web de gestion con login propio y CSRF
 - nombres de usuario no sensibles a mayusculas/minusculas
 - proteccion de quioscos por `hostname` y `IP fija` opcional
+- proteccion de reporte y proteccion de presentacion separadas
+- la presentacion web del quiosco, con su proteccion activada, solo admite `IP fija` autorizada
 - lectura de acciones por token compartido `X-Control-Token`
+- `kiosk_info` protegido con la misma sesion web de `estado_quioscos`
 - no existe autenticacion fuerte en el heartbeat; la proteccion principal es la lista de quioscos permitidos
 
 ## 5. Despliegue actual
@@ -53,22 +56,31 @@ La configuracion comun se centraliza en:
 - `estado_quioscos/app_config.php`
 - `estado_quioscos/config.local.php` si existe
 
+La politica de archivos runtime locales esta en:
+
+- `tech_docs/politica_archivos_runtime_locales.md`
+
 ## 6. Operaciones habituales
 
 ### Alta de quiosco
 
-1. desactivar proteccion si hace falta
-2. esperar a que el equipo aparezca en `Intentos de conexion`
-3. pulsar `Añadir`
-4. revisar `hostname` e `IP fija`
-5. marcar `Permitido`
-6. guardar con `GUARDAR`
-7. reactivar proteccion
+1. esperar a que el equipo aparezca en `Intentos de conexion`
+2. pulsar `Añadir`
+3. revisar `hostname` e `IP fija`
+4. marcar `Permitido`
+5. guardar con `GUARDAR`
 
 ### Cambio de tiempo de diapositiva
 
 - desde la tarjeta `SERVIDOR`
 - el valor se guarda en `slide_settings.json`
+
+### Gestion de documentos
+
+- la pantalla visible al usuario es `Gestión diapositivas`
+- permite seleccionar archivo, subirlo, previsualizarlo y eliminarlo
+- la UI marca el archivo seleccionado como pendiente antes de subir
+- si el archivo previsualizado se elimina, la vista previa se limpia
 
 ### Reinicio remoto
 
@@ -109,9 +121,101 @@ Preguntas utiles:
 - coincide la `IP fija`
 - el token de `get_action.php` sigue siendo correcto
 
+### Backup local
+
+El backup local recomendado se hace con:
+
+- `tools/backup_monkiosk.sh`
+
+Incluye:
+
+- `/home/kiosk/kioskos`
+- `/var/www/html`
+- `/etc/nginx/sites-available/default`
+
+Caracteristicas:
+
+- crea `tar.gz` locales en `/var/backups/monkiosk`
+- conserva permisos y propietarios
+- mantiene `14` copias por defecto
+
+### Restauracion guiada
+
+La restauracion se hace con:
+
+- `tools/restore_monkiosk.sh`
+
+Comportamiento:
+
+- lista backups por numero
+- pide confirmacion fuerte con `RESTAURAR`
+- crea una copia previa del estado actual
+- restaura sobre `/`
+- recarga `nginx`
+
+Modo de prueba:
+
+- `sudo ./tools/restore_monkiosk.sh --dry-run`
+
+### Inicializacion de runtime local
+
+Para crear los archivos locales necesarios de `estado_quioscos` en una instalacion nueva:
+
+- `sudo ./tools/init_estado_quioscos_runtime.sh --target-dir /var/www/html/estado_quioscos`
+
 ## 10. Principios de mantenimiento
 
 - evitar complejidad innecesaria
 - preferir archivos planos y PHP simple
 - documentar cambios operativos en `tech_docs/registro_cambios.md`
 - no eliminar documentacion historica hasta validar el flujo nuevo en produccion
+- seguir siempre la secuencia `tarea -> planner -> coder -> tester (si aplica) -> documenta -> commit`
+- no modificar codigo sin nota previa en `tech_docs` segun `tech_docs/README.md`
+
+## 11. Versionado
+
+La politica de versionado del proyecto esta en:
+
+- `tech_docs/politica_versionado.md`
+
+La fuente unica de version es:
+
+- `VERSION`
+
+Regla base:
+
+- el tipo de rama no define la version
+- la version la define el impacto real del cambio
+
+## 12. Pull Requests con IA
+
+Para cualquier PR del proyecto se debe usar siempre la plantilla oficial:
+
+- `tech_docs/14.1_plantilla_pr_vibecoding.md`
+
+Uso esperado:
+
+- copiar la plantilla al prompt
+- adjuntar diff o commits reales
+- generar la descripcion del PR sin alterar estructura ni secciones
+
+## 13. Flujo Git del proyecto
+
+La politica oficial de ramas, PR y control de sensibles esta en:
+
+- `tech_docs/14_flujo_git_y_politicas_repos.md`
+
+Reglas base:
+
+- `main` solo estable y probado
+- `dev` para integracion
+- `feature/*` desde `dev`
+- `hotfix/*` desde `main`
+- sin commits directos a `main`
+- sin despliegue de produccion desde `dev`
+
+Estado operativo actual recomendado:
+
+- integrar cambios en `dev`
+- mantener `main` solo para estado listo para produccion
+- usar ramas `feature/*` para nuevos cambios
