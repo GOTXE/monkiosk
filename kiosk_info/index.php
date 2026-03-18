@@ -38,10 +38,7 @@ auth_require_page();
     const mdFiles = [
       { file: 'MANUAL_USUARIO.md', label: 'Manual Usuario', section: 'Manuales' },
       { file: 'MANUAL_TECNICO.md', label: 'Manual Técnico', section: 'Manuales' },
-      { file: 'REGISTRO_CAMBIOS.md', label: 'Registro Cambios', section: 'Manuales' },
-      { file: 'GUIA_USO_APP_RESPALDO.md', label: 'Guía Uso App', section: 'Respaldo' },
       { file: 'CHANGELOG.md', label: 'CHANGELOG', section: 'Respaldo' },
-      { file: 'GUIA_RAPIDA.md', label: 'GUIA_RAPIDA', section: 'Respaldo' },
       { file: 'RESUMEN_MEJORAS.md', label: 'RESUMEN_MEJORAS', section: 'Respaldo' }
     ];
 
