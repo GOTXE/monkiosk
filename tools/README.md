@@ -2,6 +2,84 @@
 
 Este directorio contiene scripts auxiliares para facilitar el trabajo con Monkiosk.
 
+## init_estado_quioscos_runtime.sh
+
+Script para crear los archivos runtime locales necesarios de `estado_quioscos` durante la instalación.
+
+### Qué crea si no existen
+
+- `auth_users.json`
+- `allowed_hosts.txt`
+- `allowed_kiosks.json`
+- `allowed_kiosks_protection.json`
+- `status.json`
+- `actions.json`
+- `slide_settings.json`
+- `overlay_config.json`
+- `unknown_kiosk_attempts.json`
+- `presentation_viewers.json`
+- `control_config.php`
+
+### Uso
+
+```bash
+sudo ./tools/init_estado_quioscos_runtime.sh \
+  --target-dir /var/www/html/estado_quioscos \
+  --admin-user admin \
+  --admin-password 'CAMBIAR_CLAVE' \
+  --control-token 'CAMBIAR_TOKEN'
+```
+
+Si no se indican contraseña o token, el script genera valores iniciales aleatorios.
+
+## backup_monkiosk.sh
+
+Script para crear un backup local completo de Monkiosk.
+
+### Qué guarda
+
+- `/home/kiosk/kioskos`
+- `/var/www/html`
+- `/etc/nginx/sites-available/default`
+
+### Características
+
+- crea un `.tar.gz` fechado en `/var/backups/monkiosk`
+- mantiene permisos, propietarios y fechas
+- conserva las últimas `14` copias por defecto
+
+### Uso
+
+```bash
+sudo ./backup_monkiosk.sh
+```
+
+Variables opcionales:
+
+```bash
+sudo BACKUP_DIR=/ruta/backup RETENTION_COUNT=14 ./backup_monkiosk.sh
+```
+
+## restore_monkiosk.sh
+
+Script guiado para restaurar Monkiosk desde un backup local.
+
+### Características
+
+- lista los backups disponibles y pide elegir uno por número
+- solicita confirmación fuerte antes de sobrescribir
+- crea una copia previa del estado actual antes de restaurar
+- recarga `nginx` al final
+- dispone de simulación con `--dry-run`
+
+### Uso
+
+```bash
+sudo ./restore_monkiosk.sh
+sudo ./restore_monkiosk.sh --dry-run
+sudo ./restore_monkiosk.sh --file /var/backups/monkiosk/monkiosk_backup_YYYY-MM-DD_HHMMSS.tar.gz
+```
+
 ## convert_video.sh
 
 Script para convertir videos a formatos optimizados para reproducción en kiosks.

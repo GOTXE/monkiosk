@@ -1,0 +1,13 @@
+[Unit]
+Description=Monitorización de Quioscos
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/monitoring/report_status.sh
+Restart=always
+RestartSec=10
+EnvironmentFile=-/etc/kiosk/heartbeat.conf
+
+[Install]
+WantedBy=multi-user.target

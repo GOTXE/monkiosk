@@ -3,6 +3,29 @@
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
+$appConfigCandidates = [
+    __DIR__ . '/../estado_quioscos/app_config.php',
+    __DIR__ . '/estado_quioscos/app_config.php',
+];
+foreach ($appConfigCandidates as $appConfigPath) {
+    if (is_file($appConfigPath)) {
+        require_once $appConfigPath;
+        break;
+    }
+}
+$remoteAddr = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+if (function_exists('eq_is_presentation_access_allowed') && !eq_is_presentation_access_allowed($remoteAddr)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Acceso a presentacion no permitido\n";
+    exit;
+}
+if (function_exists('eq_register_presentation_viewer')) {
+    eq_register_presentation_viewer(
+        $remoteAddr,
+        (string)($_SERVER['HTTP_USER_AGENT'] ?? '')
+    );
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -82,6 +105,26 @@ header("Pragma: no-cache");
             object-fit: cover;
             background-color: #000000;
         }
+
+        #countdownOverlay {
+            position: absolute;
+            right: 30px;
+            bottom: 24px;
+            z-index: 9999;
+            display: none;
+            min-width: 84px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(0, 20, 45, 0.82);
+            color: #ffffff;
+            border: 1px solid rgba(123, 192, 255, 0.75);
+            text-align: center;
+            font-family: Verdana, sans-serif;
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1;
+            user-select: none;
+        }
     </style>
     <?php
     // Generar lista de documentos
@@ -122,9 +165,43 @@ header("Pragma: no-cache");
 
     // Exportar la lista de documentos a JavaScript
     $documentos = obtenerDocumentos();
+
+    function obtenerIntervaloDiapositivaMs() {
+        $defaultSeconds = 5;
+        $settingsPath = eq_slide_settings_file();
+
+        if (!is_file($settingsPath)) {
+            return $defaultSeconds * 1000;
+        }
+
+        $raw = @file_get_contents($settingsPath);
+        if (!is_string($raw) || trim($raw) === '') {
+            return $defaultSeconds * 1000;
+        }
+
+        $json = json_decode($raw, true);
+        if (!is_array($json)) {
+            return $defaultSeconds * 1000;
+        }
+
+        $seconds = (int)($json['slide_interval_seconds'] ?? $defaultSeconds);
+        if ($seconds < 5) {
+            $seconds = 5;
+        }
+        if ($seconds > 120) {
+            $seconds = 120;
+        }
+        if ($seconds % 5 !== 0) {
+            $seconds = (int)(round($seconds / 5) * 5);
+        }
+        return $seconds * 1000;
+    }
+
+    $intervaloMs = obtenerIntervaloDiapositivaMs();
     
     // Log para debugging
     error_log("Documentos encontrados: " . json_encode($documentos));
+    error_log("Intervalo de diapositiva (ms): " . $intervaloMs);
     ?>
     <!-- Cargar PDF.js localmente (debe descargarse en vendor/pdfjs/) -->
     <script src="vendor/pdfjs/pdf.min.js"></script>
@@ -144,6 +221,7 @@ header("Pragma: no-cache");
     <canvas id="pdfCanvas" style="display:none;"></canvas>
         <video id="videoPlayer" style="display:none;" autoplay muted></video>
         <img id="imageViewer" style="display:none;">
+        <div id="countdownOverlay"></div>
     </div>
 
     <script>
@@ -159,14 +237,99 @@ header("Pragma: no-cache");
         console.log('Lista inicial de documentos:', documentos);
         
         var currentIndex = 0;
-        var intervalo = 5000; // 5 segundos por documento (imágenes y PDFs)
+        var intervalo = <?php echo (int)$intervaloMs; ?>; // ms por documento (imágenes y PDFs)
         var timeoutHandle = null;
         var currentType = null;
+        var intervaloPollHandle = null;
+        var overlayPollHandle = null;
+        var countdownIntervalHandle = null;
+        var overlayEnabledForThisKiosk = false;
 
         // Referencias a elementos
         var videoPlayer = document.getElementById("videoPlayer");
         var documentFrame = document.getElementById("documentFrame");
         var imageViewer = document.getElementById("imageViewer");
+        var countdownOverlay = document.getElementById("countdownOverlay");
+
+        async function refrescarIntervaloDesdeServidor() {
+            var urls = ['/estado_quioscos/slide_settings.php', 'estado_quioscos/slide_settings.php', '../estado_quioscos/slide_settings.php'];
+            for (var i = 0; i < urls.length; i++) {
+                try {
+                    var resp = await fetch(urls[i] + '?_ts=' + Date.now(), { cache: 'no-store' });
+                    if (!resp.ok) continue;
+                    var data = await resp.json();
+                    var seconds = Number(data && data.slide_interval_seconds ? data.slide_interval_seconds : 0);
+                    if (!Number.isFinite(seconds) || seconds < 5) continue;
+                    if (seconds > 120) seconds = 120;
+                    if (seconds % 5 !== 0) seconds = Math.round(seconds / 5) * 5;
+
+                    var nuevoIntervalo = Math.round(seconds * 1000);
+                    if (nuevoIntervalo !== intervalo) {
+                        intervalo = nuevoIntervalo;
+                        console.log('Intervalo actualizado dinamicamente a', intervalo, 'ms');
+                    }
+                    return;
+                } catch (e) {
+                    // Intentar siguiente URL candidata
+                }
+            }
+        }
+
+        async function refrescarEstadoOverlay() {
+            var urls = ['/estado_quioscos/overlay_state.php', 'estado_quioscos/overlay_state.php', '../estado_quioscos/overlay_state.php'];
+            for (var i = 0; i < urls.length; i++) {
+                try {
+                    var resp = await fetch(urls[i] + '?_ts=' + Date.now(), { cache: 'no-store' });
+                    if (!resp.ok) continue;
+                    var data = await resp.json();
+                    overlayEnabledForThisKiosk = Boolean(data && data.show_countdown);
+                    if (!overlayEnabledForThisKiosk) {
+                        stopCountdownOverlay();
+                    }
+                    return;
+                } catch (e) {
+                    // Intentar siguiente URL candidata
+                }
+            }
+        }
+
+        function stopCountdownOverlay() {
+            if (countdownIntervalHandle) {
+                clearInterval(countdownIntervalHandle);
+                countdownIntervalHandle = null;
+            }
+            countdownOverlay.style.display = 'none';
+            countdownOverlay.textContent = '';
+        }
+
+        function startCountdownOverlay(durationMs) {
+            if (!overlayEnabledForThisKiosk) {
+                stopCountdownOverlay();
+                return;
+            }
+            if (!Number.isFinite(durationMs) || durationMs <= 0) {
+                stopCountdownOverlay();
+                return;
+            }
+
+            var remaining = Math.ceil(durationMs / 1000);
+            stopCountdownOverlay();
+            countdownOverlay.textContent = String(remaining);
+            countdownOverlay.style.display = 'block';
+
+            countdownIntervalHandle = setInterval(function() {
+                if (!overlayEnabledForThisKiosk) {
+                    stopCountdownOverlay();
+                    return;
+                }
+                remaining -= 1;
+                if (remaining <= 0) {
+                    stopCountdownOverlay();
+                    return;
+                }
+                countdownOverlay.textContent = String(remaining);
+            }, 1000);
+        }
 
         // Limpia por completo el reproductor de vídeo (pausa, quita src y recarga)
         function cleanupVideo() {
@@ -228,6 +391,7 @@ header("Pragma: no-cache");
 
                 // Mostrar el archivo según su tipo
                 if (ext === 'mp4' || ext === 'webm') {
+                    stopCountdownOverlay();
                     // Video
                     currentType = 'video';
                     videoPlayer.src = docActual;
@@ -294,6 +458,7 @@ header("Pragma: no-cache");
                     imageViewer.onload = function () {
                         console.log('✓ Imagen mostrada:', docActual, '(1920x1080)');
                         this.style.display = 'block';
+                        startCountdownOverlay(intervalo);
                         
                         // Programar siguiente documento después del intervalo
                         avanzarIndice();
@@ -334,6 +499,7 @@ header("Pragma: no-cache");
                                 viewport: scaledViewport
                             };
                             pdfRenderingTask = page.render(renderContext);
+                            startCountdownOverlay(intervalo);
                             // Avanzar al siguiente documento pasado el tiempo
                             avanzarIndice();
                             timeoutHandle = setTimeout(function() {
@@ -349,6 +515,7 @@ header("Pragma: no-cache");
                         // Fallback: mostrar en iframe si PDF.js no está disponible
                         documentFrame.src = docActual;
                         documentFrame.style.display = 'block';
+                        startCountdownOverlay(intervalo);
                         avanzarIndice();
                         timeoutHandle = setTimeout(mostrarSiguienteDocumento, intervalo);
                     }
@@ -384,7 +551,11 @@ header("Pragma: no-cache");
         }
 
         // Inicia el ciclo de documentos
+        refrescarEstadoOverlay();
         mostrarSiguienteDocumento(); // Mostrar el primer documento inmediatamente
+        refrescarIntervaloDesdeServidor();
+        intervaloPollHandle = setInterval(refrescarIntervaloDesdeServidor, 15000);
+        overlayPollHandle = setInterval(refrescarEstadoOverlay, 5000);
     </script>
 </body>
 

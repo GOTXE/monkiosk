@@ -1,0 +1,5 @@
+<?php
+// Copiar este archivo como control_config.php y ajustar valores.
+
+// Token compartido que usan los quioscos para consultar acciones.
+define('CONTROL_TOKEN', 'CAMBIAR_TOKEN_LARGO');

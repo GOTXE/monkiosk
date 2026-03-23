@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de los Quioscos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="container">
+        <header class="topbar">
+            <div class="title-wrap">
+                <img src="img/server.svg" alt="Servidor" class="header-icon">
+                <h1>Estado de los Quioscos</h1>
+            </div>
+            <div class="topbar-menu-wrap">
+                <button id="menu-toggle-btn" class="menu-toggle-btn" type="button" aria-label="Abrir menú" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+                <div id="topbar-menu" class="topbar-menu" hidden>
+                    <a id="menu-doc-link" class="menu-item" href="/kiosk_info/" target="_blank" rel="noopener noreferrer">Documentación</a>
+                    <a id="menu-docs-manager-link" class="menu-item" href="/estado_quioscos/docs_manager.php">Gestión diapositivas</a>
+                    <a id="menu-allowed-kiosks-link" class="menu-item" href="/estado_quioscos/allowed_kiosks.php">Quioscos permitidos</a>
+                    <button id="menu-change-password-btn" class="menu-item" type="button">Cambiar contraseña</button>
+                    <button id="menu-logout-btn" class="menu-item menu-item-danger" type="button">Cerrar sesión</button>
+                </div>
+            </div>
+        </header>
+
+        <section id="summary" class="summary"></section>
+        <section id="server-panel" class="server-panel"></section>
+
+        <section>
+            <div class="section-header">
+                <h2 class="section-title">Equipos</h2>
+                <div class="section-actions">
+                    <button id="toggle-all-kiosks-btn" class="server-btn" type="button">Desplegar todas</button>
+                </div>
+            </div>
+            <div id="quioscos-status" class="kiosk-strip"></div>
+        </section>
+
+        <footer class="app-footer">
+            <span class="footer-brand">OFAP 601</span>
+            <a
+                class="footer-github"
+                href="https://github.com/GOTXE/monkiosk"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Repositorio GitHub monkiosk"
+                title="Repositorio GitHub monkiosk"
+            >
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.49c-2.23.48-2.7-.95-2.7-.95-.36-.92-.89-1.16-.89-1.16-.73-.5.06-.49.06-.49.81.06 1.24.83 1.24.83.72 1.24 1.89.88 2.35.67.07-.52.28-.88.5-1.08-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.58.82-2.14-.08-.2-.36-1.01.08-2.1 0 0 .67-.21 2.2.82a7.62 7.62 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.09.16 1.9.08 2.1.51.56.82 1.27.82 2.14 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+                </svg>
+            </a>
+        </footer>
+
+        <div id="password-modal" class="modal-backdrop" hidden>
+            <div class="password-modal-card">
+                <h3>Cambiar contraseña</h3>
+                <div class="modal-field">
+                    <label for="modal-pwd-current">Antigua</label>
+                    <div class="modal-password-row">
+                        <input id="modal-pwd-current" type="password" autocomplete="current-password">
+                        <button class="modal-password-toggle" type="button" data-toggle-password="modal-pwd-current" aria-label="Mostrar contraseña" aria-controls="modal-pwd-current" aria-pressed="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 5c5.23 0 9.27 3.11 11 7-1.73 3.89-5.77 7-11 7S2.73 15.89 1 12c1.73-3.89 5.77-7 11-7Zm0 2C8.18 7 5.14 9.13 3.42 12 5.14 14.87 8.18 17 12 17s6.86-2.13 8.58-5C18.86 9.13 15.82 7 12 7Zm0 1.5A3.5 3.5 0 1 1 8.5 12 3.5 3.5 0 0 1 12 8.5Zm0 2A1.5 1.5 0 1 0 13.5 12 1.5 1.5 0 0 0 12 10.5Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-pwd-new">Nueva</label>
+                    <div class="modal-password-row">
+                        <input id="modal-pwd-new" type="password" autocomplete="new-password">
+                        <button class="modal-password-toggle" type="button" data-toggle-password="modal-pwd-new" aria-label="Mostrar contraseña" aria-controls="modal-pwd-new" aria-pressed="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 5c5.23 0 9.27 3.11 11 7-1.73 3.89-5.77 7-11 7S2.73 15.89 1 12c1.73-3.89 5.77-7 11-7Zm0 2C8.18 7 5.14 9.13 3.42 12 5.14 14.87 8.18 17 12 17s6.86-2.13 8.58-5C18.86 9.13 15.82 7 12 7Zm0 1.5A3.5 3.5 0 1 1 8.5 12 3.5 3.5 0 0 1 12 8.5Zm0 2A1.5 1.5 0 1 0 13.5 12 1.5 1.5 0 0 0 12 10.5Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-pwd-confirm">Repetir</label>
+                    <div class="modal-password-row">
+                        <input id="modal-pwd-confirm" type="password" autocomplete="new-password">
+                        <button class="modal-password-toggle" type="button" data-toggle-password="modal-pwd-confirm" aria-label="Mostrar contraseña" aria-controls="modal-pwd-confirm" aria-pressed="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 5c5.23 0 9.27 3.11 11 7-1.73 3.89-5.77 7-11 7S2.73 15.89 1 12c1.73-3.89 5.77-7 11-7Zm0 2C8.18 7 5.14 9.13 3.42 12 5.14 14.87 8.18 17 12 17s6.86-2.13 8.58-5C18.86 9.13 15.82 7 12 7Zm0 1.5A3.5 3.5 0 1 1 8.5 12 3.5 3.5 0 0 1 12 8.5Zm0 2A1.5 1.5 0 1 0 13.5 12 1.5 1.5 0 0 0 12 10.5Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="modal-pwd-error" class="modal-error" hidden>Las contraseñas no coinciden</div>
+                <div class="modal-actions">
+                    <button id="modal-pwd-cancel" class="server-btn danger" type="button">Cancelar</button>
+                    <button id="modal-pwd-save" class="server-btn" type="button">Cambiar contraseña</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const statusContainer = document.getElementById('quioscos-status');
+        const summaryContainer = document.getElementById('summary');
+        const serverPanel = document.getElementById('server-panel');
+        const menuToggleBtn = document.getElementById('menu-toggle-btn');
+        const topbarMenu = document.getElementById('topbar-menu');
+        const menuChangePasswordBtn = document.getElementById('menu-change-password-btn');
+        const menuLogoutBtn = document.getElementById('menu-logout-btn');
+        const passwordModal = document.getElementById('password-modal');
+        const modalPwdCurrent = document.getElementById('modal-pwd-current');
+        const modalPwdNew = document.getElementById('modal-pwd-new');
+        const modalPwdConfirm = document.getElementById('modal-pwd-confirm');
+        const modalPwdError = document.getElementById('modal-pwd-error');
+        const modalPwdSave = document.getElementById('modal-pwd-save');
+        const modalPwdCancel = document.getElementById('modal-pwd-cancel');
+        const passwordToggleButtons = document.querySelectorAll('[data-toggle-password]');
+        const toggleAllKiosksBtn = document.getElementById('toggle-all-kiosks-btn');
+        const reportOpenState = {};
+        let serverInfoOpen = false;
+        let currentServerHostname = 'servidor';
+        let currentSlideIntervalSeconds = 5;
+        let pendingSlideIntervalSeconds = null;
+        let slideIntervalDirty = false;
+        let kioskNames = [];
+        let overlayState = { enabled: false, target_kiosk: '', updated_at: '' };
+        let overlaySelection = '';
+        let overlaySelectionDirty = false;
+        const naturalSort = new Intl.Collator('es', { numeric: true, sensitivity: 'base' });
+
+        const OFFLINE_TIMEOUT = 150;
+        const WARN_THRESHOLD = 60;
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function bindPasswordToggle(button) {
+            const inputId = button.getAttribute('data-toggle-password');
+            if (!inputId) return;
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            button.addEventListener('click', () => {
+                const reveal = input.type === 'password';
+                input.type = reveal ? 'text' : 'password';
+                button.setAttribute('aria-label', reveal ? 'Ocultar contraseña' : 'Mostrar contraseña');
+                button.setAttribute('aria-pressed', reveal ? 'true' : 'false');
+            });
+        }
+
+        function relativeTime(seconds) {
+            if (seconds < 60) return `hace ${seconds} s`;
+            const minutes = Math.floor(seconds / 60);
+            return `hace ${minutes} min`;
+        }
+
+        function normalizeStatus(info, now) {
+            const lastUpdated = Number(info.last_updated || 0);
+            const elapsed = Math.max(0, now - lastUpdated);
+            const backendStatus = String(info.status || '').toLowerCase();
+
+            let stateClass = 'offline';
+            let stateLabel = 'Offline';
+
+            if (backendStatus === 'reiniciando') {
+                stateClass = 'restarting';
+                stateLabel = 'Reiniciando';
+            } else if (elapsed <= WARN_THRESHOLD) {
+                stateClass = 'online';
+                stateLabel = 'Online';
+            } else if (elapsed <= OFFLINE_TIMEOUT) {
+                stateClass = 'warning';
+                stateLabel = 'Advertencia';
+            }
+
+            return {
+                stateClass,
+                stateLabel,
+                lastUpdated,
+                elapsed,
+                unstable: Boolean(info.unstable),
+                history: Array.isArray(info.history) ? info.history : [],
+                report: {
+                    localIp: info.local_ip || '',
+                    kioskUrl: info.kiosk_url || '',
+                    uptimeS: Number(info.uptime_s || 0),
+                    load1: info.load1 || '',
+                    memFreeMb: Number(info.mem_free_mb || 0),
+                    diskFreeMb: Number(info.disk_free_mb || 0),
+                    hdmiConnected: info.hdmi_connected || '',
+                    reportTarget: info.report_target || ''
+                }
+            };
+        }
+
+        function formatUptime(seconds) {
+            if (!seconds || seconds < 1) return '-';
+            const MINUTE = 60;
+            const HOUR = 60 * MINUTE;
+            const DAY = 24 * HOUR;
+            const MONTH = 30 * DAY;  // aproximación operativa
+            const YEAR = 365 * DAY;  // aproximación operativa
+
+            let remaining = Math.floor(seconds);
+            const years = Math.floor(remaining / YEAR);
+            remaining %= YEAR;
+            const months = Math.floor(remaining / MONTH);
+            remaining %= MONTH;
+            const days = Math.floor(remaining / DAY);
+            remaining %= DAY;
+            const hours = Math.floor(remaining / HOUR);
+            remaining %= HOUR;
+            const minutes = Math.floor(remaining / MINUTE);
+
+            const parts = [];
+            if (years > 0) parts.push(`${years}A`);
+            if (months > 0) parts.push(`${months}M`);
+            if (days > 0) parts.push(`${days}d`);
+            if (hours > 0) parts.push(`${hours}h`);
+            if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
+
+            return parts.slice(0, 3).join(' ');
+        }
+
+        function formatStorageMb(valueMb) {
+            if (!valueMb || valueMb < 1) return '-';
+            if (valueMb >= 1024) {
+                const gb = valueMb / 1024;
+                return `${gb.toFixed(1)} GB`;
+            }
+            return `${valueMb} MB`;
+        }
+
+        function formatFreeGb(valueMb) {
+            const n = Number(valueMb || 0);
+            if (!Number.isFinite(n) || n < 0) return 'Sin valor';
+            return `${(n / 1024).toFixed(1)}G libre`;
+        }
+
+        function formatSpainDateTime(value) {
+            const raw = String(value || '').trim();
+            if (!raw || raw === '-' || raw.toLowerCase() === 'unknown') return '-';
+
+            // Ejemplo esperado desde backend: "2026-02-24 09:55:01"
+            const isoLike = raw.includes('T') ? raw : raw.replace(' ', 'T');
+            const d = new Date(isoLike);
+            if (Number.isNaN(d.getTime())) return escapeHtml(raw);
+
+            const parts = new Intl.DateTimeFormat('es-ES', {
+                timeZone: 'Europe/Madrid',
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).formatToParts(d);
+
+            const map = {};
+            parts.forEach((p) => { map[p.type] = p.value; });
+            return `${map.day}-${map.month}-${map.year} ${map.hour}:${map.minute}:${map.second}`;
+        }
+
+        function normalizeSlideInterval(value) {
+            let n = Number(value || 5);
+            if (!Number.isFinite(n)) n = 5;
+            n = Math.round(n);
+            if (n < 5) n = 5;
+            if (n > 120) n = 120;
+            if (n % 5 !== 0) n = Math.round(n / 5) * 5;
+            return n;
+        }
+
+        function buildKioskOptions(selectedName) {
+            if (!kioskNames.length) {
+                return '<option value="">Sin quioscos</option>';
+            }
+            return kioskNames.map((name) => {
+                const selected = name === selectedName ? ' selected' : '';
+                const safe = escapeHtml(name);
+                return `<option value="${safe}"${selected}>${safe}</option>`;
+            }).join('');
+        }
+
+        function renderSummary(stats) {
+            summaryContainer.innerHTML = `
+                <div class="summary-card"><span>Total</span><strong>${stats.total}</strong></div>
+                <div class="summary-card online"><span>Online</span><strong>${stats.online}</strong></div>
+                <div class="summary-card offline"><span>Offline</span><strong>${stats.offline}</strong></div>
+                <div class="summary-card unstable"><span>Inestables</span><strong>${stats.unstable}</strong></div>
+            `;
+        }
+
+        function renderMiniReport(report) {
+            const rows = [];
+            const hdmiStateMap = {
+                connected: 'Conectado',
+                disconnected: 'Desconectado',
+                unknown: 'Desconocido'
+            };
+            if (report.localIp) rows.push(`<li><span>IP</span><strong>${escapeHtml(report.localIp)}</strong></li>`);
+            if (report.uptimeS) rows.push(`<li><span>Encendido</span><strong>${escapeHtml(formatUptime(report.uptimeS))}</strong></li>`);
+            if (report.load1) rows.push(`<li><span>Carga 1m</span><strong>${escapeHtml(report.load1)}</strong></li>`);
+            if (report.memFreeMb) rows.push(`<li><span>RAM libre</span><strong>${formatStorageMb(report.memFreeMb)}</strong></li>`);
+            if (report.diskFreeMb) rows.push(`<li><span>Disco libre</span><strong>${formatStorageMb(report.diskFreeMb)}</strong></li>`);
+            if (report.hdmiConnected) {
+                const key = String(report.hdmiConnected).toLowerCase();
+                const label = hdmiStateMap[key] || report.hdmiConnected;
+                const valueClass = key === 'disconnected' ? 'report-danger' : '';
+                rows.push(`<li><span>HDMI</span><strong class="${valueClass}">${escapeHtml(label)}</strong></li>`);
+            }
+
+            if (!rows.length) {
+                return '<div class="kiosk-report-empty">Sin reporte extendido</div>';
+            }
+            return `<ul class="kiosk-report-list">${rows.join('')}</ul>`;
+        }
+
+        async function queueReboot(kioskName) {
+            const confirmed = window.confirm(`¿Enviar orden de reinicio a ${kioskName.toUpperCase()}?`);
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch('control_proxy.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: kioskName,
+                        action: 'reboot'
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'No se pudo encolar la orden');
+                }
+                window.alert(`Orden de reinicio encolada para ${kioskName.toUpperCase()}`);
+            } catch (error) {
+                window.alert(`Error enviando orden: ${error.message}`);
+            }
+        }
+
+        function serviceStateLabel(value) {
+            const v = String(value || '').toLowerCase();
+            if (v === 'active') return '<span class="srv-ok">OK</span>';
+            if (v === 'inactive' || v === 'failed') return '<span class="srv-bad">Fallo</span>';
+            return '<span class="srv-warn">Advertencia</span>';
+        }
+
+        function renderCertificateWarning(certificate) {
+            const info = certificate && typeof certificate === 'object' ? certificate : {};
+            if (!info.warning) return '';
+
+            const daysRemaining = Number(info.days_remaining);
+            const safeDays = Number.isFinite(daysRemaining) ? Math.max(0, Math.floor(daysRemaining)) : 0;
+            const daysLabel = safeDays === 1 ? '1 día' : `${safeDays} días`;
+            const expiresAt = info.expires_at ? formatSpainDateTime(info.expires_at) : '-';
+
+            return `
+                <div class="server-cert-warning" role="alert" aria-live="polite">
+                    <strong>Certificado HTTPS próximo a caducar</strong>
+                    <span>Quedan ${daysLabel}. Caduca: ${escapeHtml(expiresAt)}</span>
+                </div>
+            `;
+        }
+
+        function renderServerPanel(data) {
+            const uptime = formatUptime(Number(data.uptime || 0));
+            currentServerHostname = String(data.hostname || 'servidor');
+            const serverSlideInterval = normalizeSlideInterval(data.slide_interval_seconds || 5);
+            if (!slideIntervalDirty) {
+                currentSlideIntervalSeconds = serverSlideInterval;
+                pendingSlideIntervalSeconds = null;
+            }
+            const displaySlideInterval = slideIntervalDirty && pendingSlideIntervalSeconds !== null
+                ? pendingSlideIntervalSeconds
+                : currentSlideIntervalSeconds;
+            const isNewSlideDifferent = Number(displaySlideInterval) !== Number(currentSlideIntervalSeconds);
+            if (!overlaySelectionDirty) {
+                if (overlayState.enabled && overlayState.target_kiosk) {
+                    overlaySelection = overlayState.target_kiosk;
+                } else if (kioskNames.length && !overlaySelection) {
+                    overlaySelection = kioskNames[0];
+                }
+            }
+            const selectedOverlayKiosk = overlaySelection || '';
+            const overlayActiveText = overlayState.enabled && overlayState.target_kiosk
+                ? `<div class="overlay-active">Mostrando tiempo en: <strong>${escapeHtml(String(overlayState.target_kiosk).toUpperCase())}</strong></div>`
+                : '<div class="overlay-inactive">Cuenta regresiva desactivada</div>';
+            const certificateWarning = renderCertificateWarning(data.certificate);
+            serverPanel.innerHTML = `
+                <article class="server-card">
+                    <h2 class="section-title server-title">SERVIDOR</h2>
+                    ${certificateWarning}
+                    <details class="server-info"${serverInfoOpen ? ' open' : ''}>
+                        <summary>Información</summary>
+                        <div class="server-grid">
+                            <div><span>Host</span><strong>${escapeHtml(String(data.hostname || '-').toUpperCase())}</strong></div>
+                            <div><span>Encendido</span><strong>${escapeHtml(uptime)}</strong></div>
+                            <div><span>RAM libre</span><strong>${formatStorageMb(Number(data.mem_free_mb || 0))}</strong></div>
+                            <div>
+                                <span>Disco libre</span>
+                                <strong>/ ${formatFreeGb(Number(data.disk_root_free_mb || 0))}</strong><br>
+                                <strong>/var ${formatFreeGb(Number(data.disk_var_free_mb || 0))}</strong><br>
+                                <strong>/home ${formatFreeGb(Number(data.disk_home_free_mb || 0))}</strong>
+                            </div>
+                            <div><span>Nginx (web)</span><strong>${serviceStateLabel(data.services?.nginx)}</strong></div>
+                            <div><span>PHP-FPM (web)</span><strong>${serviceStateLabel(data.services?.php_fpm)}</strong></div>
+                            <div class="server-wide slide-config-row">
+                                <span>Tiempo de diapositiva (s)</span>
+                                <div class="slide-config-control">
+                                    <input id="slide-interval-input" class="slide-interval-input" type="number" min="5" max="120" step="5" value="${displaySlideInterval}" aria-label="Tiempo de diapositiva en segundos">
+                                    <button id="save-slide-interval" class="server-btn" type="button">Guardar</button>
+                                </div>
+                                <div class="slide-config-values">
+                                    <span>Actual: <strong id="slide-actual-value">${currentSlideIntervalSeconds}s</strong></span>
+                                    <span>Nuevo: <strong id="slide-new-value" class="${isNewSlideDifferent ? 'slide-new-different' : ''}">${displaySlideInterval}s</strong></span>
+                                </div>
+                            </div>
+                            <div class="server-wide overlay-control-row">
+                                <span>Quiosco para ver cuenta regresiva</span>
+                                <div class="overlay-control-main">
+                                    <select id="overlay-kiosk-select" class="overlay-kiosk-select" aria-label="Seleccionar quiosco">
+                                        ${buildKioskOptions(selectedOverlayKiosk)}
+                                    </select>
+                                    <button id="overlay-enable-btn" class="server-btn" type="button">Mostrar tiempo</button>
+                                    <button id="overlay-disable-btn" class="server-btn danger" type="button">Desactivar tiempo</button>
+                                </div>
+                                ${overlayActiveText}
+                            </div>
+                            <div class="server-wide"><span>Ult. reinicio web</span><strong>${formatSpainDateTime(data.last_web_restart || '-')}</strong></div>
+                            <div class="server-wide"><span>Ult. reinicio servidor</span><strong>${formatSpainDateTime(data.last_server_restart || '-')}</strong></div>
+                        </div>
+                        <div class="server-actions">
+                            <button class="server-btn" data-action="restart_web" type="button">Reiniciar Web</button>
+                            <button class="server-btn danger" data-action="reboot_server" type="button">Reiniciar Servidor</button>
+                        </div>
+                    </details>
+                </article>
+            `;
+
+            const serverInfo = serverPanel.querySelector('.server-info');
+            if (serverInfo) {
+                serverInfo.addEventListener('toggle', () => {
+                    serverInfoOpen = serverInfo.open;
+                });
+            }
+
+            serverPanel.querySelectorAll('.server-btn').forEach((btn) => {
+                btn.addEventListener('click', () => triggerServerAction(btn.dataset.action || ''));
+            });
+
+            const intervalInput = document.getElementById('slide-interval-input');
+            const saveButton = document.getElementById('save-slide-interval');
+            if (intervalInput) {
+                intervalInput.addEventListener('input', () => {
+                    pendingSlideIntervalSeconds = normalizeSlideInterval(intervalInput.value);
+                    slideIntervalDirty = true;
+                    const newValue = document.getElementById('slide-new-value');
+                    if (newValue) {
+                        newValue.textContent = `${pendingSlideIntervalSeconds}s`;
+                        const different = pendingSlideIntervalSeconds !== normalizeSlideInterval(currentSlideIntervalSeconds);
+                        newValue.classList.toggle('slide-new-different', different);
+                    }
+                });
+                intervalInput.addEventListener('change', () => {
+                    const normalized = normalizeSlideInterval(intervalInput.value);
+                    intervalInput.value = String(normalized);
+                    pendingSlideIntervalSeconds = normalized;
+                    slideIntervalDirty = true;
+                    const newValue = document.getElementById('slide-new-value');
+                    if (newValue) {
+                        newValue.textContent = `${pendingSlideIntervalSeconds}s`;
+                        const different = pendingSlideIntervalSeconds !== normalizeSlideInterval(currentSlideIntervalSeconds);
+                        newValue.classList.toggle('slide-new-different', different);
+                    }
+                });
+            }
+            if (saveButton && intervalInput) {
+                saveButton.addEventListener('click', () => {
+                    const targetSeconds = normalizeSlideInterval(pendingSlideIntervalSeconds !== null ? pendingSlideIntervalSeconds : intervalInput.value);
+                    const originalSeconds = normalizeSlideInterval(currentSlideIntervalSeconds);
+                    if (targetSeconds === originalSeconds) {
+                        window.alert('Los tiempos son iguales!');
+                        return;
+                    }
+                    const ok = window.confirm(`Cambiar tiempo diapositiva de ${originalSeconds}s a ${targetSeconds}s?`);
+                    if (!ok) return;
+                    saveSlideInterval(targetSeconds);
+                });
+            }
+
+            const overlaySelect = document.getElementById('overlay-kiosk-select');
+            const overlayEnableBtn = document.getElementById('overlay-enable-btn');
+            const overlayDisableBtn = document.getElementById('overlay-disable-btn');
+            if (overlaySelect) {
+                overlaySelect.addEventListener('change', () => {
+                    overlaySelection = overlaySelect.value;
+                    overlaySelectionDirty = true;
+                });
+            }
+            if (overlayEnableBtn && overlaySelect) {
+                overlayEnableBtn.addEventListener('click', async () => {
+                    const target = String(overlaySelect.value || '').trim();
+                    if (!target) {
+                        window.alert('Selecciona un quiosco');
+                        return;
+                    }
+                    await saveOverlayState('enable', target);
+                });
+            }
+            if (overlayDisableBtn) {
+                overlayDisableBtn.addEventListener('click', async () => {
+                    await saveOverlayState('disable', '');
+                });
+            }
+        }
+
+        async function fetchServerStatus() {
+            try {
+                const ts = Date.now();
+                const [serverResponse, overlayResponse] = await Promise.all([
+                    fetch(`server_status.php?_ts=${ts}`, { cache: 'no-store' }),
+                    fetch(`overlay_state.php?_ts=${ts}`, { cache: 'no-store' })
+                ]);
+                if (!serverResponse.ok) throw new Error('No se pudo leer estado servidor');
+                const data = await serverResponse.json();
+                if (overlayResponse.ok) {
+                    const overlayData = await overlayResponse.json();
+                    overlayState = {
+                        enabled: Boolean(overlayData.enabled),
+                        target_kiosk: String(overlayData.target_kiosk || ''),
+                        updated_at: String(overlayData.updated_at || '')
+                    };
+                }
+                renderServerPanel(data);
+            } catch (error) {
+                console.error('Error servidor:', error);
+            }
+        }
+
+        async function triggerServerAction(action) {
+            if (!action) return;
+            const serverName = String(currentServerHostname || 'servidor').toUpperCase();
+
+            if (action === 'reboot_server') {
+                const ok = window.confirm(`Vas a reiniciar el servidor ${serverName}. ¿Estas seguro?`);
+                if (!ok) return;
+                const confirmWord = window.prompt('Escribe REINICIAR para confirmar');
+                if (confirmWord !== 'REINICIAR') {
+                    window.alert('Confirmación inválida');
+                    return;
+                }
+                await sendServerAction(action, confirmWord);
+                return;
+            }
+
+            if (action === 'restart_web') {
+                const ok = window.confirm(`Vas a reiniciar el servidor web en ${serverName}. ¿Estas seguro?`);
+                if (!ok) return;
+                await sendServerAction(action, '');
+                return;
+            }
+
+            const ok = window.confirm(`Vas a ejecutar una acción en ${serverName}. ¿Estas seguro?`);
+            if (!ok) return;
+            await sendServerAction(action, '');
+        }
+
+        async function sendServerAction(action, confirmWord) {
+            try {
+                const response = await fetch('server_control.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action, confirm: confirmWord })
+                });
+                const raw = await response.text();
+                let data = null;
+                try {
+                    data = raw ? JSON.parse(raw) : null;
+                } catch (parseError) {
+                    if (action === 'restart_web') {
+                        window.alert('Orden enviada. La web puede tardar unos segundos en responder.');
+                        setTimeout(fetchServerStatus, 3000);
+                        return;
+                    }
+                    throw new Error('Respuesta no valida del servidor');
+                }
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || data.output || 'Acción fallida');
+                }
+                window.alert('Acción enviada correctamente');
+                fetchServerStatus();
+            } catch (error) {
+                window.alert(`Error de acción: ${error.message}`);
+            }
+        }
+
+        async function saveSlideInterval(rawValue) {
+            const seconds = normalizeSlideInterval(rawValue);
+            try {
+                const response = await fetch('slide_settings.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slide_interval_seconds: seconds })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'No se pudo guardar el tiempo');
+                }
+                currentSlideIntervalSeconds = normalizeSlideInterval(data.slide_interval_seconds || seconds);
+                pendingSlideIntervalSeconds = null;
+                slideIntervalDirty = false;
+                window.alert(`Tiempo de diapositiva actualizado a ${currentSlideIntervalSeconds}s`);
+                fetchServerStatus();
+            } catch (error) {
+                window.alert(`Error guardando tiempo: ${error.message}`);
+            }
+        }
+
+        async function saveOverlayState(action, targetKiosk) {
+            try {
+                const response = await fetch('overlay_control.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: action,
+                        target_kiosk: targetKiosk
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'No se pudo actualizar cuenta regresiva');
+                }
+                overlayState = {
+                    enabled: Boolean(data.enabled),
+                    target_kiosk: String(data.target_kiosk || ''),
+                    updated_at: String(data.updated_at || '')
+                };
+                overlaySelectionDirty = false;
+                if (overlayState.enabled && overlayState.target_kiosk) {
+                    overlaySelection = overlayState.target_kiosk;
+                }
+                window.alert(overlayState.enabled
+                    ? `Cuenta regresiva activada en ${overlayState.target_kiosk.toUpperCase()}`
+                    : 'Cuenta regresiva desactivada');
+                fetchServerStatus();
+            } catch (error) {
+                window.alert(`Error actualizando cuenta regresiva: ${error.message}`);
+            }
+        }
+
+        async function logoutManagerSession() {
+            window.location.href = '/estado_quioscos/logout.php';
+        }
+
+        function setTopbarMenuOpen(isOpen) {
+            if (!topbarMenu || !menuToggleBtn) return;
+            topbarMenu.hidden = !isOpen;
+            menuToggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        function openPasswordModal() {
+            if (!passwordModal) return;
+            passwordModal.hidden = false;
+            clearPasswordModalError();
+            if (modalPwdCurrent) modalPwdCurrent.focus();
+        }
+
+        function closePasswordModal() {
+            if (!passwordModal) return;
+            passwordModal.hidden = true;
+            if (modalPwdCurrent) modalPwdCurrent.value = '';
+            if (modalPwdNew) modalPwdNew.value = '';
+            if (modalPwdConfirm) modalPwdConfirm.value = '';
+            clearPasswordModalError();
+        }
+
+        function setPasswordModalError(message) {
+            if (!modalPwdError) return;
+            modalPwdError.textContent = String(message || 'Error');
+            modalPwdError.hidden = false;
+        }
+
+        function clearPasswordModalError() {
+            if (!modalPwdError) return;
+            modalPwdError.hidden = true;
+        }
+
+        function updatePasswordMatchError() {
+            if (!modalPwdNew || !modalPwdConfirm || !modalPwdError) return true;
+            const hasValues = modalPwdNew.value !== '' || modalPwdConfirm.value !== '';
+            const same = modalPwdNew.value === modalPwdConfirm.value;
+            if (!hasValues || same) {
+                clearPasswordModalError();
+            } else {
+                setPasswordModalError('Las contraseñas no coinciden');
+            }
+            return same;
+        }
+
+        async function ensureAuthenticated() {
+            try {
+                const response = await fetch(`session_status.php?_ts=${Date.now()}`, { cache: 'no-store' });
+                if (!response.ok) {
+                    window.location.href = '/estado_quioscos/login.php';
+                    return false;
+                }
+                const data = await response.json();
+                if (!data.authenticated) {
+                    window.location.href = '/estado_quioscos/login.php';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                window.location.href = '/estado_quioscos/login.php';
+                return false;
+            }
+        }
+
+        async function changeManagerPassword(currentPassword, newPassword, confirmPassword) {
+            const curr = String(currentPassword || '');
+            const next = String(newPassword || '');
+            const again = String(confirmPassword || '');
+            clearPasswordModalError();
+            if (!curr || !next || !again) {
+                setPasswordModalError('Completa los 3 campos de contrasena');
+                return false;
+            }
+            if (next !== again) {
+                setPasswordModalError('La nueva contrasena no coincide');
+                return false;
+            }
+            if (next.length < 8) {
+                setPasswordModalError('La nueva contrasena debe tener minimo 8 caracteres');
+                return false;
+            }
+            if (!/[A-Z]/.test(next)) {
+                setPasswordModalError('La nueva contrasena debe incluir al menos 1 mayuscula');
+                return false;
+            }
+            if (!/[0-9]/.test(next)) {
+                setPasswordModalError('La nueva contrasena debe incluir al menos 1 numero');
+                return false;
+            }
+            if (!/[^A-Za-z0-9]/.test(next)) {
+                setPasswordModalError('La nueva contrasena debe incluir al menos 1 caracter especial');
+                return false;
+            }
+
+            try {
+                const response = await fetch('change_password.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        current_password: curr,
+                        new_password: next,
+                        confirm_password: again
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'No se pudo cambiar la contrasena');
+                }
+                window.alert('Contrasena cambiada correctamente');
+                return true;
+            } catch (error) {
+                setPasswordModalError(`Error cambiando contrasena: ${error.message}`);
+                return false;
+            }
+        }
+
+        function setAllKioskReportsOpen(isOpen) {
+            kioskNames.forEach((name) => {
+                reportOpenState[name] = isOpen;
+            });
+            statusContainer.querySelectorAll('.kiosk-report').forEach((details) => {
+                details.open = isOpen;
+            });
+            updateToggleAllKiosksButton();
+        }
+
+        function updateToggleAllKiosksButton() {
+            if (!toggleAllKiosksBtn) return;
+            const hasKiosks = kioskNames.length > 0;
+            const allOpen = hasKiosks && kioskNames.every((name) => Boolean(reportOpenState[name]));
+            toggleAllKiosksBtn.textContent = allOpen ? 'Cerrar todas' : 'Desplegar todas';
+            toggleAllKiosksBtn.disabled = !hasKiosks;
+        }
+
+        function renderKiosks(statusData) {
+            const now = Math.floor(Date.now() / 1000);
+            let onlineCount = 0;
+            let offlineCount = 0;
+            let unstableCount = 0;
+
+            kioskNames = Object.keys(statusData).sort((a, b) => naturalSort.compare(a, b));
+
+            const cards = Object.entries(statusData).sort((a, b) => naturalSort.compare(a[0], b[0])).map(([name, info]) => {
+                const normalized = normalizeStatus(info, now);
+                const safeName = escapeHtml(name);
+                const safeNameUpper = escapeHtml(String(name).toUpperCase());
+
+                if (normalized.stateClass === 'online' || normalized.stateClass === 'warning') {
+                    onlineCount++;
+                } else {
+                    offlineCount++;
+                }
+
+                if (normalized.unstable) {
+                    unstableCount++;
+                }
+
+                const absoluteTime = normalized.lastUpdated > 0
+                    ? new Date(normalized.lastUpdated * 1000).toLocaleString()
+                    : 'Sin datos';
+
+                const reportOpenAttr = reportOpenState[name] ? ' open' : '';
+                const kioskKey = encodeURIComponent(name);
+
+                return `
+                    <article class="kiosk-card state-${normalized.stateClass}">
+                        <div class="kiosk-head">
+                            <img class="kiosk-icon" src="img/quiosco.svg" alt="Quiosco">
+                            <strong class="kiosk-name">${safeNameUpper}</strong>
+                            <div class="badges">
+                                <span class="badge status status-${normalized.stateClass}">${normalized.stateLabel}</span>
+                                ${normalized.unstable ? '<span class="badge unstable">Inestable</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="kiosk-meta">
+                            <span>${relativeTime(normalized.elapsed)}</span>
+                            <span>Último latido: ${absoluteTime}</span>
+                        </div>
+                        <details class="kiosk-report"${reportOpenAttr} data-kiosk="${kioskKey}">
+                            <summary>Información</summary>
+                            ${renderMiniReport(normalized.report)}
+                            <div class="kiosk-actions">
+                                <button class="reboot-btn" data-kiosk="${kioskKey}" type="button">Reiniciar</button>
+                            </div>
+                        </details>
+                    </article>
+                `;
+            });
+
+            statusContainer.innerHTML = cards.join('');
+            statusContainer.querySelectorAll('.kiosk-report').forEach((details) => {
+                const kiosk = decodeURIComponent(details.dataset.kiosk || '');
+                details.addEventListener('toggle', () => {
+                    reportOpenState[kiosk] = details.open;
+                    updateToggleAllKiosksButton();
+                });
+            });
+            statusContainer.querySelectorAll('.reboot-btn').forEach((btn) => {
+                const kiosk = decodeURIComponent(btn.dataset.kiosk || '');
+                btn.addEventListener('click', () => queueReboot(kiosk));
+            });
+            updateToggleAllKiosksButton();
+            renderSummary({
+                total: Object.keys(statusData).length,
+                online: onlineCount,
+                offline: offlineCount,
+                unstable: unstableCount
+            });
+        }
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch(`status.json?_ts=${Date.now()}`, { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error('Error al obtener el estado');
+                }
+                const statusData = await response.json();
+                renderKiosks(statusData);
+            } catch (error) {
+                console.error('Error al actualizar los estados:', error);
+            }
+        }
+
+        async function startApp() {
+            const ok = await ensureAuthenticated();
+            if (!ok) return;
+            passwordToggleButtons.forEach(bindPasswordToggle);
+            setInterval(fetchStatus, 5000);
+            setInterval(fetchServerStatus, 5000);
+            if (menuToggleBtn) {
+                menuToggleBtn.addEventListener('click', () => {
+                    const open = topbarMenu ? topbarMenu.hidden : true;
+                    setTopbarMenuOpen(open);
+                });
+            }
+            if (menuChangePasswordBtn) {
+                menuChangePasswordBtn.addEventListener('click', () => {
+                    setTopbarMenuOpen(false);
+                    openPasswordModal();
+                });
+            }
+            if (menuLogoutBtn) {
+                menuLogoutBtn.addEventListener('click', () => {
+                    setTopbarMenuOpen(false);
+                    logoutManagerSession();
+                });
+            }
+            if (topbarMenu) {
+                topbarMenu.querySelectorAll('a.menu-item').forEach((link) => {
+                    link.addEventListener('click', () => {
+                        setTopbarMenuOpen(false);
+                    });
+                });
+            }
+            if (modalPwdCancel) {
+                modalPwdCancel.addEventListener('click', closePasswordModal);
+            }
+            if (modalPwdNew) {
+                modalPwdNew.addEventListener('input', updatePasswordMatchError);
+            }
+            if (modalPwdConfirm) {
+                modalPwdConfirm.addEventListener('input', updatePasswordMatchError);
+            }
+            if (modalPwdSave && modalPwdCurrent && modalPwdNew && modalPwdConfirm) {
+                modalPwdSave.addEventListener('click', async () => {
+                    if (!updatePasswordMatchError()) {
+                        return;
+                    }
+                    const ok = await changeManagerPassword(modalPwdCurrent.value, modalPwdNew.value, modalPwdConfirm.value);
+                    if (ok) {
+                        closePasswordModal();
+                    }
+                });
+            }
+            if (passwordModal) {
+                passwordModal.addEventListener('click', (event) => {
+                    if (event.target === passwordModal) {
+                        closePasswordModal();
+                    }
+                });
+            }
+            document.addEventListener('click', (event) => {
+                if (!topbarMenu || !menuToggleBtn) return;
+                if (topbarMenu.hidden) return;
+                const target = event.target;
+                if (!(target instanceof Node)) return;
+                if (!topbarMenu.contains(target) && !menuToggleBtn.contains(target)) {
+                    setTopbarMenuOpen(false);
+                }
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    setTopbarMenuOpen(false);
+                    closePasswordModal();
+                }
+            });
+            if (topbarMenu) {
+                setTopbarMenuOpen(false);
+            }
+            if (toggleAllKiosksBtn) {
+                toggleAllKiosksBtn.addEventListener('click', () => {
+                    const allOpen = kioskNames.length > 0 && kioskNames.every((name) => Boolean(reportOpenState[name]));
+                    setAllKioskReportsOpen(!allOpen);
+                });
+            }
+            fetchStatus();
+            fetchServerStatus();
+        }
+
+        startApp();
+    </script>
+</body>
+</html>
