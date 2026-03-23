@@ -19,6 +19,7 @@ kiosk_web/test_*.html
 # Development-only folders that should not go to production
 /futuros/
 kiosk_web/tests/
+tech_docs/
 
 # Media files in docs (except README)
 kiosk_web/docs/*.mp4
