@@ -489,15 +489,16 @@ $items = eq_load_allowed_kiosks_for_crud();
 
         function renderPresentationViewers(items) {
             currentPresentationViewers = Array.isArray(items) ? items : [];
-            if (currentProtection.presentation_enabled) {
-                presentationViewersEl.innerHTML = '<div class="attempt-meta">Protección activada. Solo deberían aparecer accesos de IPs fijas autorizadas.</div>';
-                return;
-            }
             if (!currentPresentationViewers.length) {
-                presentationViewersEl.innerHTML = '<div class="attempt-meta">No hay accesos recientes a la presentación.</div>';
+                presentationViewersEl.innerHTML = currentProtection.presentation_enabled
+                    ? '<div class="attempt-meta">Protección activada. Los intentos de acceso a la presentación se siguen registrando aunque sean denegados.</div>'
+                    : '<div class="attempt-meta">No hay accesos recientes a la presentación.</div>';
                 return;
             }
-            presentationViewersEl.innerHTML = currentPresentationViewers.map((item) => `
+            const header = currentProtection.presentation_enabled
+                ? '<div class="attempt-meta" style="margin-bottom:10px;">Protección activada. Esta lista muestra también intentos denegados de acceso a la presentación.</div>'
+                : '';
+            presentationViewersEl.innerHTML = header + currentPresentationViewers.map((item) => `
                 <div class="viewer-item ${item.known_kiosk ? 'known-kiosk' : ''}">
                     <strong>${escapeHtml(item.ip || '-')}</strong>
                     <div><span class="viewer-badge ${item.known_kiosk ? 'known' : 'generic'}">${item.known_kiosk ? 'Quiosco conocido' : 'Acceso genérico'}</span></div>

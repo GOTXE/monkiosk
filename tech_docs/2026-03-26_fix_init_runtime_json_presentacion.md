@@ -1,0 +1,54 @@
+# Plan y Ejecucion - Correccion de inicializacion runtime para proteccion de presentacion
+
+## Planificacion
+
+### Objetivo
+
+Corregir el script `tools/init_estado_quioscos_runtime.sh` para que una instalacion nueva genere JSON runtime valido y la proteccion de presentacion pueda cargar su configuracion.
+
+### Alcance
+
+- revisar como se escriben los archivos JSON iniciales
+- corregir el formato generado por el inicializador
+- alinear `allowed_kiosks_protection.json` con el formato actual de doble proteccion
+- validar la generacion en un directorio temporal
+
+### Riesgos
+
+- dejar instalaciones nuevas con JSON invalido
+- mantener compatibilidad defectuosa con el estado inicial de proteccion
+- tocar un script de instalacion con impacto transversal
+
+### Archivos a tocar
+
+- `tools/init_estado_quioscos_runtime.sh`
+- `tech_docs/2026-03-26_fix_init_runtime_json_presentacion.md`
+
+## Ejecucion
+
+- detectado que `write_file_if_missing()` escribia cadenas con `\n` literales usando `printf '%s'`
+- eso dejaba invalidos varios JSON runtime creados en una instalacion nueva
+- `allowed_kiosks.json` quedaba ilegible y `eq_load_allowed_kiosks()` devolvia lista vacia
+- con la lista vacia, la proteccion de presentacion no llegaba a aplicar el bloqueo esperado
+- corregido el helper para escribir escapes con `printf '%b'`
+- actualizado el formato inicial de `allowed_kiosks_protection.json` a:
+  - `report_enabled`
+  - `presentation_enabled`
+- ajustada la logica de `eq_is_presentation_access_allowed()` para que, con proteccion activada y lista vacia, falle en cerrado y deniegue acceso
+- movido el registro de accesos de presentacion antes de la comprobacion de permiso para que tambien se guarden los intentos denegados
+- ajustada la UI de `Accesos a presentación` para mostrar esos intentos aunque la proteccion siga activada
+- corregida la proteccion de reporte para que, con proteccion activada y lista vacia, no acepte heartbeats y registre esos quioscos en `Intentos de conexion`
+- los accesos denegados a la presentacion intentan alimentar tambien `Intentos de conexion` si se puede resolver el hostname del quiosco
+
+### Validacion
+
+- `sh -n tools/init_estado_quioscos_runtime.sh`
+- ejecucion del script contra un directorio temporal
+- comprobacion con `php` de que:
+  - `allowed_kiosks.json` es JSON valido
+  - `allowed_kiosks_protection.json` es JSON valido
+  - el estado de proteccion inicial contiene `report_enabled` y `presentation_enabled`
+- comprobacion con `php` de que `eq_is_presentation_access_allowed()` devuelve `false` cuando la proteccion esta activa y no hay quioscos permitidos
+- `php -l kiosk_web/index.php`
+- `php -l estado_quioscos/update_status.php`
+- revision de la UI para que `Accesos a presentación` no quede oculta por tener la proteccion activada

@@ -489,6 +489,27 @@ function eq_remove_unknown_kiosk_attempt(string $hostname): void {
     eq_save_unknown_kiosk_attempts($filtered);
 }
 
+function eq_register_presentation_unknown_attempt(string $ip): void {
+    $normalizedIp = eq_normalize_ip($ip);
+    if (!eq_is_valid_ip_or_empty($normalizedIp) || $normalizedIp === '') {
+        return;
+    }
+
+    $hostname = eq_resolve_kiosk_hostname_by_ip($normalizedIp);
+    if ($hostname === '') {
+        $candidateHostname = @gethostbyaddr($normalizedIp);
+        if (is_string($candidateHostname) && $candidateHostname !== '' && $candidateHostname !== $normalizedIp) {
+            $hostname = eq_normalize_hostname($candidateHostname);
+        }
+    }
+
+    if ($hostname === '' || !eq_hostname_is_valid($hostname)) {
+        return;
+    }
+
+    eq_register_unknown_kiosk_attempt($hostname, $normalizedIp);
+}
+
 function eq_allowed_presentation_ips(): array {
     $lookup = eq_allowed_kiosks_lookup(eq_load_allowed_kiosks());
     $ips = [];
@@ -552,7 +573,7 @@ function eq_is_presentation_access_allowed(string $ip): bool {
 
     $allowedLookup = eq_allowed_kiosks_lookup(eq_load_allowed_kiosks());
     if (empty($allowedLookup)) {
-        return true;
+        return false;
     }
 
     $allowedIps = eq_allowed_presentation_ips();
