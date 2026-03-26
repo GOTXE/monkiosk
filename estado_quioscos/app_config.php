@@ -552,7 +552,7 @@ function eq_is_presentation_access_allowed(string $ip): bool {
 
     $allowedLookup = eq_allowed_kiosks_lookup(eq_load_allowed_kiosks());
     if (empty($allowedLookup)) {
-        return true;
+        return false;
     }
 
     $allowedIps = eq_allowed_presentation_ips();

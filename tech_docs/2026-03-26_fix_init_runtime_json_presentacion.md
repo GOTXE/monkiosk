@@ -34,6 +34,7 @@ Corregir el script `tools/init_estado_quioscos_runtime.sh` para que una instalac
 - actualizado el formato inicial de `allowed_kiosks_protection.json` a:
   - `report_enabled`
   - `presentation_enabled`
+- ajustada la logica de `eq_is_presentation_access_allowed()` para que, con proteccion activada y lista vacia, falle en cerrado y deniegue acceso
 
 ### Validacion
 
@@ -43,3 +44,4 @@ Corregir el script `tools/init_estado_quioscos_runtime.sh` para que una instalac
   - `allowed_kiosks.json` es JSON valido
   - `allowed_kiosks_protection.json` es JSON valido
   - el estado de proteccion inicial contiene `report_enabled` y `presentation_enabled`
+- comprobacion con `php` de que `eq_is_presentation_access_allowed()` devuelve `false` cuando la proteccion esta activa y no hay quioscos permitidos
