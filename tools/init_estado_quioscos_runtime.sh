@@ -75,7 +75,7 @@ write_file_if_missing() {
     return
   fi
 
-  printf '%s' "${content}" > "${path}"
+  printf '%b' "${content}" > "${path}"
   chmod "${mode}" "${path}"
 }
 
@@ -132,7 +132,7 @@ main() {
 
   write_file_if_missing "${TARGET_DIR}/allowed_hosts.txt" 640 ""
   write_file_if_missing "${TARGET_DIR}/allowed_kiosks.json" 640 "{\n    \"updated_at\": \"\",\n    \"items\": []\n}\n"
-  write_file_if_missing "${TARGET_DIR}/allowed_kiosks_protection.json" 640 "{\n    \"enabled\": true,\n    \"updated_at\": \"\"\n}\n"
+  write_file_if_missing "${TARGET_DIR}/allowed_kiosks_protection.json" 640 "{\n    \"report_enabled\": true,\n    \"presentation_enabled\": true,\n    \"updated_at\": \"\"\n}\n"
   write_file_if_missing "${TARGET_DIR}/status.json" 640 "{}\n"
   write_file_if_missing "${TARGET_DIR}/actions.json" 640 "{}\n"
   write_file_if_missing "${TARGET_DIR}/slide_settings.json" 640 "{\n    \"slide_interval_seconds\": 5,\n    \"updated_at\": \"\"\n}\n"
