@@ -35,6 +35,8 @@ Corregir el script `tools/init_estado_quioscos_runtime.sh` para que una instalac
   - `report_enabled`
   - `presentation_enabled`
 - ajustada la logica de `eq_is_presentation_access_allowed()` para que, con proteccion activada y lista vacia, falle en cerrado y deniegue acceso
+- movido el registro de accesos de presentacion antes de la comprobacion de permiso para que tambien se guarden los intentos denegados
+- ajustada la UI de `Accesos a presentación` para mostrar esos intentos aunque la proteccion siga activada
 
 ### Validacion
 
@@ -45,3 +47,5 @@ Corregir el script `tools/init_estado_quioscos_runtime.sh` para que una instalac
   - `allowed_kiosks_protection.json` es JSON valido
   - el estado de proteccion inicial contiene `report_enabled` y `presentation_enabled`
 - comprobacion con `php` de que `eq_is_presentation_access_allowed()` devuelve `false` cuando la proteccion esta activa y no hay quioscos permitidos
+- `php -l kiosk_web/index.php`
+- revision de la UI para que `Accesos a presentación` no quede oculta por tener la proteccion activada
