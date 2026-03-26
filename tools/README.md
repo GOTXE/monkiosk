@@ -32,6 +32,31 @@ sudo ./tools/init_estado_quioscos_runtime.sh \
 
 Si no se indican contraseña o token, el script genera valores iniciales aleatorios.
 
+## change_gestor_password.sh
+
+Script para cambiar desde terminal la contraseña del usuario web `gestor` en `auth_users.json`.
+
+### Características
+
+- pide la contraseña de forma segura si no se pasa por parámetro
+- detecta el nombre real del usuario web actual y lo muestra antes de pedir la nueva contraseña
+- aplica las mismas reglas mínimas que la web:
+  - 8 caracteres o más
+  - al menos 1 mayúscula
+  - al menos 1 número
+  - al menos 1 carácter especial
+- conserva propietario, grupo y permisos del archivo original
+- permite cambiar otro usuario con `--user`
+
+### Uso
+
+```bash
+sudo ./tools/change_gestor_password.sh
+sudo ./tools/change_gestor_password.sh 'NuevaClave!2026'
+sudo ./tools/change_gestor_password.sh --target-dir /var/www/html/estado_quioscos
+sudo ./tools/change_gestor_password.sh --auth-file /var/www/html/estado_quioscos/auth_users.json --user gestor
+```
+
 ## backup_monkiosk.sh
 
 Script para crear un backup local completo de Monkiosk.
