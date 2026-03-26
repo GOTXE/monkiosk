@@ -137,7 +137,7 @@ $remote_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $current_time = time();
 $report_protection_enabled = eq_load_report_protection_enabled();
 $allowed_kiosk = eq_resolve_allowed_kiosk($allowed_kiosks_lookup, $kiosk_name);
-if ($report_protection_enabled && !empty($allowed_kiosks_lookup) && !is_array($allowed_kiosk)) {
+if ($report_protection_enabled && !is_array($allowed_kiosk)) {
     eq_register_unknown_kiosk_attempt($kiosk_name, $remote_ip);
     http_response_code(403);
     echo json_encode(['error' => 'Hostname no permitido']);
