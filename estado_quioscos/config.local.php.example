@@ -5,6 +5,9 @@ return [
     'slide_settings_file' => __DIR__ . '/slide_settings.json',
     'allowed_kiosks_file' => __DIR__ . '/allowed_kiosks.json',
     'legacy_allowed_hosts_file' => __DIR__ . '/allowed_hosts.txt',
+    'manager_allowed_ips' => [
+        '192.168.244.252',
+    ],
     'offline_timeout_seconds' => 150,
     'server' => [
         'php_fpm_unit' => 'php8.2-fpm',

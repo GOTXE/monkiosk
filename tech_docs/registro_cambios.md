@@ -173,3 +173,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: al guardar `Quioscos: Reporte permitido`, los quioscos eliminados se purgan inmediatamente de `status.json` para desaparecer del reporte principal sin esperar a recarga manual o nuevo heartbeat.
 - Archivos: `estado_quioscos/app_config.php`, `estado_quioscos/allowed_kiosks_api.php`
 - Verificación: `php -l` en ambos PHP y comprobación manual en producción del flujo de borrado y guardado.
+
+### 2026-04-09 10:10
+- Área: seguridad
+- Cambio: se añade excepción de IPs de gestión fijas (`manager_allowed_ips`) para que equipos autorizados puedan seguir accediendo aunque la protección de presentación esté activada.
+- Archivos: `estado_quioscos/app_config.php`, `estado_quioscos/config.local.php.example`, `tech_docs/manual_tecnico.md`
+- Verificación: `php -l estado_quioscos/app_config.php` y validación de carga de configuración local con IP fija de gestor.

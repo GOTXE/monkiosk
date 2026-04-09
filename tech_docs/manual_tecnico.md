@@ -38,6 +38,7 @@ Este manual resume la parte tecnica de Monkiosk para instalacion, mantenimiento 
 - proteccion de quioscos por `hostname` y `IP fija` opcional
 - proteccion de reporte y proteccion de presentacion separadas
 - la presentacion web del quiosco, con su proteccion activada, solo admite `IP fija` autorizada
+- se puede definir `manager_allowed_ips` en `config.local.php` para permitir equipos de gestion fijos aunque la presentacion este protegida
 - lectura de acciones por token compartido `X-Control-Token`
 - `kiosk_info` protegido con la misma sesion web de `estado_quioscos`
 - no existe autenticacion fuerte en el heartbeat; la proteccion principal es la lista de quioscos permitidos

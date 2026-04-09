@@ -22,6 +22,7 @@ function eq_config(): array {
         'slide_settings_file' => __DIR__ . '/slide_settings.json',
         'allowed_kiosks_file' => __DIR__ . '/allowed_kiosks.json',
         'legacy_allowed_hosts_file' => __DIR__ . '/allowed_hosts.txt',
+        'manager_allowed_ips' => [],
         'offline_timeout_seconds' => 150,
         'server' => [
             'php_fpm_unit' => 'php8.2-fpm',
@@ -110,6 +111,35 @@ function eq_is_valid_ip_or_empty(string $ip): bool {
         return true;
     }
     return filter_var($ip, FILTER_VALIDATE_IP) !== false;
+}
+
+function eq_manager_allowed_ips(): array {
+    $raw = eq_config()['manager_allowed_ips'] ?? [];
+    if (is_string($raw)) {
+        $raw = [$raw];
+    }
+    if (!is_array($raw)) {
+        return [];
+    }
+
+    $ips = [];
+    foreach ($raw as $item) {
+        $ip = eq_normalize_ip((string)$item);
+        if ($ip === '' || !eq_is_valid_ip_or_empty($ip)) {
+            continue;
+        }
+        $ips[$ip] = true;
+    }
+
+    return array_keys($ips);
+}
+
+function eq_is_manager_ip_allowed(string $ip): bool {
+    $normalizedIp = eq_normalize_ip($ip);
+    if ($normalizedIp === '' || !eq_is_valid_ip_or_empty($normalizedIp)) {
+        return false;
+    }
+    return in_array($normalizedIp, eq_manager_allowed_ips(), true);
 }
 
 function eq_load_allowed_kiosks(): array {
@@ -544,6 +574,9 @@ function eq_is_presentation_access_allowed(string $ip): bool {
         return false;
     }
     if (eq_is_localhost_address($normalizedIp)) {
+        return true;
+    }
+    if (eq_is_manager_ip_allowed($normalizedIp)) {
         return true;
     }
     if (!eq_load_presentation_protection_enabled()) {

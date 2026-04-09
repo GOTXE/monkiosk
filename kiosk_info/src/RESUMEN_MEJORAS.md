@@ -15,13 +15,13 @@ El proyecto Monkiosk era un sistema de kiosk web básico que:
 
 ## 🚀 Mejoras Implementadas
 
-### 1. Soporte Completo de Videos con Audio ⭐
+### 1. Soporte Completo de Videos ⭐
 
 #### Funcionalidad Principal
 ```
 ✅ Formatos: MP4 (H.264+AAC) y WEBM (VP9+Opus)
 ✅ Resolución óptima: 1920x1080 (Full HD)
-✅ Reproducción automática con audio activado
+✅ Reproducción automática
 ✅ Avance automático al finalizar el video
 ✅ Manejo robusto de errores
 ✅ Object-fit: contain para mantener proporciones
@@ -281,7 +281,7 @@ El proyecto incluye un **mockup conceptual** (`admin_concept.html`) que presenta
 ## ✅ Checklist de Cumplimiento
 
 ### Requerimientos Originales
-- ✅ **Videos en formato 1920x1080 con sonido** - Implementado completamente
+- ✅ **Videos en formato 1920x1080** - Implementado completamente
 - ✅ **Creatividad y originalidad** - Mockups, herramientas, docs profesionales
 - ✅ **Mejoras generales** - Arquitectura, logging, manejo de errores
 
@@ -322,10 +322,10 @@ El proyecto incluye un **mockup conceptual** (`admin_concept.html`) que presenta
 ### Sistema Monkiosk v2.0 - Completo y Listo para Producción
 
 **Antes:** Sistema básico de imágenes/PDFs  
-**Ahora:** Sistema multimedia completo con videos, audio, herramientas y documentación profesional
+**Ahora:** Sistema multimedia completo con videos, herramientas y documentación profesional
 
 **Complejidad:** Mínima - mantiene la filosofía original  
-**Funcionalidad:** Máxima - videos con audio, conversión automática  
+**Funcionalidad:** Máxima - videos, conversión automática  
 **Documentación:** Profesional - 10 archivos, +8000 líneas  
 **Herramientas:** Incluidas - script de conversión, páginas de prueba  
 **Futuro:** Planificado - mockup y roadmap completo  
@@ -360,4 +360,4 @@ Este proyecto demuestra que con creatividad, documentación clara y herramientas
 ---
 
 *Desarrollado con ❤️ para la comunidad Monkiosk*  
-*Octubre 2025 - Versión 2.0*
+*Marzo 2026 - Versión 2.0*
