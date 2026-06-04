@@ -27,6 +27,82 @@ function allowed_types(): array {
     ];
 }
 
+function bytes_from_ini_value(string $value): int {
+    $value = trim($value);
+    if ($value === '') {
+        return 0;
+    }
+
+    $unit = strtolower(substr($value, -1));
+    $number = (float)$value;
+    switch ($unit) {
+        case 'g':
+            $number *= 1024;
+            // fall through
+        case 'm':
+            $number *= 1024;
+            // fall through
+        case 'k':
+            $number *= 1024;
+            break;
+    }
+
+    return (int)$number;
+}
+
+function format_bytes_for_user(int $bytes): string {
+    if ($bytes >= 1024 * 1024) {
+        return (string)round($bytes / (1024 * 1024)) . 'MB';
+    }
+    if ($bytes >= 1024) {
+        return (string)round($bytes / 1024) . 'KB';
+    }
+    return $bytes . 'B';
+}
+
+function upload_error_message(int $errorCode): string {
+    switch ($errorCode) {
+        case UPLOAD_ERR_INI_SIZE:
+            $limit = bytes_from_ini_value((string)ini_get('upload_max_filesize'));
+            return 'El archivo supera el limite PHP upload_max_filesize' . ($limit > 0 ? ' (' . format_bytes_for_user($limit) . ')' : '') . '.';
+        case UPLOAD_ERR_FORM_SIZE:
+            return 'El archivo supera el limite permitido por el formulario.';
+        case UPLOAD_ERR_PARTIAL:
+            return 'La subida se corto antes de completarse.';
+        case UPLOAD_ERR_NO_FILE:
+            return 'No se recibio ningun archivo.';
+        case UPLOAD_ERR_NO_TMP_DIR:
+            return 'Falta el directorio temporal de PHP para subidas.';
+        case UPLOAD_ERR_CANT_WRITE:
+            return 'PHP no pudo escribir el archivo temporal.';
+        case UPLOAD_ERR_EXTENSION:
+            return 'Una extension de PHP detuvo la subida.';
+        default:
+            return 'Error en subida.';
+    }
+}
+
+function reject_oversized_empty_multipart(): void {
+    $contentType = (string)($_SERVER['CONTENT_TYPE'] ?? '');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || stripos($contentType, 'multipart/form-data') === false) {
+        return;
+    }
+    if (!empty($_POST) || !empty($_FILES)) {
+        return;
+    }
+
+    $contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+    $postLimit = bytes_from_ini_value((string)ini_get('post_max_size'));
+    if ($contentLength > 0 && $postLimit > 0 && $contentLength > $postLimit) {
+        http_response_code(413);
+        echo json_encode([
+            'success' => false,
+            'error' => 'El archivo supera el limite PHP post_max_size (' . format_bytes_for_user($postLimit) . ').',
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
 function ext_of(string $name): string {
     return strtolower(pathinfo($name, PATHINFO_EXTENSION));
 }
@@ -113,7 +189,7 @@ function action_upload(): void {
     $errorCode = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
     if ($errorCode !== UPLOAD_ERR_OK) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Error en subida'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['success' => false, 'error' => upload_error_message($errorCode)], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -249,6 +325,8 @@ function action_delete(): void {
     echo json_encode(['success' => true, 'name' => $name], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
+reject_oversized_empty_multipart();
 
 $action = trim((string)($_GET['action'] ?? $_POST['action'] ?? 'list'));
 switch ($action) {
