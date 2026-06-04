@@ -173,3 +173,8 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: al guardar `Quioscos: Reporte permitido`, los quioscos eliminados se purgan inmediatamente de `status.json` para desaparecer del reporte principal sin esperar a recarga manual o nuevo heartbeat.
 - Archivos: `estado_quioscos/app_config.php`, `estado_quioscos/allowed_kiosks_api.php`
 - Verificación: `php -l` en ambos PHP y comprobación manual en producción del flujo de borrado y guardado.
+### 2026-06-04 12:10
+- Área: docs
+- Cambio: mejora del diagnostico de subida en `Gestión diapositivas` para evitar errores tecnicos de `JSON.parse` cuando el servidor devuelve HTML/no JSON o cuando un MP4 supera limites PHP. En produccion se suben limites de carga a Nginx `220M`, PHP-FPM `post_max_size=220M` y `upload_max_filesize=200M`. Version `0.2.1`.
+- Archivos: `estado_quioscos/docs_manager.php`, `estado_quioscos/docs_api.php`, `VERSION`, `README.md`, `tech_docs/2026-06-04_error_subida_mp4_json_parse.md`
+- Verificación: `php -l estado_quioscos/docs_api.php`, `php -l estado_quioscos/docs_manager.php`, `nginx -t`, `php-fpm8.4 -t`, recarga de servicios y validacion manual de subida MP4 correcta.
