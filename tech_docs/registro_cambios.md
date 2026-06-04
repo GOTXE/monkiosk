@@ -179,3 +179,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: se añade excepción de IPs de gestión fijas (`manager_allowed_ips`) para que equipos autorizados puedan seguir accediendo aunque la protección de presentación esté activada.
 - Archivos: `estado_quioscos/app_config.php`, `estado_quioscos/config.local.php.example`, `tech_docs/manual_tecnico.md`
 - Verificación: `php -l estado_quioscos/app_config.php` y validación de carga de configuración local con IP fija de gestor.
+
+### 2026-06-04 12:10
+- Área: docs
+- Cambio: mejora del diagnostico de subida en `Gestión diapositivas` para evitar errores tecnicos de `JSON.parse` cuando el servidor devuelve HTML/no JSON o cuando un MP4 supera limites PHP. En produccion se suben limites de carga a Nginx `220M`, PHP-FPM `post_max_size=220M` y `upload_max_filesize=200M`. Version `0.2.1`.
+- Archivos: `estado_quioscos/docs_manager.php`, `estado_quioscos/docs_api.php`, `VERSION`, `README.md`, `tech_docs/2026-06-04_error_subida_mp4_json_parse.md`
+- Verificación: `php -l estado_quioscos/docs_api.php`, `php -l estado_quioscos/docs_manager.php`, `nginx -t`, `php-fpm8.4 -t`, recarga de servicios y validacion manual de subida MP4 correcta.

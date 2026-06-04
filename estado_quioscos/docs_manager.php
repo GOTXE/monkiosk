@@ -402,6 +402,22 @@ $csrfToken = auth_csrf_token();
             return new Date(n * 1000).toLocaleDateString('es-ES');
         }
 
+        async function readJsonResponse(response) {
+            const raw = await response.text();
+            try {
+                return raw ? JSON.parse(raw) : {};
+            } catch (_error) {
+                if (response.status === 413) {
+                    throw new Error('El archivo es demasiado grande para la configuracion del servidor');
+                }
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('text/html')) {
+                    throw new Error(`El servidor devolvio HTML en lugar de JSON (HTTP ${response.status})`);
+                }
+                throw new Error(`Respuesta no JSON del servidor (HTTP ${response.status})`);
+            }
+        }
+
         function clearPreview(message) {
             currentPreviewName = '';
             updatePreviewButtonsState();
@@ -451,7 +467,7 @@ $csrfToken = auth_csrf_token();
         async function fetchList() {
             try {
                 const response = await fetch(`docs_api.php?action=list&_ts=${Date.now()}`, { cache: 'no-store' });
-                const data = await response.json();
+                const data = await readJsonResponse(response);
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || 'No se pudo listar');
                 }
@@ -526,7 +542,7 @@ $csrfToken = auth_csrf_token();
                 method: 'POST',
                 body: fd
             });
-            const data = await response.json();
+            const data = await readJsonResponse(response);
 
             if (data && data.error === 'exists' && !overwrite) {
                 const confirmOverwrite = window.confirm(`El archivo ${file.name} ya existe. ¿Sobrescribir?`);
@@ -558,7 +574,7 @@ $csrfToken = auth_csrf_token();
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, csrf_token: csrfToken })
                 });
-                const data = await response.json();
+                const data = await readJsonResponse(response);
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || 'No se pudo eliminar');
                 }
