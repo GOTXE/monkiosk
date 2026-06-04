@@ -69,7 +69,7 @@ Pero esa vez no se lo vamos a reinstalar porque los `dos` del futuro, que fueron
 
 ## Descripción General
 
-Monkiosk en su estado actual (fuente de versión: [`VERSION`](./VERSION), actual `0.2.1`) se compone de tres bloques principales:
+Monkiosk en su estado actual (fuente de versión: [`VERSION`](./VERSION), actual `0.2.2`) se compone de tres bloques principales:
 
 - **Presentación de contenido en quiosco** (`kiosk_web/index.php`) leyendo archivos de `kiosk_web/docs/`.
 - **Gestión web y monitorización** en `estado_quioscos/` con login, control de quioscos permitidos, estado del servidor, acciones remotas y gestión de documentos.

@@ -22,7 +22,7 @@
   - Nginx: `client_max_body_size 220M`
   - PHP-FPM: `post_max_size = 220M`
   - PHP-FPM: `upload_max_filesize = 200M`
-- Se actualiza `VERSION` a `0.2.1` por tratarse de un bugfix compatible.
+- Se actualiza `VERSION` a `0.2.2` por tratarse de un bugfix compatible.
 
 ## Tester
 
