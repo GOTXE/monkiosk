@@ -89,6 +89,70 @@ function run_command_raw(string $cmd): string {
     return is_string($out) ? trim($out) : '';
 }
 
+function release_info_from_runtime_file(): ?array {
+    $path = __DIR__ . '/release.json';
+    if (!is_file($path)) {
+        return null;
+    }
+
+    $raw = @file_get_contents($path);
+    if (!is_string($raw) || trim($raw) === '') {
+        return null;
+    }
+
+    $decoded = json_decode($raw, true);
+    if (!is_array($decoded)) {
+        return null;
+    }
+
+    $version = trim((string)($decoded['version'] ?? ''));
+    if ($version === '') {
+        return null;
+    }
+
+    return [
+        'version' => $version,
+        'git_tag' => trim((string)($decoded['git_tag'] ?? '')),
+        'git_commit' => trim((string)($decoded['git_commit'] ?? '')),
+        'deployed_at' => trim((string)($decoded['deployed_at'] ?? '')),
+        'source' => 'runtime',
+    ];
+}
+
+function release_info_from_repo(): array {
+    $repoDir = '/opt/monkiosk';
+    $version = 'unknown';
+    $versionFile = $repoDir . '/VERSION';
+    if (is_file($versionFile)) {
+        $rawVersion = @file_get_contents($versionFile);
+        if (is_string($rawVersion) && trim($rawVersion) !== '') {
+            $version = trim($rawVersion);
+        }
+    }
+
+    $gitCommit = run_single_line('git -C ' . escapeshellarg($repoDir) . ' rev-parse --short HEAD 2>/dev/null || true');
+    if ($gitCommit === 'unknown') {
+        $gitCommit = '';
+    }
+
+    return [
+        'version' => $version,
+        'git_tag' => $version !== 'unknown' ? 'v' . ltrim($version, 'v') : '',
+        'git_commit' => $gitCommit,
+        'deployed_at' => '',
+        'source' => 'repo',
+    ];
+}
+
+function get_release_info(): array {
+    $runtime = release_info_from_runtime_file();
+    if (is_array($runtime)) {
+        return $runtime;
+    }
+
+    return release_info_from_repo();
+}
+
 function certificate_cache_file(): string {
     return __DIR__ . '/certificate_status.json';
 }
@@ -177,6 +241,7 @@ $status = [
     'last_php_restart' => systemd_active_enter_timestamp($phpFpmUnit),
     'services' => $services,
     'certificate' => get_certificate_expiry_info(),
+    'release' => get_release_info(),
 ];
 
 echo json_encode($status, JSON_UNESCAPED_UNICODE);

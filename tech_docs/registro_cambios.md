@@ -201,3 +201,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: el estado visual de reinicio deja de volver a `Online` por un heartbeat previo al reinicio real. Al solicitar reinicio se guarda el `uptime` de referencia, `get_action.php` marca cuándo el quiosco recoge la orden y `update_status.php` mantiene `Reiniciando` hasta detectar una caída real de `uptime`. El panel también limita cuánto tiempo conserva el color naranja si el equipo deja de reportar durante el reinicio. Version `0.2.6`.
 - Archivos: `estado_quioscos/app_config.php`, `estado_quioscos/control_proxy.php`, `estado_quioscos/get_action.php`, `estado_quioscos/update_status.php`, `estado_quioscos/index.html`, `VERSION`
 - Verificación: `php -l estado_quioscos/app_config.php`, `php -l estado_quioscos/control_proxy.php`, `php -l estado_quioscos/get_action.php`, `php -l estado_quioscos/update_status.php` y comprobación manual del flujo de reinicio en producción.
+
+### 2026-06-25 12:44
+- Área: estado
+- Cambio: la tarjeta `Servidor` muestra la versión de despliegue dentro de `Información`, con más separación visual respecto a los botones de reinicio. `server_status.php` expone la release actual desde `release.json` si existe, o desde `VERSION` como respaldo. Version `0.2.7`.
+- Archivos: `estado_quioscos/server_status.php`, `estado_quioscos/index.html`, `estado_quioscos/styles.css`, `VERSION`
+- Verificación: `php -l estado_quioscos/server_status.php` y comprobación manual del bloque de versión en la UI.
