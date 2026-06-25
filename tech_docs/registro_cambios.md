@@ -189,3 +189,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: `Quioscos permitidos` deja de mostrar intentos de conexión caducados. Los intentos sin nueva actividad durante `120` segundos se excluyen de la lista y se purgan del runtime para evitar entradas antiguas fijas. Version `0.2.4`.
 - Archivos: `estado_quioscos/app_config.php`, `VERSION`
 - Verificación: `php -l estado_quioscos/app_config.php` y comprobación manual del TTL de intentos en producción.
+
+### 2026-06-25 11:15
+- Área: estado
+- Cambio: se ajusta el umbral visual de advertencia en el panel principal de `estado_quioscos` para reducir falsos naranjas con heartbeats de `60` segundos. El estado permanece en verde hasta `120` segundos sin latido y mantiene offline a partir de `150` segundos. Version `0.2.5`.
+- Archivos: `estado_quioscos/index.html`, `VERSION`
+- Verificación: comprobación manual en producción del comportamiento estable de los quioscos con heartbeats periódicos.
