@@ -183,3 +183,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: el panel de `estado_quioscos` pasa a mostrar todos los quioscos configurados aunque no esten reportando, corrige el tiempo relativo para evitar lecturas irreales cuando falta `last_updated`, y `Quioscos permitidos` actualiza la IP real observada en `Intentos de conexión` para no conservar una IP antigua al cambiar por DHCP o IP fija. Version `0.2.3`.
 - Archivos: `estado_quioscos/index.html`, `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/app_config.php`, `VERSION`
 - Verificación: `php -l estado_quioscos/app_config.php`, `php -l estado_quioscos/allowed_kiosks.php` y comprobacion manual en produccion del listado completo, tiempos relativos y actualizacion de IP real en intentos de conexion.
+
+### 2026-06-25 11:05
+- Área: estado
+- Cambio: `Quioscos permitidos` deja de mostrar intentos de conexión caducados. Los intentos sin nueva actividad durante `120` segundos se excluyen de la lista y se purgan del runtime para evitar entradas antiguas fijas. Version `0.2.4`.
+- Archivos: `estado_quioscos/app_config.php`, `VERSION`
+- Verificación: `php -l estado_quioscos/app_config.php` y comprobación manual del TTL de intentos en producción.

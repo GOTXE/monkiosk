@@ -22,6 +22,7 @@ function eq_config(): array {
         'slide_settings_file' => __DIR__ . '/slide_settings.json',
         'allowed_kiosks_file' => __DIR__ . '/allowed_kiosks.json',
         'legacy_allowed_hosts_file' => __DIR__ . '/allowed_hosts.txt',
+        'unknown_attempt_visibility_seconds' => 120,
         'offline_timeout_seconds' => 150,
         'server' => [
             'php_fpm_unit' => 'php8.2-fpm',
@@ -80,6 +81,11 @@ function eq_legacy_allowed_hosts_file(): string {
 function eq_offline_timeout_seconds(): int {
     $value = (int)(eq_config()['offline_timeout_seconds'] ?? 150);
     return $value > 0 ? $value : 150;
+}
+
+function eq_unknown_attempt_visibility_seconds(): int {
+    $value = (int)(eq_config()['unknown_attempt_visibility_seconds'] ?? 120);
+    return $value > 0 ? $value : 120;
 }
 
 function eq_php_fpm_unit(): string {
@@ -414,6 +420,8 @@ function eq_load_unknown_kiosk_attempts(): array {
     }
 
     $items = [];
+    $maxAgeSeconds = eq_unknown_attempt_visibility_seconds();
+    $now = time();
     foreach ($decoded as $item) {
         if (!is_array($item)) {
             continue;
@@ -423,6 +431,9 @@ function eq_load_unknown_kiosk_attempts(): array {
         $lastSeen = (int)($item['last_seen'] ?? 0);
         $attempts = max(1, (int)($item['attempts'] ?? 1));
         if (!eq_hostname_is_valid($hostname) || !eq_is_valid_ip_or_empty($ip)) {
+            continue;
+        }
+        if ($lastSeen <= 0 || ($now - $lastSeen) > $maxAgeSeconds) {
             continue;
         }
         $items[] = [
@@ -436,6 +447,9 @@ function eq_load_unknown_kiosk_attempts(): array {
     usort($items, static function (array $a, array $b): int {
         return ($b['last_seen'] ?? 0) <=> ($a['last_seen'] ?? 0);
     });
+    if (count($items) !== count($decoded)) {
+        eq_save_unknown_kiosk_attempts($items);
+    }
     return $items;
 }
 
