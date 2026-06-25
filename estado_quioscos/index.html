@@ -126,6 +126,7 @@
         let pendingSlideIntervalSeconds = null;
         let slideIntervalDirty = false;
         let kioskNames = [];
+        let allowedKioskItems = [];
         let overlayState = { enabled: false, target_kiosk: '', updated_at: '' };
         let overlaySelection = '';
         let overlaySelectionDirty = false;
@@ -157,14 +158,54 @@
         }
 
         function relativeTime(seconds) {
-            if (seconds < 60) return `hace ${seconds} s`;
-            const minutes = Math.floor(seconds / 60);
-            return `hace ${minutes} min`;
+            if (seconds === null || seconds === undefined || seconds === '' || !Number.isFinite(Number(seconds))) {
+                return 'Sin datos';
+            }
+
+            let remaining = Math.max(0, Math.floor(Number(seconds) || 0));
+            if (remaining < 60) return `hace ${remaining} s`;
+
+            const MINUTE = 60;
+            const HOUR = 60 * MINUTE;
+            const DAY = 24 * HOUR;
+            const WEEK = 7 * DAY;
+            const MONTH = 30 * DAY; // aproximación operativa
+            const YEAR = 365 * DAY; // aproximación operativa
+
+            const units = [
+                { label: 'año', seconds: YEAR },
+                { label: 'mes', seconds: MONTH },
+                { label: 'semana', seconds: WEEK },
+                { label: 'día', seconds: DAY },
+                { label: 'hora', seconds: HOUR },
+                { label: 'min', seconds: MINUTE }
+            ];
+
+            const parts = [];
+            for (const unit of units) {
+                if (remaining < unit.seconds) {
+                    continue;
+                }
+                const amount = Math.floor(remaining / unit.seconds);
+                remaining %= unit.seconds;
+                if (unit.label === 'min') {
+                    parts.push(`${amount} min`);
+                } else {
+                    parts.push(`${amount} ${amount === 1 ? unit.label : `${unit.label}s`}`);
+                }
+            }
+
+            if (!parts.length) {
+                return `hace ${remaining} s`;
+            }
+
+            return `hace ${parts.slice(0, 3).join(' ')}`;
         }
 
         function normalizeStatus(info, now) {
             const lastUpdated = Number(info.last_updated || 0);
-            const elapsed = Math.max(0, now - lastUpdated);
+            const hasLastUpdated = Number.isFinite(lastUpdated) && lastUpdated > 0;
+            const elapsed = hasLastUpdated ? Math.max(0, now - lastUpdated) : null;
             const backendStatus = String(info.status || '').toLowerCase();
 
             let stateClass = 'offline';
@@ -185,6 +226,7 @@
                 stateClass,
                 stateLabel,
                 lastUpdated,
+                hasLastUpdated,
                 elapsed,
                 unstable: Boolean(info.unstable),
                 history: Array.isArray(info.history) ? info.history : [],
@@ -289,6 +331,66 @@
                 const safe = escapeHtml(name);
                 return `<option value="${safe}"${selected}>${safe}</option>`;
             }).join('');
+        }
+
+        function normalizeKioskKey(name) {
+            return String(name || '').trim().toLowerCase();
+        }
+
+        function normalizeKioskItem(item) {
+            if (!item || typeof item !== 'object') {
+                return null;
+            }
+
+            const hostname = normalizeKioskKey(item.hostname);
+            if (!hostname) {
+                return null;
+            }
+
+            return {
+                hostname,
+                ip: String(item.ip || '').trim(),
+                enabled: item.enabled !== false
+            };
+        }
+
+        function buildKioskDirectory(statusData, allowedItems) {
+            const directory = new Map();
+            const statusEntries = statusData && typeof statusData === 'object' ? Object.entries(statusData) : [];
+
+            statusEntries.forEach(([hostname, info]) => {
+                const key = normalizeKioskKey(hostname);
+                if (!key) {
+                    return;
+                }
+                directory.set(key, {
+                    hostname: String(hostname),
+                    status: info && typeof info === 'object' ? info : {},
+                    allowed: null
+                });
+            });
+
+            (Array.isArray(allowedItems) ? allowedItems : []).forEach((item) => {
+                const normalized = normalizeKioskItem(item);
+                if (!normalized) {
+                    return;
+                }
+                const existing = directory.get(normalized.hostname);
+                if (existing) {
+                    existing.allowed = normalized;
+                    if (!existing.hostname) {
+                        existing.hostname = normalized.hostname;
+                    }
+                    return;
+                }
+                directory.set(normalized.hostname, {
+                    hostname: normalized.hostname,
+                    status: {},
+                    allowed: normalized
+                });
+            });
+
+            return Array.from(directory.values()).sort((a, b) => naturalSort.compare(a.hostname, b.hostname));
         }
 
         function renderSummary(stats) {
@@ -796,15 +898,18 @@
             toggleAllKiosksBtn.disabled = !hasKiosks;
         }
 
-        function renderKiosks(statusData) {
+        function renderKiosks(statusData, allowedItems = []) {
             const now = Math.floor(Date.now() / 1000);
             let onlineCount = 0;
             let offlineCount = 0;
             let unstableCount = 0;
 
-            kioskNames = Object.keys(statusData).sort((a, b) => naturalSort.compare(a, b));
+            const kioskDirectory = buildKioskDirectory(statusData, allowedItems);
+            kioskNames = kioskDirectory.map((entry) => entry.hostname);
 
-            const cards = Object.entries(statusData).sort((a, b) => naturalSort.compare(a[0], b[0])).map(([name, info]) => {
+            const cards = kioskDirectory.map((entry) => {
+                const name = entry.hostname;
+                const info = entry.status && typeof entry.status === 'object' ? entry.status : {};
                 const normalized = normalizeStatus(info, now);
                 const safeName = escapeHtml(name);
                 const safeNameUpper = escapeHtml(String(name).toUpperCase());
@@ -836,8 +941,8 @@
                                 ${normalized.unstable ? '<span class="badge unstable">Inestable</span>' : ''}
                             </div>
                         </div>
-                        <div class="kiosk-meta">
-                            <span>${relativeTime(normalized.elapsed)}</span>
+                <div class="kiosk-meta">
+                            <span>${normalized.hasLastUpdated ? relativeTime(normalized.elapsed) : 'Sin datos'}</span>
                             <span>Último latido: ${absoluteTime}</span>
                         </div>
                         <details class="kiosk-report"${reportOpenAttr} data-kiosk="${kioskKey}">
@@ -874,14 +979,30 @@
 
         async function fetchStatus() {
             try {
-                const response = await fetch(`status.json?_ts=${Date.now()}`, { cache: 'no-store' });
-                if (!response.ok) {
-                    throw new Error('Error al obtener el estado');
+                const ts = Date.now();
+                const [statusResponse, allowedResponse] = await Promise.all([
+                    fetch(`status.json?_ts=${ts}`, { cache: 'no-store' }),
+                    fetch(`allowed_kiosks_api.php?_ts=${ts}`, { cache: 'no-store' })
+                ]);
+
+                let statusData = {};
+                if (statusResponse.ok) {
+                    statusData = await statusResponse.json();
+                } else {
+                    console.error('Error al obtener el estado:', statusResponse.status);
                 }
-                const statusData = await response.json();
-                renderKiosks(statusData);
+
+                if (allowedResponse.ok) {
+                    const allowedData = await allowedResponse.json();
+                    allowedKioskItems = Array.isArray(allowedData.items) ? allowedData.items : [];
+                } else {
+                    console.error('Error al obtener la lista de quioscos permitidos:', allowedResponse.status);
+                }
+
+                renderKiosks(statusData, allowedKioskItems);
             } catch (error) {
                 console.error('Error al actualizar los estados:', error);
+                renderKiosks({}, allowedKioskItems);
             }
         }
 

@@ -149,3 +149,8 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: se adapta `.gitignore` a la realidad de `estado_quioscos`, se fija la política de archivos runtime locales fuera de Git y se añade un script de inicialización para crear esos archivos durante instalación.
 - Archivos: `.gitignore`, `tools/init_estado_quioscos_runtime.sh`, `tools/README.md`, `tech_docs/politica_archivos_runtime_locales.md`, `AGENTS.md`, `tech_docs/guia_lectura_agente.md`, `tech_docs/manual_tecnico.md`
 - Verificación: revisión manual de la lista de runtime local, sintaxis shell del script y coherencia con el flujo de instalación.
+### 2026-06-25 10:40
+- Área: estado
+- Cambio: el panel de `estado_quioscos` pasa a mostrar todos los quioscos configurados aunque no esten reportando, corrige el tiempo relativo para evitar lecturas irreales cuando falta `last_updated`, y `Quioscos permitidos` actualiza la IP real observada en `Intentos de conexión` para no conservar una IP antigua al cambiar por DHCP o IP fija. Version `0.2.3`.
+- Archivos: `estado_quioscos/index.html`, `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/app_config.php`, `VERSION`
+- Verificación: `php -l estado_quioscos/app_config.php`, `php -l estado_quioscos/allowed_kiosks.php` y comprobacion manual en produccion del listado completo, tiempos relativos y actualizacion de IP real en intentos de conexion.

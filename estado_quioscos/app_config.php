@@ -400,7 +400,7 @@ function eq_register_unknown_kiosk_attempt(string $hostname, string $ip): void {
         'last_seen' => 0,
         'attempts' => 0,
     ];
-    if ($existing['ip'] === '' && $ip !== '') {
+    if ($ip !== '' && (!isset($existing['ip']) || (string)$existing['ip'] !== $ip)) {
         $existing['ip'] = $ip;
     }
     $existing['last_seen'] = time();
