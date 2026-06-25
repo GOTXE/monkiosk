@@ -290,6 +290,31 @@ h2.section-title.server-title {
     grid-column: 1 / -1;
 }
 
+.server-version-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid #d7e2ef;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+}
+
+.server-version-row span {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0;
+}
+
+.server-version-row strong {
+    color: #001f3f;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
 .slide-config-row {
     display: flex;
     align-items: center;
@@ -537,8 +562,17 @@ h2.section-title.server-title {
 .server-actions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 24px;
+}
+
+.server-actions-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .server-btn {

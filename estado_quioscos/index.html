@@ -549,10 +549,16 @@
                             </div>
                             <div class="server-wide"><span>Ult. reinicio web</span><strong>${formatSpainDateTime(data.last_web_restart || '-')}</strong></div>
                             <div class="server-wide"><span>Ult. reinicio servidor</span><strong>${formatSpainDateTime(data.last_server_restart || '-')}</strong></div>
+                            <div class="server-wide server-version-row"${releaseTitle}>
+                                <span>Version</span>
+                                <strong>${escapeHtml(releaseVersion)}</strong>
+                            </div>
                         </div>
                         <div class="server-actions">
-                            <button class="server-btn" data-action="restart_web" type="button">Reiniciar Web</button>
-                            <button class="server-btn danger" data-action="reboot_server" type="button">Reiniciar Servidor</button>
+                            <div class="server-actions-main">
+                                <button class="server-btn" data-action="restart_web" type="button">Reiniciar Web</button>
+                                <button class="server-btn danger" data-action="reboot_server" type="button">Reiniciar Servidor</button>
+                            </div>
                         </div>
                     </details>
                 </article>
