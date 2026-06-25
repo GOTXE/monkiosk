@@ -149,7 +149,6 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: se adapta `.gitignore` a la realidad de `estado_quioscos`, se fija la política de archivos runtime locales fuera de Git y se añade un script de inicialización para crear esos archivos durante instalación.
 - Archivos: `.gitignore`, `tools/init_estado_quioscos_runtime.sh`, `tools/README.md`, `tech_docs/politica_archivos_runtime_locales.md`, `AGENTS.md`, `tech_docs/guia_lectura_agente.md`, `tech_docs/manual_tecnico.md`
 - Verificación: revisión manual de la lista de runtime local, sintaxis shell del script y coherencia con el flujo de instalación.
-
 ### 2026-03-17 09:40
 - Área: git
 - Cambio: se implanta el modelo de ramas `main` + `dev` como base operativa del proyecto, manteniendo ramas de trabajo temporales solo mientras duran los cambios, y se actualizan referencias en documentación y agentes.
@@ -178,3 +177,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: mejora del diagnostico de subida en `Gestión diapositivas` para evitar errores tecnicos de `JSON.parse` cuando el servidor devuelve HTML/no JSON o cuando un MP4 supera limites PHP. En produccion se suben limites de carga a Nginx `220M`, PHP-FPM `post_max_size=220M` y `upload_max_filesize=200M`. Version `0.2.2`.
 - Archivos: `estado_quioscos/docs_manager.php`, `estado_quioscos/docs_api.php`, `VERSION`, `README.md`, `tech_docs/2026-06-04_error_subida_mp4_json_parse.md`
 - Verificación: `php -l estado_quioscos/docs_api.php`, `php -l estado_quioscos/docs_manager.php`, `nginx -t`, `php-fpm8.4 -t`, recarga de servicios y validacion manual de subida MP4 correcta.
+
+### 2026-06-25 10:40
+- Área: estado
+- Cambio: el panel de `estado_quioscos` pasa a mostrar todos los quioscos configurados aunque no esten reportando, corrige el tiempo relativo para evitar lecturas irreales cuando falta `last_updated`, y `Quioscos permitidos` actualiza la IP real observada en `Intentos de conexión` para no conservar una IP antigua al cambiar por DHCP o IP fija. Version `0.2.3`.
+- Archivos: `estado_quioscos/index.html`, `estado_quioscos/allowed_kiosks.php`, `estado_quioscos/app_config.php`, `VERSION`
+- Verificación: `php -l estado_quioscos/app_config.php`, `php -l estado_quioscos/allowed_kiosks.php` y comprobacion manual en produccion del listado completo, tiempos relativos y actualizacion de IP real en intentos de conexion.
