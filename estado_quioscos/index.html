@@ -134,6 +134,8 @@
 
         const OFFLINE_TIMEOUT = 150;
         const WARN_THRESHOLD = 120;
+        const REBOOT_TRACKING_TIMEOUT = 900;
+        const REBOOT_OFFLINE_GRACE = 300;
 
         function escapeHtml(text) {
             return String(text)
@@ -207,11 +209,18 @@
             const hasLastUpdated = Number.isFinite(lastUpdated) && lastUpdated > 0;
             const elapsed = hasLastUpdated ? Math.max(0, now - lastUpdated) : null;
             const backendStatus = String(info.status || '').toLowerCase();
+            const rebootRequestedAt = Number(info.reboot_requested_at || 0);
+            const rebootAge = rebootRequestedAt > 0 ? Math.max(0, now - rebootRequestedAt) : null;
+            const rebootActive = backendStatus === 'reiniciando'
+                && rebootRequestedAt > 0
+                && rebootAge !== null
+                && rebootAge <= REBOOT_TRACKING_TIMEOUT
+                && (elapsed === null || elapsed <= REBOOT_OFFLINE_GRACE);
 
             let stateClass = 'offline';
             let stateLabel = 'Offline';
 
-            if (backendStatus === 'reiniciando') {
+            if (rebootActive) {
                 stateClass = 'restarting';
                 stateLabel = 'Reiniciando';
             } else if (elapsed <= WARN_THRESHOLD) {

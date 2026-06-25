@@ -3,6 +3,8 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/app_config.php';
 
 $offline_timeout = eq_offline_timeout_seconds();
+$reboot_tracking_timeout = eq_reboot_tracking_timeout_seconds();
+$reboot_uptime_drop_tolerance = eq_reboot_uptime_drop_tolerance_seconds();
 $cleanup_ttl = 7 * 24 * 60 * 60; // 7 dias
 $history_max_events = 5;
 $unstable_window_seconds = 10 * 60; // 10 minutos
@@ -211,9 +213,49 @@ if ($disk_free_mb !== null) {
     $extra_fields['disk_free_mb'] = $disk_free_mb;
 }
 
+// Mantener estado de reinicio hasta detectar una caida real del uptime.
+$effective_status = $status;
+$reboot_requested_at = isset($existing_kiosk['reboot_requested_at']) ? (int)$existing_kiosk['reboot_requested_at'] : 0;
+$reboot_delivered_at = isset($existing_kiosk['reboot_delivered_at']) ? (int)$existing_kiosk['reboot_delivered_at'] : 0;
+$reboot_reference_uptime_s = isset($existing_kiosk['reboot_reference_uptime_s']) ? max(0, (int)$existing_kiosk['reboot_reference_uptime_s']) : 0;
+
+if ($reboot_requested_at > 0) {
+    if ($reboot_reference_uptime_s <= 0) {
+        unset(
+            $existing_kiosk['reboot_requested_at'],
+            $existing_kiosk['reboot_delivered_at'],
+            $existing_kiosk['reboot_reference_uptime_s']
+        );
+    } else {
+        $reboot_age = max(0, $current_time - $reboot_requested_at);
+        $reboot_detected = $uptime_s !== null
+            && $uptime_s + $reboot_uptime_drop_tolerance < $reboot_reference_uptime_s;
+
+        if ($reboot_detected) {
+            unset(
+                $existing_kiosk['reboot_requested_at'],
+                $existing_kiosk['reboot_delivered_at'],
+                $existing_kiosk['reboot_reference_uptime_s']
+            );
+            $existing_kiosk['reboot_completed_at'] = $current_time;
+        } elseif ($reboot_age <= $reboot_tracking_timeout) {
+            $effective_status = 'Reiniciando';
+            $existing_kiosk['reboot_requested_at'] = $reboot_requested_at;
+            $existing_kiosk['reboot_delivered_at'] = $reboot_delivered_at;
+            $existing_kiosk['reboot_reference_uptime_s'] = $reboot_reference_uptime_s;
+        } else {
+            unset(
+                $existing_kiosk['reboot_requested_at'],
+                $existing_kiosk['reboot_delivered_at'],
+                $existing_kiosk['reboot_reference_uptime_s']
+            );
+        }
+    }
+}
+
 // Actualiza o agrega el estado del quiosco que reporta.
 $status_data[$kiosk_name] = array_merge($existing_kiosk, [
-    'status' => $status,
+    'status' => $effective_status,
     'last_updated' => $current_time,
     'ip' => $remote_ip,
     'source_ip' => $remote_ip

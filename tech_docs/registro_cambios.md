@@ -166,3 +166,9 @@ Bitácora cronológica de cambios del proyecto. Añadir nuevas entradas al final
 - Cambio: se ajusta el umbral visual de advertencia en el panel principal de `estado_quioscos` para reducir falsos naranjas con heartbeats de `60` segundos. El estado permanece en verde hasta `120` segundos sin latido y mantiene offline a partir de `150` segundos. Version `0.2.5`.
 - Archivos: `estado_quioscos/index.html`, `VERSION`
 - Verificación: comprobación manual en producción del comportamiento estable de los quioscos con heartbeats periódicos.
+
+### 2026-06-25 12:15
+- Área: control
+- Cambio: el estado visual de reinicio deja de volver a `Online` por un heartbeat previo al reinicio real. Al solicitar reinicio se guarda el `uptime` de referencia, `get_action.php` marca cuándo el quiosco recoge la orden y `update_status.php` mantiene `Reiniciando` hasta detectar una caída real de `uptime`. El panel también limita cuánto tiempo conserva el color naranja si el equipo deja de reportar durante el reinicio. Version `0.2.6`.
+- Archivos: `estado_quioscos/app_config.php`, `estado_quioscos/control_proxy.php`, `estado_quioscos/get_action.php`, `estado_quioscos/update_status.php`, `estado_quioscos/index.html`, `VERSION`
+- Verificación: `php -l estado_quioscos/app_config.php`, `php -l estado_quioscos/control_proxy.php`, `php -l estado_quioscos/get_action.php`, `php -l estado_quioscos/update_status.php` y comprobación manual del flujo de reinicio en producción.

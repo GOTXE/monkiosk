@@ -118,6 +118,11 @@ if (!isset($status_data[$canonical_name]) || !is_array($status_data[$canonical_n
 }
 $status_data[$canonical_name]['status'] = 'Reiniciando';
 $status_data[$canonical_name]['reboot_requested_at'] = time();
+$status_data[$canonical_name]['reboot_delivered_at'] = 0;
+$status_data[$canonical_name]['reboot_completed_at'] = 0;
+$status_data[$canonical_name]['reboot_reference_uptime_s'] = isset($status_data[$canonical_name]['uptime_s'])
+    ? max(0, (int)$status_data[$canonical_name]['uptime_s'])
+    : 0;
 
 $status_out = json_encode($status_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 $status_fp = @fopen($status_file, 'c+');

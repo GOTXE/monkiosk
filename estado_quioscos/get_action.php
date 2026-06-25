@@ -58,6 +58,37 @@ if (isset($actions[$name]) && is_array($actions[$name])) {
         flock($fp, LOCK_UN);
         fclose($fp);
     }
+
+    if ($action === 'reboot') {
+        $status_file = __DIR__ . '/status.json';
+        $status_data = [];
+        if (file_exists($status_file)) {
+            $existing_status = @file_get_contents($status_file);
+            if ($existing_status !== false && trim($existing_status) !== '') {
+                $decoded_status = json_decode($existing_status, true);
+                if (is_array($decoded_status)) {
+                    $status_data = $decoded_status;
+                }
+            }
+        }
+
+        if (!isset($status_data[$name]) || !is_array($status_data[$name])) {
+            $status_data[$name] = [];
+        }
+        $status_data[$name]['status'] = 'Reiniciando';
+        $status_data[$name]['reboot_delivered_at'] = time();
+
+        $status_out = json_encode($status_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $status_fp = @fopen($status_file, 'c+');
+        if ($status_fp !== false && flock($status_fp, LOCK_EX)) {
+            ftruncate($status_fp, 0);
+            rewind($status_fp);
+            fwrite($status_fp, $status_out);
+            fflush($status_fp);
+            flock($status_fp, LOCK_UN);
+            fclose($status_fp);
+        }
+    }
 }
 
 echo json_encode([
@@ -66,4 +97,3 @@ echo json_encode([
     'action' => $action,
     'meta' => $meta
 ]);
-
