@@ -23,7 +23,12 @@ function eq_config(): array {
         'allowed_kiosks_file' => __DIR__ . '/allowed_kiosks.json',
         'legacy_allowed_hosts_file' => __DIR__ . '/allowed_hosts.txt',
         'unknown_attempt_visibility_seconds' => 120,
+        'presentation_viewer_visibility_seconds' => 120,
+        'known_kiosk_presentation_viewer_visibility_seconds' => 900,
         'offline_timeout_seconds' => 150,
+        'reboot_tracking_timeout_seconds' => 900,
+        'reboot_offline_grace_seconds' => 300,
+        'reboot_uptime_drop_tolerance_seconds' => 30,
         'server' => [
             'php_fpm_unit' => 'php8.2-fpm',
         ],
@@ -88,9 +93,34 @@ function eq_unknown_attempt_visibility_seconds(): int {
     return $value > 0 ? $value : 120;
 }
 
+function eq_presentation_viewer_visibility_seconds(): int {
+    $value = (int)(eq_config()['presentation_viewer_visibility_seconds'] ?? 120);
+    return $value > 0 ? $value : 120;
+}
+
+function eq_known_kiosk_presentation_viewer_visibility_seconds(): int {
+    $value = (int)(eq_config()['known_kiosk_presentation_viewer_visibility_seconds'] ?? 900);
+    return $value > 0 ? $value : 900;
+}
+
 function eq_php_fpm_unit(): string {
     $unit = (string)(eq_config()['server']['php_fpm_unit'] ?? 'php8.2-fpm');
     return $unit !== '' ? $unit : 'php8.2-fpm';
+}
+
+function eq_reboot_tracking_timeout_seconds(): int {
+    $value = (int)(eq_config()['reboot_tracking_timeout_seconds'] ?? 900);
+    return $value > 0 ? $value : 900;
+}
+
+function eq_reboot_offline_grace_seconds(): int {
+    $value = (int)(eq_config()['reboot_offline_grace_seconds'] ?? 300);
+    return $value > 0 ? $value : 300;
+}
+
+function eq_reboot_uptime_drop_tolerance_seconds(): int {
+    $value = (int)(eq_config()['reboot_uptime_drop_tolerance_seconds'] ?? 30);
+    return $value >= 0 ? $value : 30;
 }
 
 function eq_hostname_is_valid(string $hostname): bool {
@@ -573,6 +603,42 @@ function eq_is_known_kiosk_ip(string $ip): bool {
     return eq_resolve_kiosk_hostname_by_ip($ip) !== '';
 }
 
+function eq_is_kiosk_online_by_ip(string $ip): bool {
+    $normalizedIp = eq_normalize_ip($ip);
+    if (!eq_is_valid_ip_or_empty($normalizedIp) || $normalizedIp === '') {
+        return false;
+    }
+
+    $path = eq_status_file();
+    if (!is_file($path)) {
+        return false;
+    }
+    $raw = @file_get_contents($path);
+    if (!is_string($raw) || trim($raw) === '') {
+        return false;
+    }
+    $decoded = json_decode($raw, true);
+    if (!is_array($decoded)) {
+        return false;
+    }
+
+    $now = time();
+    $offlineTimeout = eq_offline_timeout_seconds();
+    foreach ($decoded as $info) {
+        if (!is_array($info)) {
+            continue;
+        }
+        $candidateIp = eq_normalize_ip((string)($info['local_ip'] ?? $info['source_ip'] ?? $info['ip'] ?? ''));
+        if ($candidateIp === '' || $candidateIp !== $normalizedIp) {
+            continue;
+        }
+        $lastUpdated = (int)($info['last_updated'] ?? 0);
+        return $lastUpdated > 0 && (($now - $lastUpdated) <= $offlineTimeout);
+    }
+
+    return false;
+}
+
 function eq_is_presentation_access_allowed(string $ip): bool {
     $normalizedIp = eq_normalize_ip($ip);
     if (!eq_is_valid_ip_or_empty($normalizedIp) || $normalizedIp === '') {
@@ -613,6 +679,7 @@ function eq_load_presentation_viewers(): array {
     }
 
     $items = [];
+    $now = time();
     foreach ($decoded as $item) {
         if (!is_array($item)) {
             continue;
@@ -633,6 +700,14 @@ function eq_load_presentation_viewers(): array {
         if (eq_is_localhost_address($ip, $hostname)) {
             continue;
         }
+        $knownKiosk = $resolvedHostname !== '';
+        $isOnlineKnownKiosk = $knownKiosk && eq_is_kiosk_online_by_ip($ip);
+        $maxAgeSeconds = $knownKiosk
+            ? eq_known_kiosk_presentation_viewer_visibility_seconds()
+            : eq_presentation_viewer_visibility_seconds();
+        if (($lastSeen <= 0 || ($now - $lastSeen) > $maxAgeSeconds) && !$isOnlineKnownKiosk) {
+            continue;
+        }
         if (strlen($userAgent) > 255) {
             $userAgent = substr($userAgent, 0, 255);
         }
@@ -643,13 +718,16 @@ function eq_load_presentation_viewers(): array {
             'last_seen' => $lastSeen,
             'hits' => $hits,
             'user_agent' => $userAgent,
-            'known_kiosk' => $resolvedHostname !== '',
+            'known_kiosk' => $knownKiosk,
         ];
     }
 
     usort($items, static function (array $a, array $b): int {
         return ($b['last_seen'] ?? 0) <=> ($a['last_seen'] ?? 0);
     });
+    if (count($items) !== count($decoded)) {
+        eq_save_presentation_viewers($items);
+    }
     return $items;
 }
 
@@ -719,8 +797,18 @@ function eq_register_presentation_viewer(string $ip, string $userAgent = ''): vo
 
     $map[$ip] = $existing;
 
-    $ttl = 7 * 24 * 60 * 60;
-    $filtered = array_values(array_filter($map, static function (array $item) use ($now, $ttl): bool {
+    $filtered = array_values(array_filter($map, static function (array $item) use ($now): bool {
+        $ip = eq_normalize_ip((string)($item['ip'] ?? ''));
+        if (!eq_is_valid_ip_or_empty($ip) || $ip === '') {
+            return false;
+        }
+        $knownKiosk = eq_is_known_kiosk_ip($ip);
+        if ($knownKiosk && eq_is_kiosk_online_by_ip($ip)) {
+            return true;
+        }
+        $ttl = $knownKiosk
+            ? eq_known_kiosk_presentation_viewer_visibility_seconds()
+            : eq_presentation_viewer_visibility_seconds();
         return (($now - (int)($item['last_seen'] ?? 0)) <= $ttl);
     }));
     eq_save_presentation_viewers($filtered);
