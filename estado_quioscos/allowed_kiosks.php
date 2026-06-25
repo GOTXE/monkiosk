@@ -424,6 +424,12 @@ $items = eq_load_allowed_kiosks_for_crud();
             if (!currentItems.length) addRow({ hostname: '', ip: '', enabled: true });
         }
 
+        function findCurrentItemIndex(hostname) {
+            const target = String(hostname || '').trim().toLowerCase();
+            if (!target) return -1;
+            return currentItems.findIndex((item) => String(item.hostname || '').trim().toLowerCase() === target);
+        }
+
         function formatRelativeTime(ts) {
             const value = Number(ts || 0);
             if (!value) return 'sin dato';
@@ -436,40 +442,56 @@ $items = eq_load_allowed_kiosks_for_crud();
         }
 
         function renderUnknownAttempts(items) {
-            const currentHostnames = new Set(collectItems().map((item) => String(item.hostname || '').toLowerCase()).filter((hostname) => hostname !== ''));
-            currentUnknownAttempts = (Array.isArray(items) ? items : []).filter((item) => {
-                const hostname = String(item.hostname || '').toLowerCase();
-                return hostname !== '' && !currentHostnames.has(hostname);
-            });
+            const currentHostnames = new Set(collectItems().map((item) => String(item.hostname || '').trim().toLowerCase()).filter((hostname) => hostname !== ''));
+            currentUnknownAttempts = (Array.isArray(items) ? items : []).filter((item) => String(item.hostname || '').trim() !== '');
             if (!currentUnknownAttempts.length) {
                 unknownAttemptsEl.innerHTML = '<div class="attempt-meta">No hay intentos pendientes.</div>';
                 return;
             }
-            unknownAttemptsEl.innerHTML = currentUnknownAttempts.map((item) => `
+            unknownAttemptsEl.innerHTML = currentUnknownAttempts.map((item) => {
+                const hostname = String(item.hostname || '').trim().toLowerCase();
+                const currentIndex = findCurrentItemIndex(hostname);
+                const currentIp = currentIndex >= 0 ? String(currentItems[currentIndex].ip || '').trim() : '';
+                const attemptIp = String(item.ip || '').trim();
+                const alreadyMatched = currentIndex >= 0 && currentIp !== '' && currentIp === attemptIp;
+                const buttonLabel = alreadyMatched ? 'En tabla' : (currentHostnames.has(hostname) ? 'Actualizar IP' : 'Añadir');
+                const buttonDisabled = alreadyMatched ? ' disabled' : '';
+
+                return `
                 <div class="attempt-item">
                     <div>
                         <strong>${escapeHtml(item.hostname || '')}</strong>
-                        <div class="attempt-meta">IP: ${escapeHtml(item.ip || '-')} | Intentos: ${Number(item.attempts || 0)} | Último: ${formatRelativeTime(item.last_seen)}</div>
+                        <div class="attempt-meta">IP real: ${escapeHtml(item.ip || '-')} | Intentos: ${Number(item.attempts || 0)} | Último: ${formatRelativeTime(item.last_seen)}</div>
                     </div>
-                    <button class="small-btn" type="button" data-add-attempt="${escapeHtml(item.hostname || '')}">Añadir</button>
+                    <button class="small-btn" type="button" data-add-attempt="${escapeHtml(item.hostname || '')}"${buttonDisabled}>${buttonLabel}</button>
                 </div>
-            `).join('');
+            `;
+            }).join('');
             unknownAttemptsEl.querySelectorAll('[data-add-attempt]').forEach((button) => {
                 button.addEventListener('click', () => {
                     const hostname = String(button.getAttribute('data-add-attempt') || '').toLowerCase();
                     const attempt = currentUnknownAttempts.find((item) => String(item.hostname || '').toLowerCase() === hostname);
                     if (!attempt) return;
                     const items = collectItems();
-                    if (!items.some((item) => item.hostname === hostname)) {
+                    const existingIndex = findCurrentItemIndex(hostname);
+                    if (existingIndex >= 0) {
+                        items[existingIndex].ip = String(attempt.ip || '');
+                        items[existingIndex].enabled = true;
+                    } else {
                         items.push({
                             hostname,
                             ip: String(attempt.ip || ''),
                             enabled: true,
                         });
-                        renderRows(items);
-                        renderUnknownAttempts(currentUnknownAttempts.filter((item) => String(item.hostname || '').toLowerCase() !== hostname));
-                        setStatus(`Añadido ${hostname} a la tabla. Falta guardar cambios.`, 'warn');
                     }
+                    renderRows(items);
+                    renderUnknownAttempts(currentUnknownAttempts);
+                    setStatus(
+                        existingIndex >= 0
+                            ? `Actualizada la IP de ${hostname}. Falta guardar cambios.`
+                            : `Añadido ${hostname} a la tabla. Falta guardar cambios.`,
+                        'warn'
+                    );
                 });
             });
         }
